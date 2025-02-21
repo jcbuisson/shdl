@@ -3,14 +3,11 @@
 
    <div class="main" cclass="fullscreen appearing main global--background">
 
-      <div 
-         class="main-container"  style="border:1px solid black;"
-         v-bind:class="{ 'white-background': isConnection, 'black-background': isSignUp }"
-      >
+      <div class="main-container"  style="border:1px solid black;"
+         :class="{ 'white-background': isConnection, 'black-background': isSignUp }">
 
-         <div
-            class='main-label'
-            v-bind:class="{ 'black-color': isConnection, 'white-color': isSignUp }">
+         <div class='main-label'
+            :class="{ 'black-color': isConnection, 'white-color': isSignUp }">
             {{ title }}
          </div>
          
@@ -36,8 +33,8 @@
                :rules="passwordRules"
                required
                @keyup.enter.native="submit"
-               :append-icon="hiddenPassword ? 'visibility' : 'visibility_off'"
-               @click:append="() => (hiddenPassword = !hiddenPassword)"
+               :append-inner-icon="hiddenPassword ? 'mdi-eye' : 'mdi-eye-off'"
+               @click:append-inner="() => (hiddenPassword = !hiddenPassword)"
                :type="hiddenPassword ? 'password' : 'text'"
             ></v-text-field>
 
@@ -72,7 +69,7 @@
             ></v-text-field>
             
             <div class="submit-block">
-                <v-btn @click="submit" :disabled="!valid" flat dark style="width: 100%;">{{ submitButtonText }}</v-btn>
+               <v-btn @click="submit" :disabled="!valid" flat size="large" color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
             </div>
          </v-form>
 
@@ -89,8 +86,8 @@
          </div>
       </div>
     
-      <div class="sign-up-block" v-if="platform === 'shdl' || !isProduction">
-         <v-btn flat dark @click="onModeButtonTap" style="width: 100%;">{{ modeButtonText }}</v-btn>
+      <div class="sign-up-block">
+         <v-btn flat size="large" color="black" @click="onModeButtonTap" style="width: 100%;">{{ modeButtonText }}</v-btn>
       </div>
 
    </div>
@@ -145,97 +142,23 @@ function submit() {
    if (isConnection.value) {
       signIn()
    } else {
-      signUpAsSelfRegistered()
+      signUp()
    }
 }
 
 async function signIn () {
-   this.$store.commit('WAITING', true)
-   try {
-      let response
-      // ask server for a token, signed with the private key
-      response = await axios({
-         method: 'post',
-         url: config.TOKEN_URL,
-         data: {
-            username: this.username,
-            password: this.password,
-         },
-      })
-      let token = response.data
-      //console.log('token', token)
-      // then get public key in PEM format (with separate lines, see https://github.com/auth0/node-jsonwebtoken/issues/331)
-      response = await axios.get(config.PUBLIC_KEY_URL, {})
-      let publicKey = response.data
-      // then verify the provided token with the public key
-      let decodedToken = verifyToken(token, publicKey)
-      //console.log('decodedToken', decodedToken)
-      // then load user data
-      response = await axios({
-         method: 'get',
-         url: `${config.USERS_URL}${decodedToken.user_id}/`,
-         headers: {"Authorization": `JWT ${token}`},
-      })
-      let user_data = response.data
-      //console.log('user_data', user_data)
-      // commit changes in vuex
-      this.$store.commit('SET_LOGGED_USER', user_data)
-      // commit login in vuex state, with token & public key
-      this.$store.commit('SET_AUTHENTICATION_DATA', {
-         token: token,
-         decodedToken: decodedToken,
-         publicKey: publicKey
-      })
-      // get realms - necessary for several store.getters
-      await this.$store.dispatch('GET_REALMS')
-      // get roles - necessary for several store.getters
-      await this.$store.dispatch('GET_ROLES')
-      // look for route to go to for App component
-      let url
-      if (this.$route.query.next) {
-         // special case when when route is specified in query param
-         url = this.$route.query.next
-      } else {
-         // get first user's roles
-         let firstGroup = this.$store.state.roles[user_data.group_ids[0]]
-         // get first authorization's url
-         url = firstGroup.authorizations[0].url
-         //console.log('url', url)
-      }
-      // then emit 'onLogin' to App parent component
-      this.$emit('onLogin', url)
-   } catch(e) {
-      console.log('login error', e)
-      let errorText = "Erreur inconnue"
-      if (e.response && e.response.status && e.response.status === 400) {
-         errorText = "Identifiant / mot de passe incorrects, ou compte inactivé"
-      }
-      this.$store.commit('SNACKBAR', { timeout: 3500, text: errorText, color: 'red' })
-   } finally {
-      this.$store.commit('WAITING', false)
-   }
+   // console.log('login error', e)
+   // let errorText = "Erreur inconnue"
+   // if (e.response && e.response.status && e.response.status === 400) {
+   //    errorText = "Identifiant / mot de passe incorrects, ou compte inactivé"
+   // }
+   // this.$store.commit('SNACKBAR', { timeout: 3500, text: errorText, color: 'red' })
 }
 
-async function signUpAsSelfRegistered () {
-   this.$store.commit('WAITING', true)
-   try {
-      let userId = await this.$store.dispatch('CREATE_USER', {
-         username: this.username,
-         email: this.email,
-         first_name: this.first_name,
-         last_name: this.last_name,
-         tag: this.tag,
-      })
-      // then display message
-      this.$store.commit('SNACKBAR', { timeout: 3500, text: `Compte utilisateur ${this.username} créé. Un mail d'activation vient d'être envoyé à ${this.email}`, color: 'green' })
-      // then go in 'connection' mode
-      this.mode = 'connection'
-   } catch(err) {
-      this.$store.commit('SNACKBAR', { timeout: 3500, text: err.message, color: 'red' })
-      this.errMsg = err.message
-   } finally {
-      this.$store.commit('WAITING', false)
-   }
+async function signUp () {
+   // // then display message
+   // this.$store.commit('SNACKBAR', { timeout: 3500, text: `Compte utilisateur ${this.username} créé. Un mail d'activation vient d'être envoyé à ${this.email}`, color: 'green' })
+   // // then go in 'connection' mode
 }
 </script>
 
