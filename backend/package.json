@@ -1,0 +1,41 @@
+{
+  "name": "",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "license": "AGPL-version-3.0",
+  "private": false,
+  "engines": {
+    "node": ">= 14.0.0",
+    "npm": ">= 6.0.0"
+  },
+  "imports": {
+    "#root/*": "./*",
+    "#lib/*": "./src/lib/*",
+    "#config": "./config/index.mjs"
+  },
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": "",
+  "keywords": [],
+  "author": {
+    "name": "",
+    "email": "",
+    "url": ""
+  },
+  "contributors": [],
+  "scripts": {
+    "dev": "npx nodemon src/app.js"
+  },
+  "dependencies": {
+    "@jcbuisson/express-x": "^2.1.18",
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.0"
+  }
+}
