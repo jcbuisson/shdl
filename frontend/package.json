@@ -12,6 +12,7 @@
     "@jcbuisson/express-x-client": "^2.2.1",
     "@mdi/font": "^7.4.47",
     "@vueuse/core": "^12.7.0",
+    "jose": "^5.10.0",
     "socket.io-client": "^4.8.1",
     "typeface-roboto": "^1.1.13",
     "vite-plugin-pwa": "^0.21.1",

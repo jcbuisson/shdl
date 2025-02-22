@@ -52,7 +52,7 @@ app.addConnectListener(async (socket) => {
 
    socket.on('cnx-transfer-error', async (fromSocketId, toSocketId) => {
       console.log('ERR ERR!!!', fromSocketId, toSocketId)
-      appState.value.unrecoverableError = true
+      // appState.value.unrecoverableError = true
    })
 
    socket.on('not-authenticated', async () => {

@@ -1,9 +1,6 @@
-
 <template>
-
    <div class="main" cclass="fullscreen appearing main global--background">
-
-      <div class="main-container"  style="border:1px solid black;"
+      <div class="main-container" style="border:1px solid black;"
          :class="{ 'white-background': isConnection, 'black-background': isSignUp }">
 
          <div class='main-label'
@@ -14,11 +11,13 @@
          <v-form v-model="valid" ref="form" lazy-validation>
          
             <v-text-field
-               v-if="isConnection"
                name="email"
                label="Email"
+               autofocus tabindex="1"
                v-model="email"
+               :rules="emailRules"
                :dark="isSignUp"
+               :autocomplete= 'isConnection ? "new-password" : null'
                required
                @keyup.enter.native="submit"
             ></v-text-field>
@@ -28,6 +27,7 @@
                v-if="isConnection"
                name="password"
                label="Mot de passe"
+               tabindex="2"
                autocomplete="new-password"
                v-model="password"
                :rules="passwordRules"
@@ -38,33 +38,19 @@
                :type="hiddenPassword ? 'password' : 'text'"
             ></v-text-field>
 
-         
             <v-text-field
                v-if="isSignUp"
-               name="email"
-               label="email"
-               v-model="email"
-               :rules="emailRules"
-               autocomplete="new-password"
-               dark
-               required
-            ></v-text-field>
-
-            <v-text-field
-               v-if="isSignUp"
-               name="first_name"
+               name="firstname"
                label="Prénom"
-               v-model="first_name"
-               dark
+               v-model="firstname"
                required
             ></v-text-field>
 
             <v-text-field
                v-if="isSignUp"
-               name="last_name"
+               name="lastname"
                label="Nom"
-               v-model="last_name"
-               dark
+               v-model="lastname"
                required
             ></v-text-field>
             
@@ -72,10 +58,6 @@
                <v-btn @click="submit" :disabled="!valid" flat size="large" color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
             </div>
          </v-form>
-
-         <div class="err-msg">
-            {{ errMsg }}
-         </div>
 
          <div class="forgot-password-block">
             <a href="/forgot_password"
@@ -91,11 +73,17 @@
       </div>
 
    </div>
+
+   <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
+      {{ snackbar.text }}
+   </v-snackbar>
 </template>
 
 
 <script setup>
 import { ref, computed } from 'vue'
+
+import { app } from '/src/client-app.js'
 
 const props = defineProps({
    // 'connection' or 'sign-up'
@@ -106,12 +94,14 @@ const props = defineProps({
 })
 
 const email = ref('')
-const first_name = ref('')
-const last_name = ref('')
+const firstname = ref('')
+const lastname = ref('')
 const password = ref('')
 const valid = ref(false)
 const mode = ref(props.initial_mode)
 const hiddenPassword = ref(true)
+const snackbar = ref({})
+
 const emailRules = [
    (v) => !!v || "L'e-mail est obligatoire",
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
@@ -120,14 +110,13 @@ const passwordRules = [
    (v) => !!v || 'Le mot de passe est obligatoire',
    (v) => !!v && v.length >= 6 || 'Le mot de passe doit faire au moins 6 caractères'
 ]
-const errMsg = ref('')
 
 const title = computed(() => isConnection.value ? "Connexion" : "Créer un compte")
 const isConnection = computed(() => mode.value === 'connection')
 const isSignUp = computed(() => mode.value === 'sign-up')
 const submitButtonText = computed(() => isConnection.value ? "Se connecter" : "Créer le compte")
 const modeButtonText = computed(() => isConnection.value ? "Créer un compte" : "Retour à la connexion")
-        
+
 function onModeButtonTap() {
    email.value = ''
    password.value = ''
@@ -138,6 +127,10 @@ function onModeButtonTap() {
    }
 }
 
+function displaySnackbar({ text, color, timeout }) {
+   snackbar.value = { text, color, timeout, visible: true }
+}
+
 function submit() {
    if (isConnection.value) {
       signIn()
@@ -146,19 +139,30 @@ function submit() {
    }
 }
 
+const errorCodes = {
+   'wrong-credentials': "email ou mot de passe incorrect",
+}
+
 async function signIn () {
-   // console.log('login error', e)
-   // let errorText = "Erreur inconnue"
-   // if (e.response && e.response.status && e.response.status === 400) {
-   //    errorText = "Identifiant / mot de passe incorrects, ou compte inactivé"
-   // }
-   // this.$store.commit('SNACKBAR', { timeout: 3500, text: errorText, color: 'red' })
+   try {
+      const user = await app.service('auth').signin(email.value, password.value)
+      console.log('user', user)
+   } catch(err) {
+      const text = errorCodes[err.code] || "Erreur inconnue"
+      displaySnackbar({ text, color: 'error', timeout: 2000 })
+   }
 }
 
 async function signUp () {
-   // // then display message
-   // this.$store.commit('SNACKBAR', { timeout: 3500, text: `Compte utilisateur ${this.username} créé. Un mail d'activation vient d'être envoyé à ${this.email}`, color: 'green' })
-   // // then go in 'connection' mode
+   try {
+      const user = await app.service('auth').signup(email.value, firstname.value, lastname.value)
+      console.log('user', user)
+      const text = `Veuillez vérifier votre boite mail '${email.value}', des instructions d'activation viennent d'y être envoyées.`
+      displaySnackbar({ text, color: 'success', timeout: 2000 })
+   } catch(err) {
+      const text = errorCodes[err.code] || "Erreur inconnue"
+      displaySnackbar({ text, color: 'error', timeout: 2000 })
+   }
 }
 </script>
 

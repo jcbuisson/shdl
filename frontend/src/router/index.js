@@ -11,14 +11,15 @@ const routes = [
       component: () => import('/src/components/login/Login.vue'),
    },
    {
-      path: '/logout',
-      name: 'logout',
-      component: () => import('/src/components/login/Logout.vue'),
+      path: '/set-password/:token',
+      name: 'set-password',
+      props: true,
+      component: () => import('/src/components/login/SetPassword.vue'),
    },
 
    {
       path: "/:catchAll(.*)",
-      redirect: '/',
+      redirect: '/login',
    },
 
 ]
