@@ -7,14 +7,16 @@ import { app } from '/src/client-app.js'
 const routes = [
    {
       path: '/login',
-      name: 'login',
       component: () => import('/src/components/login/Login.vue'),
    },
    {
       path: '/set-password/:token',
-      name: 'set-password',
       props: true,
       component: () => import('/src/components/login/SetPassword.vue'),
+   },
+   {
+      path: '/forgotten-password',
+      component: () => import('/src/components/login/ForgottenPassword.vue'),
    },
 
    {

@@ -1,6 +1,4 @@
 
-// COMMON TO NUTRIEDUC & INFIRMIER
-
 import config from '#config'
 
 import { extendExpiration } from '#root/src/common-server.mjs'
@@ -33,8 +31,8 @@ function afterSignout(context) {
 
 export default {
    after: {
-      localSignin: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
-      localSignup: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
+      signin: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
+      signup: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
       logout: [afterSignout],
       checkAndExtend: [extendExpiration(config.SESSION_EXPIRE_DELAY)],
    },

@@ -55,12 +55,12 @@
             ></v-text-field>
             
             <div class="submit-block">
-               <v-btn @click="submit" :disabled="!valid" flat size="large" color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
+               <v-btn @click="submit" :disabled="!valid" flat color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
             </div>
          </v-form>
 
          <div class="forgot-password-block">
-            <a href="/forgot_password"
+            <a href="/forgotten-password"
                v-if="isConnection"
                class="forgot-password connection">
                Mot de passe oublié ?
@@ -69,7 +69,7 @@
       </div>
     
       <div class="sign-up-block">
-         <v-btn flat size="large" color="black" @click="onModeButtonTap" style="width: 100%;">{{ modeButtonText }}</v-btn>
+         <v-btn flat color="black" @click="onModeButtonTap" style="width: 100%; height: 50px;">{{ modeButtonText }}</v-btn>
       </div>
 
    </div>

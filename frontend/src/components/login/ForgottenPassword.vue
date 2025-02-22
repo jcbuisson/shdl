@@ -3,33 +3,22 @@
       <div class="main-container white-background"  style="border:1px solid black;">
 
          <div class='main-label black-color'>
-            Choisissez un mot de passe
+            Mot de passe oublié
          </div>
          
          <v-form v-model="valid" lazy-validation>
             <v-text-field
-               label="Mot de passe"
+               name="email"
+               label="Email"
                autofocus tabindex="1"
-               v-model="password"
-               :rules="passwordRules"
+               v-model="email"
+               :rules="emailRules"
+               :dark="isSignUp"
+               :autocomplete= 'isConnection ? "new-password" : null'
                required
-               :append-inner-icon="hiddenPassword ? 'mdi-eye' : 'mdi-eye-off'"
-               @click:append-inner="() => (hiddenPassword = !hiddenPassword)"
-               :type="hiddenPassword ? 'password' : 'text'"
-            ></v-text-field>
-
-            <v-text-field
-               label="Mot de passe (confirmation)"
-               tabindex="2"
-               v-model="passwordConfirmed"
-               :rules="passwordConfirmRules"
-               required
-               :append-inner-icon="hiddenPassword ? 'mdi-eye' : 'mdi-eye-off'"
-               @click:append-inner="() => (hiddenPassword = !hiddenPassword)"
-               :type="hiddenPassword ? 'password' : 'text'"
                @keyup.enter.native="submit"
             ></v-text-field>
-            
+
             <div class="submit-block">
                 <v-btn @click="submit" :disabled="!valid" flat size="large" color="indigo-darken-3" style="width: 100%;">Valider</v-btn>
                </div>
@@ -45,31 +34,17 @@
 
 <script setup>
 import { ref } from 'vue'
-import { importSPKI, jwtVerify } from "jose"
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
-
-const props = defineProps({
-   token: {
-      type: String,
-   },
-})
-const passwordRules = [
-   (v) => !!v || 'Le mot de passe est obligatoire',
-   (v) => !!v && v.length >= 6 || 'Le mot de passe doit faire au moins 6 caractères',
-]
-
-const passwordConfirmRules = [
-   ...passwordRules,
-   (v) => !!v && password.value && v === password.value || 'Les deux mots de passe ne sont pas identiques',
+const emailRules = [
+   (v) => !!v || "L'e-mail est obligatoire",
+   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 
 const valid = ref()
-const password = ref('')
-const passwordConfirmed = ref('')
-const hiddenPassword = ref(true)
+const email = ref('')
 const snackbar = ref({})
 
 function displaySnackbar({ text, color, timeout }) {
@@ -78,12 +53,7 @@ function displaySnackbar({ text, color, timeout }) {
 
 async function submit() {
    try {
-      const publicKeyPEM = import.meta.env.VITE_APP_JWT_PUBLIC_KEY
-      const publicKey = await importSPKI(publicKeyPEM, 'RS256')
-      const { payload } = await jwtVerify(props.token, publicKey)
-      console.log('payload', payload)
-      await app.service('auth').setPasswordWithToken(props.token, password.value)
-      router.push('/login')
+      await app.service('auth').forgottenPassword(email.value)
    } catch(err) {
       console.log('err', err)
       displaySnackbar({ text: "Erreur inconnue", color: 'error', timeout: 2000 })
