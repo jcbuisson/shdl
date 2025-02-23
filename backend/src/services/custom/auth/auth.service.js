@@ -36,7 +36,7 @@ export default function (app) {
                from: 'buisson@enseeiht.fr',
                to: email,
                subject: "Problème création compte SHDL",
-               text: `Un compte associé à l'email '${email}' existe déjà, sous le nom : ${firstname} ${lastname}. Cliquez sur "Mot de passe oublié" pour le réactiver, ou utilisez une autre adresse mail.`,
+               text: `Un compte associé à l'email '${email}' existe déjà, sous le nom : ${firstname} ${lastname}.`,
             })
          } else {
             const createdUser = await prisma.user.create({
@@ -56,7 +56,7 @@ export default function (app) {
       },
 
       // see hooks
-      logout: async () => {
+      signout: async () => {
          return 'ok'
       },
 
@@ -101,8 +101,12 @@ export default function (app) {
          })
       },
 
-      // Do nothing - see hooks
+      // extend expiration date - see hooks
       checkAndExtend: async () => {
+      },
+
+      // return null or the authenticated user - see hooks
+      checkAuthentication: async () => {
       },
    })
 

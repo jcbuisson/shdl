@@ -1,10 +1,10 @@
 
 import config from '#config'
 
-import { extendExpiration } from '#root/src/common-server.mjs'
+import { extendExpiration, protect } from '#root/src/common-server.mjs'
 
 
-async function afterAuthentication(context) {
+async function afterSignin(context) {
    // set socket.data.user
    context.socket.data.user = Object.assign({}, context.result)
    console.log('socket.data.user set by afterAuthentication')
@@ -29,11 +29,25 @@ function afterSignout(context) {
    }
 }
 
+function afterCheckAuthentication(context) {
+   if (context.socket?.data?.expiresAt) {
+      const expiresAtDate = new Date(context.socket.data.expiresAt)
+      const now = new Date()
+      if (now > expiresAtDate) {
+         context.result = null
+      } else {
+         context.result = context.socket.data.user
+      }
+   } else {
+      context.result = null
+   }
+}
+
 export default {
    after: {
-      signin: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
-      signup: [afterAuthentication, extendExpiration(config.SESSION_EXPIRE_DELAY)],
-      logout: [afterSignout],
+      signin: [afterSignin],
+      signout: [afterSignout],
       checkAndExtend: [extendExpiration(config.SESSION_EXPIRE_DELAY)],
+      checkAuthentication: [afterCheckAuthentication, protect('password')],
    },
 }

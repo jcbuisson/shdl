@@ -83,6 +83,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 
+import router from '/src/router'
 import { app } from '/src/client-app.js'
 
 const props = defineProps({
@@ -103,7 +104,7 @@ const hiddenPassword = ref(true)
 const snackbar = ref({})
 
 const emailRules = [
-   (v) => !!v || "L'e-mail est obligatoire",
+   (v) => !!v || "L'email est obligatoire",
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 const passwordRules = [
@@ -147,6 +148,7 @@ async function signIn () {
    try {
       const user = await app.service('auth').signin(email.value, password.value)
       console.log('user', user)
+      router.push(`/home/${user.id}/users`)
    } catch(err) {
       const text = errorCodes[err.code] || "Erreur inconnue"
       displaySnackbar({ text, color: 'error', timeout: 2000 })

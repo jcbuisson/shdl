@@ -7,23 +7,35 @@ import { app } from '/src/client-app.js'
 const routes = [
    {
       path: '/login',
-      component: () => import('/src/components/login/Login.vue'),
+      component: () => import('/src/views/login/Login.vue'),
    },
    {
       path: '/set-password/:token',
       props: true,
-      component: () => import('/src/components/login/SetPassword.vue'),
+      component: () => import('/src/views/login/SetPassword.vue'),
    },
    {
       path: '/forgotten-password',
-      component: () => import('/src/components/login/ForgottenPassword.vue'),
+      component: () => import('/src/views/login/ForgottenPassword.vue'),
+   },
+
+   {
+      path: '/home/:userid',
+      props: true,
+      component: () => import('/src/views/Home.vue'),
+      children: [
+         {
+            path: 'users',
+            props: true,
+            component: () => import('/src/views/ManageUsers.vue'),
+         },
+      ],
    },
 
    {
       path: "/:catchAll(.*)",
       redirect: '/login',
    },
-
 ]
 
 const router = createRouter({

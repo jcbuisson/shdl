@@ -56,6 +56,7 @@ export default defineConfig({
             secure: false,
             changeOrigin: true,
          },
+         '^/static/.*': 'http://localhost:3000',
       }
    },
 })

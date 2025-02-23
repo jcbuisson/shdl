@@ -32,7 +32,7 @@
     "dev": "npx nodemon src/app.js"
   },
   "dependencies": {
-    "@jcbuisson/express-x": "^2.1.18",
+    "@jcbuisson/express-x": "^2.1.19",
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
