@@ -24,7 +24,7 @@ export default function (app) {
          // check its password
          const correct = await bcrypt.compare(password, user.password)
          if (!correct) throw new EXError('wrong-credentials')
-         return user
+         return user // returned value is replaced by { user, expiresAt } by 'after' hook
       },
 
       signup: async (email, firstname, lastname) => {
@@ -63,7 +63,6 @@ export default function (app) {
       setPasswordWithToken: async (token, password) => {
          try {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
-            console.log('payload', payload)
             password = await bcrypt.hash(password, 5)
             const user = await prisma.user.update({
                where: { id: payload.userid },
@@ -82,9 +81,7 @@ export default function (app) {
          }
       },
 
-      // only when sub is email
       forgottenPassword: async (email) => {
-         console.log('forgottenPassword', email)
          // check existence of a user with `email`
          const user = await prisma.user.findUnique({ where: { email }})
          if (!user) return
@@ -101,12 +98,10 @@ export default function (app) {
          })
       },
 
-      // extend expiration date - see hooks
-      checkAndExtend: async () => {
-      },
-
-      // return null or the authenticated user - see hooks
-      checkAuthentication: async () => {
+      // Typically used each time a user interacts with the application
+      // Sends a client socket event 'expiresAt' with the new expiration date, or null if client is no longer authenticated
+      // See hooks
+      extendExpiration: async () => {
       },
    })
 

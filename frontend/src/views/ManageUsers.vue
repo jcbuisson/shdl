@@ -22,7 +22,7 @@
 <script setup>
 import { ref } from 'vue'
 
-import { userOfId } from '/src/use/useUser.js'
+import { getReactiveUser } from '/src/use/useUser.js'
 
 const props = defineProps({
    userid: {
@@ -30,7 +30,7 @@ const props = defineProps({
    },
 })
 
-const signedinUser = userOfId.value(parseInt(props.userid))
+const signedinUser = getReactiveUser(parseInt(props.userid))
 
 const filter = ref('')
 const items = ref([

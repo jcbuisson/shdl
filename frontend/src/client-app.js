@@ -7,6 +7,9 @@ import { useSessionStorage } from '@vueuse/core'
 import expressXClient from '@jcbuisson/express-x-client'
 // import expressXClient from './client.mjs'
 
+import { setExpiresAt } from "/src/use/useAppState"
+import router from '/src/router'
+
 
 const socketOptions = {
    path: '/shdl-socket-io/',
@@ -54,9 +57,12 @@ app.addConnectListener(async (socket) => {
       console.log('ERR ERR!!!', fromSocketId, toSocketId)
       // appState.value.unrecoverableError = true
    })
-
-   socket.on('not-authenticated', async () => {
-      console.log("server app-hook sent 'not-authenticated' event")
-      // appState.value.isNotAuthenticated = true
+   
+   socket.on('expiresAt', async (expiresAt) => {
+      console.log("server sent 'expiresAt' event", expiresAt)
+      setExpiresAt(expiresAt)
+      if (!expiresAt) {
+         router.push('/login')
+      }
    })
 })

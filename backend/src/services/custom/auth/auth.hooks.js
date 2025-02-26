@@ -1,7 +1,8 @@
 
 import config from '#config'
 
-import { extendExpiration, protect } from '#root/src/common-server.mjs'
+import { protect } from '#root/src/common-server.mjs'
+import { extendExpiration } from '#root/src/hooks.mjs'
 
 
 async function afterSignin(context) {
@@ -14,8 +15,10 @@ async function afterSignin(context) {
    console.log('socket.data.expiresAt set by afterAuthentication', context.socket.data.expiresAt)
    // add socket to "authenticated" channel
    context.app.joinChannel('authenticated', context.socket)
-   // remove password field from result
-   delete context.result.password
+   context.result = {
+      user: context.socket.data.user,
+      expiresAt: context.socket.data.expiresAt
+   }
 }
 
 function afterSignout(context) {
@@ -29,25 +32,12 @@ function afterSignout(context) {
    }
 }
 
-function afterCheckAuthentication(context) {
-   if (context.socket?.data?.expiresAt) {
-      const expiresAtDate = new Date(context.socket.data.expiresAt)
-      const now = new Date()
-      if (now > expiresAtDate) {
-         context.result = null
-      } else {
-         context.result = context.socket.data.user
-      }
-   } else {
-      context.result = null
-   }
-}
-
 export default {
+   before: {
+      extendExpiration: [extendExpiration(config.SESSION_EXPIRE_DELAY)],
+   },
    after: {
-      signin: [afterSignin],
+      signin: [afterSignin, protect('password')],
       signout: [afterSignout],
-      checkAndExtend: [extendExpiration(config.SESSION_EXPIRE_DELAY)],
-      checkAuthentication: [afterCheckAuthentication, protect('password')],
    },
 }
