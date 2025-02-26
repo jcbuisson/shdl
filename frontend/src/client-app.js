@@ -60,8 +60,10 @@ app.addConnectListener(async (socket) => {
    
    socket.on('expiresAt', async (expiresAt) => {
       console.log("server sent 'expiresAt' event", expiresAt)
+      // store expiration date in appState
       setExpiresAt(expiresAt)
       if (!expiresAt) {
+         alert("La session a expiré")
          router.push('/login')
       }
    })

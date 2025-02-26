@@ -29,6 +29,11 @@ const routes = [
             props: true,
             component: () => import('/src/views/ManageUsers.vue'),
          },
+         {
+            path: 'groups',
+            props: true,
+            component: () => import('/src/views/ManageGroups.vue'),
+         },
       ],
    },
 

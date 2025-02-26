@@ -7,10 +7,7 @@ import router from '/src/router'
 
 
 export async function clearCaches() {
-   console.log('clearCaches')
-
-   sessionStorage.removeItem('userid')
-   
+   console.log('clearCaches')   
    // resetUseAuthentication()
    await resetUseAppState()
    await resetUseUser()

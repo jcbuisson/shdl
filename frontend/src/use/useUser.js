@@ -5,11 +5,12 @@ import { useObservable } from "@vueuse/rxjs"
 
 import { app } from '/src/client-app.js'
 
-export const db = new Dexie("user-database")
+export const db = new Dexie("userDatabase")
 
 db.version(1).stores({
    values: "id",
    valuesStatus: "id",
+   listStatus: "whereTag",
 })
 
 export const resetUseUser = async () => {
@@ -27,14 +28,12 @@ app.service('user').on('update', async user => {
    console.log('USER EVENT update', user)
    await db.values.put(user)
    await db.valuesStatus.update(user.id, { status: 'ready'})
-   sessionStorage.setItem('expiresAt', user.expiresAt)
 })
 
 app.service('user').on('delete', async user => {
    console.log('USER EVENT delete', user)
    await db.valuesStatus.delete(user.id)
    await db.values.delete(user.id)
-   sessionStorage.setItem('expiresAt', user.expiresAt)
 })
 
 export function getFullname(user) {
@@ -43,7 +42,7 @@ export function getFullname(user) {
    return user.firstname || user.lastname
 }
 
-export const getReactiveUser = (id) => {
+export const userOfId = (id) => {
    db.valuesStatus.get(id).then(valueStatus => {
       if (valueStatus?.status !== 'ready' && valueStatus?.status !== 'ongoing') {
          const promise = app.service('user').findUniqueOrThrow({ where: { id }})
@@ -59,6 +58,32 @@ export const getReactiveUser = (id) => {
    // return reactive ref
    return useObservable(liveQuery(() => db.values.get(id)))
 }
+
+// ex: whereTag = 'role-admin', wherePrisma = { role: 'admin' }, wherePredicate = (user) => user.role === 'admin'
+export const listOfUser = computed(() => (whereTag, wherePrisma, wherePredicate) => {
+   db.listStatus.get(whereTag).then(listStatus => {
+      if (listStatus?.status !== 'ready' && listStatus?.status !== 'ongoing') {
+         db.listStatus.put({ whereTag, status: 'ongoing'})
+         const promise = app.service('user').findMany({ where: wherePrisma })
+         promise.then(async list => {
+            for (const value of list) {
+               await db.values.put(value)
+               await db.valuesStatus.put({ id: value.id, status: 'ready'})
+            }
+            db.listStatus.put({ whereTag, status: 'ready'})
+         })
+         .catch(err => {
+            console.log('userOfIdList err', err)
+            setTimeout(async () => {
+               await db.listStatus.delete(whereTag)
+            }, 500)
+         })
+      }
+   })
+   // return reactive ref
+   return useObservable(liveQuery(() => db.values.filter(wherePredicate).toArray()))
+})
+
 
 // export const getUser = async (id) => {
 //    const { value, promise } = fetchAndCache(id, app.service('user'), userState?.value.userStatus, userState?.value.userCache)
@@ -96,6 +121,6 @@ export const getReactiveUser = (id) => {
 // }
 
 // export const listOfUser = computed(() => {
-//    const { value } = fetchAndCacheList(app.service('user'), {}, ()=>true, userState?.value.userStatus, userState?.value.userCache, userState?.value.userListStatus)
+//    const { value } = fetchAndCacheList(app.service('user'), {}, ()=>true, userState?.value.userStatus, userState?.value.userCache, userState?.value.listStatus)
 //    return value
 // })

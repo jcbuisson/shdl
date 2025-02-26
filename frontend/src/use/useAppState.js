@@ -14,6 +14,8 @@ export const resetUseAppState = async () => {
    await db.keyval.clear()
 }
 
+/////////////////       expiresAt       /////////////////
+
 export async function setExpiresAt(date) {
    await db.keyval.put({ key: 'expiresAt', date })
 }

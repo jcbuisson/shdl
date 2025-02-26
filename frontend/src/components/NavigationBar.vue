@@ -33,10 +33,10 @@
       </v-menu>
    </v-toolbar>
 
-   <v-tabs v-if="isAuthenticated" align-tabs="center" stacked bg-color="brown-darken-1" v-model="currentTab" density="compact" slider-color="yellow">
+   <v-tabs v-if="isAuthenticated" align-tabs="center" stacked bg-color="brown-darken-1" :model-value="currentTabIndex" @update:modelValue="onTabChange" density="compact" slider-color="yellow">
       <v-tabs-slider color="yellow"></v-tabs-slider>
 
-      <v-tab :to="{path: tab.url}" router v-for="tab in tabs" :key="tab.uid">
+      <v-tab :to="{path: tab.path}" router v-for="tab in tabs" :key="tab.uid">
          <v-icon>{{ tab.icon }}</v-icon>
          {{ tab.name }}
       </v-tab>
@@ -47,11 +47,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
+import { useRoute } from 'vue-router'
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
-import { getReactiveUser, getFullname } from '/src/use/useUser.js'
+import { userOfId, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { signout, extendExpiration } from "/src/use/useAuthentication"
 
@@ -68,21 +69,32 @@ const expiresAtHHmm = computed(() => {
    return format(new Date(expiresAt.value), "HH:mm:ss")
 })
 
-const signedinUser = getReactiveUser(parseInt(props.userid))
+const signedinUser = userOfId(parseInt(props.userid))
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
-const currentTab = ref()
+const route = useRoute()
 
 const tabs = [
-   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', url: `/home/${props.userid}/users` },
-   { uid: "b", name: "Groupes", icon: 'mdi-eye', url: '#' },
-   { uid: "c", name: "Tests", icon: 'mdi-eye', url: '#' },
-   { uid: "d", name: "Suivi étudiants", icon: 'mdi-eye', url: '#' },
-   { uid: "e", name: "SHDL Sandbox", icon: 'mdi-eye', url: '#' },
-   { uid: "f", name: "CRAPS Sandbox", icon: 'mdi-eye', url: '#' },
+   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.userid}/users` },
+   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.userid}/groups` },
+   { uid: "c", name: "Tests", icon: 'mdi-eye', path: '#' },
+   { uid: "d", name: "Suivi étudiants", icon: 'mdi-eye', path: '#' },
+   { uid: "e", name: "SHDL Sandbox", icon: 'mdi-eye', path: '#' },
+   { uid: "f", name: "CRAPS Sandbox", icon: 'mdi-eye', path: '#' },
 ]
+
+const currentTabIndex = computed(() => {
+   const tabIndex = tabs.findIndex(tab => route.path.startsWith(tab.path))
+   console.log('tabIndex', tabIndex)
+   return tabIndex
+})
+
+function onTabChange(tabIndex) {
+   const tab = tabs[tabIndex]
+   router.push(tab.path)
+}
 
 function login() {
    router.push('/login')
@@ -97,6 +109,7 @@ async function home() {
    extendExpiration()
    const user15 = await app.service('user').findUnique({ where: { id: 15 }})
    console.log('user15', user15)
+   onTabChange(0)
 }
 </script>
 
