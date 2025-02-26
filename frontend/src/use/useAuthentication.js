@@ -6,14 +6,14 @@ import { resetUseUser } from '/src/use/useUser'
 import router from '/src/router'
 
 
-export function clearCaches() {
+export async function clearCaches() {
    console.log('clearCaches')
 
    sessionStorage.removeItem('userid')
    
    // resetUseAuthentication()
-   resetUseAppState()
-   resetUseUser()
+   await resetUseAppState()
+   await resetUseUser()
 }
 
 export const restartApp = async () => {
@@ -30,21 +30,25 @@ export const restartApp = async () => {
 ////////////////////////           LOGIN / LOGOUT            ////////////////////////
 
 // throws an error 'wrong-credentials' if wrong email / password
-export async function login(email, password) {
+export async function signin(email, password) {
    const { user, expiresAt } = await app.service('auth').signin(email, password)
    await setExpiresAt(expiresAt)
    return user
 }
 
-export async function logout(user) {
+export async function signup(email, firstname, lastname) {
+   await app.service('auth').signup(email, firstname, lastname)
+}
+
+export async function signout(user) {
    clearCaches()
    try {
-      await app.service('auth').logout()
+      await app.service('auth').signout()
    } catch(err) {
       console.log('logout err', err)
    }
 }
 
-export async function checkAuthenticationAndExtendExpiration() {
-   await app.service('auth').checkAuthenticationAndExtendExpiration()
+export async function extendExpiration() {
+   await app.service('auth').extendExpiration()
 }

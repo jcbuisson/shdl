@@ -12,6 +12,10 @@ db.version(1).stores({
    valuesStatus: "id",
 })
 
+export const resetUseUser = async () => {
+   await db.values.clear()
+   await db.valuesStatus.clear()
+}
 
 app.service('user').on('create', async user => {
    console.log('USER EVENT created', user)

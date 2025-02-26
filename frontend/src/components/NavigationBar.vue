@@ -17,8 +17,11 @@
 
       <v-menu :location="location">
          <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" @click="login">
-               {{ isAuthenticated ? signedinUserFullname : "Connexion" }}
+            <v-btn v-if="isAuthenticated" v-bind="props">
+               {{ signedinUserFullname }}
+            </v-btn>
+            <v-btn v-else v-bind="props" @click="login">
+               Connexion
             </v-btn>
          </template>
 
@@ -47,8 +50,11 @@ import { format } from 'date-fns'
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
+
 import { getReactiveUser, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
+import { signout, extendExpiration } from "/src/use/useAuthentication"
+
 
 const props = defineProps({
    userid: {
@@ -83,11 +89,12 @@ function login() {
 }
 
 async function logout() {
-   await app.service('auth').signout()
+   await signout()
+   router.push('/login')
 }
 
 async function home() {
-   await app.service('auth').extendExpiration()
+   extendExpiration()
    const user15 = await app.service('user').findUnique({ where: { id: 15 }})
    console.log('user15', user15)
 }

@@ -1,7 +1,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { app } from '/src/client-app.js'
+import { extendExpiration } from "/src/use/useAuthentication"
 
 
 const routes = [
@@ -49,8 +49,8 @@ router.beforeEach(async (to, from, next) => {
 
    if (to.meta.requiresAuth) {
       try {
-         // checks authentication + extends session at each route change
-         await app.service('auth').checkAndExtend()
+         // extends session at each route change
+         extendExpiration()
       } catch(err) {
          console.log('router.beforeEach err', err.code, err.message)
          // restartApp()

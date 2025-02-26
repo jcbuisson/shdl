@@ -2,6 +2,8 @@
 import { EXError } from '#root/src/common-server.mjs'
 
 
+// If authenticated, do nothing
+// If not, throws 'not-authenticated' exception (blocks service calls when used as 'before' hook)
 export const isAuthenticated = async (context) => {
    // do nothing if it's not a client call from a ws connexion
    if (!context.socket) return

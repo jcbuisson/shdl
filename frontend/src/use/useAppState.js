@@ -10,8 +10,8 @@ db.version(1).stores({
    keyval: "key",
 })
 
-export const resetUseAppState = () => {
-   db.keyval.clear()
+export const resetUseAppState = async () => {
+   await db.keyval.clear()
 }
 
 export async function setExpiresAt(date) {

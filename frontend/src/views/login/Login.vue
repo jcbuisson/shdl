@@ -84,7 +84,7 @@
 import { ref, computed } from 'vue'
 
 import router from '/src/router'
-import { app } from '/src/client-app.js'
+import { signin, signup } from "/src/use/useAuthentication"
 
 const props = defineProps({
    // 'connection' or 'sign-up'
@@ -146,7 +146,7 @@ const errorCodes = {
 
 async function signIn () {
    try {
-      const user = await app.service('auth').signin(email.value, password.value)
+      const user = await signin(email.value, password.value)
       console.log('user', user)
       router.push(`/home/${user.id}/users`)
    } catch(err) {
@@ -157,8 +157,7 @@ async function signIn () {
 
 async function signUp () {
    try {
-      const user = await app.service('auth').signup(email.value, firstname.value, lastname.value)
-      console.log('user', user)
+      await signup(email.value, firstname.value, lastname.value)
       const text = `Veuillez vérifier votre boite mail '${email.value}', des instructions d'activation viennent d'y être envoyées.`
       displaySnackbar({ text, color: 'success', timeout: 2000 })
    } catch(err) {
