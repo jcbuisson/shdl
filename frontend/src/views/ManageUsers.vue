@@ -1,34 +1,68 @@
 <template>
-   <v-card max-width="300">
-      <v-toolbar color="red-darken-4" density="compact">
-         <v-btn icon="mdi-magnify" variant="text"></v-btn>
-         <v-text-field v-model="filter" single-line></v-text-field>
-         <v-btn icon="mdi-plus" variant="text"></v-btn>
-      </v-toolbar>
-   
-      <v-list lines="three" :items="items" item-props>
-         <template v-slot:subtitle="{ subtitle }">
-            <div v-html="subtitle"></div>
-            <!-- <v-chip size="small">1SN24D</v-chip> -->
-         </template>
-      </v-list>
-   </v-card>
-   {{ userList }}
- </template>
+   <SplitPanel>
+      <template v-slot:left-panel>
+         <v-flex class="xs12 sm5">
+            <v-card>
+               <v-toolbar color="red-darken-4" density="compact">
+                  <v-btn icon="mdi-magnify" variant="text"></v-btn>
+                  <v-text-field v-model="filter" single-line></v-text-field>
+                  <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
+               </v-toolbar>
+            
+               <v-list lines="three" :items="items" item-props>
+                  <template v-slot:subtitle="{ subtitle }">
+                     <div v-html="subtitle"></div>
+                     <v-chip size="small">1SN24D</v-chip>
+                  </template>
+               </v-list>
+            </v-card>
+         </v-flex>
+      </template>
+
+      <template v-slot:right-panel>
+         <router-view></router-view>
+      </template>
+   </SplitPanel>
+
+  <!-- <v-layout row wrap>
+      <v-flex class="xs12 sm5">
+         <v-card max-width="300">
+            <v-toolbar color="red-darken-4" density="compact">
+               <v-btn icon="mdi-magnify" variant="text"></v-btn>
+               <v-text-field v-model="filter" single-line></v-text-field>
+               <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
+            </v-toolbar>
+         
+            <v-list lines="three" :items="items" item-props>
+               <template v-slot:subtitle="{ subtitle }">
+                  <div v-html="subtitle"></div>
+                  <v-chip size="small">1SN24D</v-chip>
+               </template>
+            </v-list>
+         </v-card>
+      </v-flex>
+
+      <v-flex class="xs12 sm7">
+         <router-view></router-view>
+      </v-flex>
+   </v-layout> -->
+</template>
 
 
 <script setup>
 import { ref, computed } from 'vue'
 
-import { getUserRef, getUserListRef, getFullname } from '/src/use/useUser.js'
+import { getUserRef, getUserListRef } from '/src/use/useUser.js'
+import router from '/src/router'
+
+import SplitPanel from '/src/components/SplitPanel.vue'
+
 
 const props = defineProps({
-   userid: {
+   signedinId: {
       type: String,
    },
 })
-
-const signedinUser = getUserRef(parseInt(props.userid))
 
 const filter = ref('')
 
@@ -44,36 +78,7 @@ const items = computed(() => {
    }))
 })
 
-const items0 = ref([
-   { type: 'subheader', title: 'Today' },
-   {
-      prependAvatar: signedinUser?.value?.pict,
-      title: signedinUser?.value?.lastname,
-      subtitle: `<span class="text-primary">Ali Connors</span> &mdash; I'll be in your neighborhood doing errands this weekend. Do you want to hang out?`,
-   },
-   { type: 'divider', inset: true },
-   {
-      prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/2.jpg',
-      title: 'Summer BBQ',
-      subtitle: `<span class="text-primary">to Alex, Scott, Jennifer</span> &mdash; Wish I could come, but I'm out of town this weekend.`,
-   },
-   { type: 'divider', inset: true },
-   {
-      prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/3.jpg',
-      title: 'Oui oui',
-      subtitle: '<span class="text-primary">Sandra Adams</span> &mdash; Do you have Paris recommendations? Have you ever been?',
-   },
-   { type: 'divider', inset: true },
-   {
-      prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/4.jpg',
-      title: 'Birthday gift',
-      subtitle: '<span class="text-primary">Trevor Hansen</span> &mdash; Have any ideas about what we should get Heidi for her birthday?',
-   },
-   { type: 'divider', inset: true },
-   {
-      prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/5.jpg',
-      title: 'Recipe to try',
-      subtitle: '<span class="text-primary">Britta Holt</span> &mdash; We should eat this: Grate, Squash, Corn, and tomatillo Tacos.',
-   },
-])
+function createUser() {
+   router.push(`/home/${props.signedinId}/users/create`)
+}
 </script>

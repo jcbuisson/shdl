@@ -1,6 +1,6 @@
 <template>
 
-   <NavigationBar :userid="userid"></NavigationBar>
+   <NavigationBar :signedinId="signedinId"></NavigationBar>
 
    <router-view></router-view>
 
@@ -10,7 +10,7 @@
 import NavigationBar from '/src/components/NavigationBar.vue'
 
 const props = defineProps({
-   userid: {
+   signedinId: {
       type: String,
    },
 })

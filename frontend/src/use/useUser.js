@@ -39,7 +39,7 @@ export function getFullname(user) {
    return user.lastname || user.firstname
 }
 
-// return a promise
+
 export const getUserPromise = async (id) => {
    let value = await db.values.get(id)
    if (value) return value

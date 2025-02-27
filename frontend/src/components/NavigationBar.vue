@@ -58,7 +58,7 @@ import { restartApp, extendExpiration } from "/src/use/useAuthentication"
 
 
 const props = defineProps({
-   userid: {
+   signedinId: {
       type: String,
    },
 })
@@ -69,7 +69,7 @@ const expiresAtHHmm = computed(() => {
    return format(new Date(expiresAt.value), "HH:mm:ss")
 })
 
-const signedinUser = getUserRef(parseInt(props.userid))
+const signedinUser = getUserRef(parseInt(props.signedinId))
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
@@ -77,8 +77,8 @@ const isAuthenticated = computed(() => !!expiresAt.value)
 const route = useRoute()
 
 const tabs = [
-   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.userid}/users` },
-   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.userid}/groups` },
+   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.signedinId}/users` },
+   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.signedinId}/groups` },
    { uid: "c", name: "Tests", icon: 'mdi-eye', path: '#' },
    { uid: "d", name: "Suivi étudiants", icon: 'mdi-eye', path: '#' },
    { uid: "e", name: "SHDL Sandbox", icon: 'mdi-eye', path: '#' },

@@ -20,7 +20,7 @@ const routes = [
    },
 
    {
-      path: '/home/:userid',
+      path: '/home/:signedinId',
       props: true,
       component: () => import('/src/views/Home.vue'),
       children: [
@@ -28,6 +28,13 @@ const routes = [
             path: 'users',
             props: true,
             component: () => import('/src/views/ManageUsers.vue'),
+            children: [
+               {
+                  path: 'create',
+                  props: true,
+                  component: () => import('/src/components/User.vue'),
+               },
+            ],      
          },
          {
             path: 'groups',
