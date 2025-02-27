@@ -1,6 +1,4 @@
-import { computed } from 'vue'
 import Dexie from "dexie"
-import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
 import { from } from 'rxjs'
 
