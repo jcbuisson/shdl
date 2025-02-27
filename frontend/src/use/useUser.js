@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
+import { from } from 'rxjs'
 
 import { app } from '/src/client-app.js'
 
@@ -38,51 +39,85 @@ app.service('user').on('delete', async user => {
 
 export function getFullname(user) {
    if (!user) return ''
-   if (user.firstname && user.lastname) return user.firstname + ' ' + user.lastname
-   return user.firstname || user.lastname
+   if (user.firstname && user.lastname) return user.lastname + ' ' + user.firstname
+   return user.lastname || user.firstname
 }
 
-export const userOfId = (id) => {
-   db.valuesStatus.get(id).then(valueStatus => {
-      if (valueStatus?.status !== 'ready' && valueStatus?.status !== 'ongoing') {
-         const promise = app.service('user').findUniqueOrThrow({ where: { id }})
-         db.valuesStatus.put({ id, status: 'ongoing'})
-         promise.then(async value => {
+// return a promise
+export const getUserPromise = async (id) => {
+   const valueStatus = await db.valuesStatus.get(id)
+   let value = await db.values.get(id)
+   if (valueStatus?.status !== 'ready' && valueStatus?.status !== 'ongoing') {
+      try {
+         value = await app.service('user').findUnique({ where: { id }})
+         await db.values.put(value)
+         await db.valuesStatus.put({ id: value.id, status: 'ready'})
+      } catch(err) {
+         console.log('getUserPromise err', err)
+         setTimeout(async () => {
+            await db.valuesStatus.delete(id)
+         }, 500)
+      }
+   }
+   return value
+}
+
+// return a reactive object (convert promise into an observable, then into a reactive object)
+export const getUserRef = (id) =>
+   useObservable(from(getUserPromise(id)))
+
+
+export const getUserListPromise = async (whereTag, whereDatabase, wherePredicate) => {
+   const listStatus = await db.listStatus.get(whereTag)
+   let list = await db.values.filter(wherePredicate).toArray()
+   if (listStatus?.status !== 'ready' && listStatus?.status !== 'ongoing') {
+      try {
+         list = await app.service('user').findMany({ where: whereDatabase })
+         for (const value of list) {
             await db.values.put(value)
             await db.valuesStatus.put({ id: value.id, status: 'ready'})
-         }).catch(async err => {
-            await db.valuesStatus.delete(id)
-         })
+         }
+         db.listStatus.put({ whereTag, status: 'ready'})
+      } catch(err) {
+         console.log('getUserListPromise err', err)
+         setTimeout(async () => {
+            await db.listStatus.delete(whereTag)
+         }, 500)
       }
-   })
-   // return reactive ref
-   return useObservable(liveQuery(() => db.values.get(id)))
+   }
+   return list
 }
 
-// ex: whereTag = 'role-admin', wherePrisma = { role: 'admin' }, wherePredicate = (user) => user.role === 'admin'
-export const listOfUser = computed(() => (whereTag, wherePrisma, wherePredicate) => {
-   db.listStatus.get(whereTag).then(listStatus => {
-      if (listStatus?.status !== 'ready' && listStatus?.status !== 'ongoing') {
-         db.listStatus.put({ whereTag, status: 'ongoing'})
-         const promise = app.service('user').findMany({ where: wherePrisma })
-         promise.then(async list => {
-            for (const value of list) {
-               await db.values.put(value)
-               await db.valuesStatus.put({ id: value.id, status: 'ready'})
-            }
-            db.listStatus.put({ whereTag, status: 'ready'})
-         })
-         .catch(err => {
-            console.log('userOfIdList err', err)
-            setTimeout(async () => {
-               await db.listStatus.delete(whereTag)
-            }, 500)
-         })
-      }
-   })
-   // return reactive ref
-   return useObservable(liveQuery(() => db.values.filter(wherePredicate).toArray()))
-})
+// return a reactive object (convert promise into an observable, then into a reactive object)
+export const getUserListRef = (whereTag, whereDatabase, wherePredicate) =>
+   useObservable(from(getUserListPromise(whereTag, whereDatabase, wherePredicate)))
+
+// // ex: whereTag = 'role-admin', whereDatabase = { role: 'admin' }, wherePredicate = (user) => user.role === 'admin'
+// export const listOfUser = computed(() => (whereTag, whereDatabase, wherePredicate) => {
+//    db.listStatus.get(whereTag).then(listStatus => {
+//       if (listStatus?.status !== 'ready' && listStatus?.status !== 'ongoing') {
+//          db.listStatus.put({ whereTag, status: 'ongoing'})
+//          const promise = app.service('user').findMany({ where: whereDatabase })
+//          promise.then(async list => {
+//             for (const value of list) {
+//                await db.values.put(value)
+//                await db.valuesStatus.put({ id: value.id, status: 'ready'})
+//             }
+//             db.listStatus.put({ whereTag, status: 'ready'})
+//          })
+//          .catch(err => {
+//             console.log('getUserRefList err', err)
+//             setTimeout(async () => {
+//                await db.listStatus.delete(whereTag)
+//             }, 500)
+//          })
+//       }
+//    })
+//    // return reactive ref
+//    return useObservable(liveQuery(() => db.values.filter(wherePredicate).toArray()))
+// })
+
+
 
 
 // export const getUser = async (id) => {
@@ -90,7 +125,7 @@ export const listOfUser = computed(() => (whereTag, wherePrisma, wherePredicate)
 //    return value || await promise
 // }
 
-// export const userOfId = computed(() => (id) => {
+// export const getUserRef = computed(() => (id) => {
 //    const { value } = fetchAndCache(id, app.service('user'), userState?.value.userStatus, userState?.value.userCache)
 //    return value
 // })

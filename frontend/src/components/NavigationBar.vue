@@ -52,7 +52,7 @@ import { useRoute } from 'vue-router'
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
-import { userOfId, getFullname } from '/src/use/useUser.js'
+import { getUserRef, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { signout, extendExpiration } from "/src/use/useAuthentication"
 
@@ -69,7 +69,7 @@ const expiresAtHHmm = computed(() => {
    return format(new Date(expiresAt.value), "HH:mm:ss")
 })
 
-const signedinUser = userOfId(parseInt(props.userid))
+const signedinUser = getUserRef(parseInt(props.userid))
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
@@ -92,6 +92,7 @@ const currentTabIndex = computed(() => {
 })
 
 function onTabChange(tabIndex) {
+   extendExpiration()
    const tab = tabs[tabIndex]
    router.push(tab.path)
 }

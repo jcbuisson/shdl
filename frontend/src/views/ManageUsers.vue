@@ -6,23 +6,21 @@
          <v-btn icon="mdi-plus" variant="text"></v-btn>
       </v-toolbar>
    
-      <v-list lines="three"
-         :items="items"
-         item-props
-      >
+      <v-list lines="three" :items="items" item-props>
          <template v-slot:subtitle="{ subtitle }">
-            <!-- <div v-html="subtitle"></div> -->
-            <v-chip size="small">1SN24D</v-chip>
+            <div v-html="subtitle"></div>
+            <!-- <v-chip size="small">1SN24D</v-chip> -->
          </template>
       </v-list>
    </v-card>
+   {{ userList }}
  </template>
 
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-import { userOfId } from '/src/use/useUser.js'
+import { getUserRef, getUserListRef, getFullname } from '/src/use/useUser.js'
 
 const props = defineProps({
    userid: {
@@ -30,10 +28,23 @@ const props = defineProps({
    },
 })
 
-const signedinUser = userOfId(parseInt(props.userid))
+const signedinUser = getUserRef(parseInt(props.userid))
 
 const filter = ref('')
-const items = ref([
+
+const userList = getUserListRef('all', {}, ()=>true)
+
+const items = computed(() => {
+   if (!userList?.value) return []
+   return userList.value.map(user => ({
+      prependAvatar: user.pict,
+      // title: getFullname(user),
+      title: user.lastname,
+      subtitle: user.firstname
+   }))
+})
+
+const items0 = ref([
    { type: 'subheader', title: 'Today' },
    {
       prependAvatar: signedinUser?.value?.pict,
