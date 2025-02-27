@@ -54,7 +54,7 @@ import { app } from '/src/client-app.js'
 
 import { getUserRef, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
-import { signout, extendExpiration } from "/src/use/useAuthentication"
+import { restartApp, extendExpiration } from "/src/use/useAuthentication"
 
 
 const props = defineProps({
@@ -102,8 +102,7 @@ function login() {
 }
 
 async function logout() {
-   await signout()
-   router.push('/login')
+   await restartApp()
 }
 
 async function home() {

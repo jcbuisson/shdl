@@ -8,6 +8,7 @@ import expressXClient from '@jcbuisson/express-x-client'
 // import expressXClient from './client.mjs'
 
 import { setExpiresAt } from "/src/use/useAppState"
+import { restartApp } from "/src/use/useAuthentication"
 import router from '/src/router'
 
 
@@ -63,8 +64,7 @@ app.addConnectListener(async (socket) => {
       // store expiration date in appState
       setExpiresAt(expiresAt)
       if (!expiresAt) {
-         alert("La session a expiré")
-         router.push('/login')
+         await restartApp()
       }
    })
 })
