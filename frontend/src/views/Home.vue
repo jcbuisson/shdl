@@ -1,8 +1,10 @@
 <template>
-   <div style="display: flex; flex-direction: column; height: 100vh;">
+   <div style="display: flex; flex-direction: column; overflow: hidden; height: 100vh;">
+
       <NavigationBar :signedinId="signedinId"></NavigationBar>
 
-      <router-view style="flex-grow: 4;"></router-view>
+      <router-view></router-view>
+
    </div>
 </template>
 
