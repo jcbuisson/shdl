@@ -1,4 +1,5 @@
 import Dexie from "dexie"
+import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
 import { from } from 'rxjs'
 
@@ -46,56 +47,42 @@ export const getUserPromise = async (id) => {
    return value
 }
 
-// return a reactive object (convert promise into an observable, then into a reactive object)
-// export const getUserRef = (id) => useObservable(from(getUserPromise(id)))
 export const getUserRef = (id) => {
-   const promise = getUserPromise(id)
-   promise.then(x => console.log('x', x))
-   return useObservable(from(promise))
+   // asynchronously fetch value if it is not in cache
+   db.values.get(id).then(value => {
+      if (value === undefined) {
+         app.service('user').app.service('user').findUnique({ where: { id }}).then(value => {
+            db.values.put(value)
+         })
+      }
+   })
+   const observable = liveQuery(() => db.values.get(id))
+   return useObservable(observable)
 }
 
 
-export const getUserListPromise = async (whereTag, whereDatabase, wherePredicate) => {
-   const listStatus = await db.listStatus.get(whereTag)
-   if (listStatus?.status === 'ready')
-      return await db.values.filter(wherePredicate).toArray()
-   const list = await app.service('user').findMany({ where: whereDatabase })
-   for (const value of list) {
-      await db.values.put(value)
-   }
-   db.listStatus.put({ whereTag, status: 'ready'})
-   return list
-}
-
-// return a reactive object (convert promise into an observable, then into a reactive object)
-// export const getUserListRef = (whereTag, whereDatabase, wherePredicate) =>
-//    useObservable(from(getUserListPromise(whereTag, whereDatabase, wherePredicate)))
 export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
-   const promise = getUserListPromise(whereTag, whereDatabase, wherePredicate)
-   promise.then(l => console.log('l', l))
-   return useObservable(from(promise))
+   // asynchronously fetch values if status isn't ready (= values are not in cache)
+   db.listStatus.get(whereTag).then(listStatus => {
+      if (listStatus?.status !== 'ready') {
+         app.service('user').findMany({ where: whereDatabase }).then(list => {
+            for (const value of list) {
+               db.values.put(value)
+            }
+         })
+      }
+   })
+   const observable = liveQuery(() => db.values.filter(wherePredicate).toArray())
+   return useObservable(observable)
 }
 
 
-
-
-// export const getUser = async (id) => {
-//    const { value, promise } = fetchAndCache(id, app.service('user'), userState?.value.userStatus, userState?.value.userCache)
-//    return value || await promise
-// }
-
-// export const getUserRef = computed(() => (id) => {
-//    const { value } = fetchAndCache(id, app.service('user'), userState?.value.userStatus, userState?.value.userCache)
-//    return value
-// })
-
-// export const createUser = async (data) => {
-//    const user = await app.service('user').create({ data })
-//    // update cache
-//    userState.value.userCache[user.id] = user
-//    userState.value.userStatus[user.id] = 'ready'
-//    return user
-// }
+export const createUser = async (data) => {
+   const user = await app.service('user').create({ data })
+   // update cache
+   await db.values.put(user)
+   return user
+}
 
 // export const updateUser = async (id, data) => {
 //    const user = await app.service('user').update({

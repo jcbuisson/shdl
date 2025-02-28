@@ -1,10 +1,8 @@
 <template>
    <div class="main" cclass="fullscreen appearing main global--background">
-      <div class="main-container" style="border:1px solid black;"
-         :class="{ 'white-background': isConnection, 'black-background': isSignUp }">
+      <div class="main-container white-background" style="border:1px solid black;">
 
-         <div class='main-label'
-            :class="{ 'black-color': isConnection, 'white-color': isSignUp }">
+         <div class='main-label black-color'>
             {{ title }}
          </div>
          
@@ -16,7 +14,6 @@
                autofocus tabindex="1"
                v-model="email"
                :rules="emailRules"
-               :dark="isSignUp"
                :autocomplete= 'isConnection ? "new-password" : null'
                required
                @keyup.enter.native="submit"
@@ -36,22 +33,6 @@
                :append-inner-icon="hiddenPassword ? 'mdi-eye' : 'mdi-eye-off'"
                @click:append-inner="() => (hiddenPassword = !hiddenPassword)"
                :type="hiddenPassword ? 'password' : 'text'"
-            ></v-text-field>
-
-            <v-text-field
-               v-if="isSignUp"
-               name="firstname"
-               label="Prénom"
-               v-model="firstname"
-               required
-            ></v-text-field>
-
-            <v-text-field
-               v-if="isSignUp"
-               name="lastname"
-               label="Nom"
-               v-model="lastname"
-               required
             ></v-text-field>
             
             <div class="submit-block">
@@ -95,8 +76,6 @@ const props = defineProps({
 })
 
 const email = ref('')
-const firstname = ref('')
-const lastname = ref('')
 const password = ref('')
 const valid = ref(false)
 const mode = ref(props.initial_mode)
@@ -115,7 +94,7 @@ const passwordRules = [
 const title = computed(() => isConnection.value ? "Connexion" : "Créer un compte")
 const isConnection = computed(() => mode.value === 'connection')
 const isSignUp = computed(() => mode.value === 'sign-up')
-const submitButtonText = computed(() => isConnection.value ? "Se connecter" : "Créer le compte")
+const submitButtonText = computed(() => isConnection.value ? "Se connecter" : "Vérifier l'email")
 const modeButtonText = computed(() => isConnection.value ? "Créer un compte" : "Retour à la connexion")
 
 function onModeButtonTap() {
@@ -157,12 +136,12 @@ async function signIn () {
 
 async function signUp () {
    try {
-      await signup(email.value, firstname.value, lastname.value)
+      await signup(email.value)
       const text = `Veuillez vérifier votre boite mail '${email.value}', des instructions d'activation viennent d'y être envoyées.`
-      displaySnackbar({ text, color: 'success', timeout: 2000 })
+      displaySnackbar({ text, color: 'success', timeout: 5000 })
    } catch(err) {
       const text = errorCodes[err.code] || "Erreur inconnue"
-      displaySnackbar({ text, color: 'error', timeout: 2000 })
+      displaySnackbar({ text, color: 'error', timeout: 4000 })
    }
 }
 </script>

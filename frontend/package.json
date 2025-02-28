@@ -17,6 +17,7 @@
     "date-fns": "^3.6.0",
     "dexie": "^4.0.11",
     "idb-keyval": "^6.2.1",
+    "jcb-upload": "^1.0.8",
     "jose": "^5.10.0",
     "socket.io-client": "^4.8.1",
     "typeface-roboto": "^1.1.13",

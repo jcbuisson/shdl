@@ -39,5 +39,6 @@ export default {
    after: {
       signin: [afterSignin, protect('password')],
       signout: [afterSignout],
+      createAccountWithToken: [protect('password')],
    },
 }

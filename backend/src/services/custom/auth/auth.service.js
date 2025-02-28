@@ -27,7 +27,7 @@ export default function (app) {
          return user // returned value is replaced by { user, expiresAt } by 'after' hook
       },
 
-      signup: async (email, firstname, lastname) => {
+      signup: async (email) => {
          // check existence of a user with `email`
          const user = await prisma.user.findUnique({ where: { email }})
          // send email
@@ -35,22 +35,25 @@ export default function (app) {
             await app.service('mail').send({
                from: 'buisson@enseeiht.fr',
                to: email,
-               subject: "Problème création compte SHDL",
-               text: `Un compte associé à l'email '${email}' existe déjà, sous le nom : ${firstname} ${lastname}.`,
+               subject: "Création compte SHDL",
+               text: `<p>Bonjour,</p>
+<p>Une demande de création de compte pour l'email ${email} vient d'être réalisée.</p>
+<p><b>Ne faites rien si vous n'êtes pas à l'origine de cette demande.</b></p>
+<p>Si par contre vous êtes bien l'auteur de cette demande, sachez qu'un compte associé à l'email '${email}' existe déjà.</p>`,
             })
          } else {
-            const createdUser = await prisma.user.create({
-               data: { email, firstname, lastname }
-            })
-            const token = jwt.sign({ userid: createdUser.id }, config.JWT_PRIVATE_KEY, {
+            const token = jwt.sign({ email }, config.JWT_PRIVATE_KEY, {
                algorithm: "RS256",
                // expiresIn: "1h",
-             })
+            })
             await app.service('mail').send({
                from: 'buisson@enseeiht.fr',
                to: email,
                subject: "Création compte SHDL",
-               text: `Bonjour ${firstname} ${lastname}. Cliquez <a href="${config.CLIENT_URL}/set-password/${token}">sur ce lien</a> pour confirmer votre inscription`,
+               text: `<p>Bonjour,</p>
+<p>Une demande de création de compte pour l'email ${email} vient d'être réalisée.</p>
+<p><b>Ne faites rien si vous n'êtes pas à l'origine de cette demande.</b></p>
+<p>Si par contre vous êtes bien l'auteur de cette demande, cliquez <a href="${config.CLIENT_URL}/create-account/${token}">sur ce lien</a> pour confirmer votre inscription.</p>`,
             })
          }
       },
@@ -58,6 +61,23 @@ export default function (app) {
       // see hooks
       signout: async () => {
          return 'ok'
+      },
+
+      createAccountWithToken: async (token, password, firstname, lastname) => {
+         try {
+            const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
+            password = await bcrypt.hash(password, 5)
+            const user = await prisma.user.create({
+               data: { email: payload.email, password, firstname, lastname }
+            })
+            return user
+         } catch(err) {
+            if (err.code === 'jwt-error') {
+               throw new EXError('jwt-error', "Could not verify JWT")
+            } else {
+               throw new EXError('unknown-error', err.message)
+            }
+         }
       },
 
       setPasswordWithToken: async (token, password) => {

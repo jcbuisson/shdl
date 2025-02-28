@@ -68,5 +68,5 @@ model user_shdl_test {
    user_id                 Int
    shdl_test_id            Int
    date                    DateTime
-   ok                      Boolean
+   success                 Boolean
 }

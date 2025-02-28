@@ -10,6 +10,11 @@ const routes = [
       component: () => import('/src/views/login/Login.vue'),
    },
    {
+      path: '/create-account/:token',
+      props: true,
+      component: () => import('/src/views/login/CreateAccount.vue'),
+   },
+   {
       path: '/set-password/:token',
       props: true,
       component: () => import('/src/views/login/SetPassword.vue'),
@@ -31,7 +36,7 @@ const routes = [
             children: [
                {
                   path: 'create',
-                  props: true,
+                  props: { create: true },
                   component: () => import('/src/components/User.vue'),
                },
             ],      
