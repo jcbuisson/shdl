@@ -3,11 +3,10 @@
       <div class="main-container white-background"  style="border:1px solid black;">
 
          <div class='main-label black-color'>
-            Création de compte : choisissez un mot de passe
+            Création de compte
          </div>
          
          <v-text-field
-            v-if="isSignUp"
             name="firstname"
             label="Prénom"
             v-model="firstname"
@@ -15,7 +14,6 @@
          ></v-text-field>
 
          <v-text-field
-            v-if="isSignUp"
             name="lastname"
             label="Nom"
             v-model="lastname"

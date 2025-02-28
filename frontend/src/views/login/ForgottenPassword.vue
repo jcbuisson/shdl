@@ -54,6 +54,8 @@ function displaySnackbar({ text, color, timeout }) {
 async function submit() {
    try {
       await app.service('auth').forgottenPassword(email.value)
+      const text = `Veuillez vérifier votre boite mail '${email.value}', des instructions viennent d'y être envoyées.`
+      displaySnackbar({ text, color: 'success', timeout: 5000 })
    } catch(err) {
       console.log('err', err)
       displaySnackbar({ text: "Erreur inconnue", color: 'error', timeout: 2000 })

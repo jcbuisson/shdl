@@ -8,12 +8,14 @@
                <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
             </v-toolbar>
          
-            <v-list lines="three" :items="items" item-props>
-               <template v-slot:subtitle="{ subtitle }">
-                  <div v-html="subtitle"></div>
-                  <v-chip size="small">1SN24D</v-chip>
-               </template>
-            </v-list>
+            <div :style="{ height: `calc(100vh - 170px)`, 'overflow-y': 'auto' }">
+               <v-list lines="three" :items="items" item-props>
+                  <template v-slot:subtitle="{ subtitle }">
+                     <div v-html="subtitle"></div>
+                     <v-chip size="small">1SN24D</v-chip>
+                  </template>
+               </v-list>
+            </div>
          </v-card>
       </template>
 
