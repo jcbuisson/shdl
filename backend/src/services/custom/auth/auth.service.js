@@ -119,7 +119,7 @@ export default function (app) {
       },
 
       // Typically used each time a user interacts with the application
-      // Sends a client socket event 'expiresAt' with the new expiration date, or null if client is no longer authenticated
+      // Sends event 'expiresAt' with the new expiration date to the client socket, or null if client is no longer authenticated
       // See hooks
       extendExpiration: async () => {
       },

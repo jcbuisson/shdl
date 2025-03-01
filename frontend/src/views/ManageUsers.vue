@@ -9,12 +9,19 @@
             </v-toolbar>
          
             <div :style="{ height: `calc(100vh - 170px)`, 'overflow-y': 'auto' }">
-               <v-list lines="three" :items="items" item-props>
-                  <template v-slot:subtitle="{ subtitle }">
-                     <div v-html="subtitle"></div>
-                     <v-chip size="small">1SN24D</v-chip>
+               <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.id === user?.id">
+                  <template v-slot:prepend>
+                     <v-avatar>
+                        <v-img :src="user.pict"></v-img>
+                     </v-avatar>
                   </template>
-               </v-list>
+                  <v-list-item-title>{{ user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                     <v-chip size="x-small">1SN24D</v-chip>
+                  </v-list-item-subtitle>
+               </v-list-item>
+
             </div>
          </v-card>
       </template>
@@ -45,17 +52,15 @@ const filter = ref('')
 
 const userList = getUserListRef('all', {}, ()=>true)
 
-const items = computed(() => {
-   if (!userList?.value) return []
-   return userList.value.map(user => ({
-      prependAvatar: user.pict,
-      // title: getFullname(user),
-      title: user.lastname,
-      subtitle: user.firstname
-   }))
-})
-
 function createUser() {
    router.push(`/home/${props.signedinId}/users/create`)
 }
+
+const selectedUser = ref(null)
+
+function selectUser(user) {
+   selectedUser.value = user
+   router.push(`/home/${props.signedinId}/users/${user.id}`)
+}
+
 </script>

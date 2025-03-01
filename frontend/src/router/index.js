@@ -39,6 +39,11 @@ const routes = [
                   props: { create: true },
                   component: () => import('/src/components/User.vue'),
                },
+               {
+                  path: ':userid',
+                  props: true,
+                  component: () => import('/src/components/User.vue'),
+               },
             ],      
          },
          {
