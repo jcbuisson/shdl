@@ -8,7 +8,7 @@
                <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
             </v-toolbar>
          
-            <div :style="{ height: `calc(100vh - 170px)`, 'overflow-y': 'auto' }">
+            <div :style="{ height: `calc(100vh - 160px)`, 'overflow-y': 'auto' }">
                <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.id === user?.id">
                   <template v-slot:prepend>
                      <v-avatar>

@@ -36,13 +36,13 @@ const routes = [
             children: [
                {
                   path: 'create',
-                  props: { create: true },
-                  component: () => import('/src/components/User.vue'),
+                  props: true,
+                  component: () => import('/src/views/CreateUser.vue'),
                },
                {
                   path: ':userid',
                   props: true,
-                  component: () => import('/src/components/User.vue'),
+                  component: () => import('/src/views/EditUser.vue'),
                },
             ],      
          },
