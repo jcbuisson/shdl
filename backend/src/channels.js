@@ -5,4 +5,12 @@ export default function(app) {
         return context.methodName.startsWith('find') ? [] : ['authenticated']
     })
 
+    app.service('group').publish(async (context) => {
+        return context.methodName.startsWith('find') ? [] : ['authenticated']
+    })
+
+    app.service('user_group').publish(async (context) => {
+        return context.methodName.startsWith('find') ? [] : ['authenticated']
+    })
+
 }

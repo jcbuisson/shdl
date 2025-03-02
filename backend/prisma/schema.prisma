@@ -18,18 +18,21 @@ model user {
    pict                    String     @default("/static/img/avatar.svg")
 }
 
-// 'Gestion utilisateurs', 'Suivi étudiants', 'Gestion des groupes', 'SHDL sandbox', 'CRAPS sandbox', "Gestion des tests"
-model feature {
-   id                      Int        @id @default(autoincrement())
-   name                    String     @unique(map: "feature_name_unique")
+enum Tab {
+   user_management
+   group_management
+   test_management
+   student_followup
+   shdl_sandbox
+   craps_sandbox
 }
 
-model user_feature {
+model user_tab {
    id                      Int        @id @default(autoincrement())
    user_id                 Int
-   feature_id              Int
+   tab                     Tab
 
-   @@unique([user_id, feature_id])
+   @@unique([user_id, tab])
 }
 
 // 'Enseignants', '1SN24D', '1APP24', 'Binôme X & Y'

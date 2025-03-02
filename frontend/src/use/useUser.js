@@ -1,7 +1,6 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
-import { from } from 'rxjs'
 
 import { app } from '/src/client-app.js'
 
@@ -66,9 +65,13 @@ export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
    db.listStatus.get(whereTag).then(listStatus => {
       if (listStatus?.status !== 'ready') {
          app.service('user').findMany({ where: whereDatabase }).then(list => {
-            for (const value of list) {
-               db.values.put(value)
-            }
+            const promiseList = list.map(value => db.values.put(value))
+            return Promise.all(promiseList)
+         }).then(() => {
+            // db.listStatus.update(whereTag, 'ready')
+            db.listStatus.put({ whereTag, status: 'ready' })
+         }).catch(err => {
+            console.log('err', err)
          })
       }
    })
@@ -84,24 +87,18 @@ export const createUser = async (data) => {
    return user
 }
 
-// export const updateUser = async (id, data) => {
-//    const user = await app.service('user').update({
-//       where: { id },
-//       data,
-//    })
-//    // update cache
-//    userState.value.userCache[id] = user
-//    userState.value.userStatus[id] = 'ready'
-//    return user
-// }
+export const updateUser = async (id, data) => {
+   const user = await app.service('user').update({
+      where: { id },
+      data,
+   })
+   // update cache
+   await db.values.update(id, data)
+   return user
+}
 
 // export const removeUser = async (id) => {
 //    await app.service('user').delete({ where: { id }})
 //    delete userState.value.userCache[id]
 //    delete userState.value.userStatus[id]
 // }
-
-// export const listOfUser = computed(() => {
-//    const { value } = fetchAndCacheList(app.service('user'), {}, ()=>true, userState?.value.userStatus, userState?.value.userCache, userState?.value.listStatus)
-//    return value
-// })
