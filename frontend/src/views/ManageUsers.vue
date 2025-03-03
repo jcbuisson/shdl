@@ -32,20 +32,9 @@
    </SplitPanel>
 
    <v-dialog v-model="dialog" width="auto">
-      <v-card
-        max-width="400"
-        prepend-icon="mdi-update"
-        text="Your application will relaunch automatically after the update is complete."
-        title="Update in progress"
-      >
-         <template v-slot:actions>
-            <v-btn
-               class="ms-auto"
-               text="Ok"
-               @click="dialog = false"
-            ></v-btn>
-         </template>
-      </v-card>
+      <v-img :width="800" aspect-ratio="16/9" cover 
+         :src="selectedUser?.pict"
+      ></v-img>
    </v-dialog>
 </template>
 
@@ -84,8 +73,7 @@ function selectUser(user) {
 
 const dialog = ref(false)
 
-function onAvatarClick(user) {
-   console.log('onAvatarClick', user)
+function onAvatarClick() {
    dialog.value = true
 }
 </script>

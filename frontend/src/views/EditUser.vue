@@ -83,7 +83,7 @@
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getUserRef, updateUser, updateUserGroups } from '/src/use/useUser'
+import { getUserRef, getUserPromise, updateUser, updateUserGroups } from '/src/use/useUser'
 import { getGroupListRef } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
@@ -101,12 +101,14 @@ const props = defineProps({
 
 const userid = ref()
 
-watch(() => props.userid, (newValue, oldValue) => {
+// const user = getUserRef(parseInt(props.userid))
+const user = ref()
+
+watch(() => props.userid, async (newValue, oldValue) => {
    console.log('userid', props.userid)
    userid.value = parseInt(props.userid)
+   user.value = await getUserPromise(userid.value)
 }, { immediate: true })
-
-const user = getUserRef(props.userid)
 
 const usertabs = ref({})
 
@@ -160,7 +162,6 @@ function displaySnackbar({ text, color, timeout }) {
 }
 
 async function onUploadChunk(ev) {
-   console.log('onUploadChunk', ev.detail)
    try {
       await app.service('file-upload').appendToFile({
          dirKey: 'UPLOAD_AVATARS_PATH',
@@ -174,7 +175,6 @@ async function onUploadChunk(ev) {
 }
 
 async function onUploadEnd(ev) {
-   console.log('onUploadEnd', ev)
    await updateUser(userid.value, { pict: `/static/upload/avatars/${ev.detail.file.name}` })
 }
 </script>
