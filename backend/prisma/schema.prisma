@@ -16,6 +16,8 @@ model user {
    firstname               String?
    lastname                String?
    pict                    String     @default("/static/img/avatar.svg")
+
+   groups                  group[]
 }
 
 enum Tab {
@@ -39,15 +41,20 @@ model user_tab {
 model group {
    id                      Int        @id @default(autoincrement())
    name                    String     @unique(map: "group_name_unique")
+
+   users                   user[]
 }
 
-model user_group {
-   id                      Int        @id @default(autoincrement())
-   user_id                 Int
-   group_id                Int
+// model user_group {
+//    id                      Int        @id @default(autoincrement())
+//    user_id                 Int
+//    group_id                Int
 
-   @@unique([user_id, group_id])
-}
+//    user                    user       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+//    group                   group      @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+//    @@unique([user_id, group_id])
+// }
 
 // groupe 1SN24D, 2024-12-10T14:00 à 2024-12-10T15:45
 model group_slot {

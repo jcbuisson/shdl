@@ -36,7 +36,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-import { getUserRef, getUserListRef } from '/src/use/useUser.js'
+import { getUserListRef } from '/src/use/useUser.js'
+import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -59,6 +60,7 @@ function createUser() {
 const selectedUser = ref(null)
 
 function selectUser(user) {
+   extendExpiration()
    selectedUser.value = user
    router.push(`/home/${props.signedinId}/users/${user.id}`)
 }

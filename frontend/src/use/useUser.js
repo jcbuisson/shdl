@@ -50,7 +50,12 @@ export const getUserRef = (id) => {
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
       if (value === undefined) {
-         app.service('user').app.service('user').findUnique({ where: { id }}).then(value => {
+         app.service('user').app.service('user').findUnique({
+            where: { id },
+            include: {
+               groups: true,
+            },
+         }).then(value => {
             db.values.put(value)
          })
       }
@@ -64,11 +69,15 @@ export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
    // asynchronously fetch values if status isn't ready (= values are not in cache)
    db.listStatus.get(whereTag).then(listStatus => {
       if (listStatus?.status !== 'ready') {
-         app.service('user').findMany({ where: whereDatabase }).then(list => {
-            const promiseList = list.map(value => db.values.put(value))
+         app.service('user').findMany({
+            where: whereDatabase,
+            include: {
+               groups: true,
+            },
+         }).then(values => {
+            const promiseList = values.map(value => db.values.put(value))
             return Promise.all(promiseList)
          }).then(() => {
-            // db.listStatus.update(whereTag, 'ready')
             db.listStatus.put({ whereTag, status: 'ready' })
          }).catch(err => {
             console.log('err', err)
@@ -94,6 +103,28 @@ export const updateUser = async (id, data) => {
    })
    // update cache
    await db.values.update(id, data)
+   return user
+}
+
+export const updateUserGroups = async (id, connectIdList, disconnectIdList) => {
+   const user = await app.service('user').update({
+      where: { id },
+      data: {
+         groups: {
+            connect: connectIdList.map(id => ({ id })),
+            disconnect: disconnectIdList.map(id => ({ id })),
+         }
+      }
+   })
+   // update cache
+   const userWithGroups = await app.service('user').findUnique({
+      where: { id },
+      include: {
+         groups: true,
+      },
+   })
+   console.log('userWithGroups', id, userWithGroups)
+   await db.values.update(id, { groups: userWithGroups.groups })
    return user
 }
 

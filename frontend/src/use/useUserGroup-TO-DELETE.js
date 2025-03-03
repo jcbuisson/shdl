@@ -8,7 +8,7 @@ export const db = new Dexie("userGroupDatabase")
 
 db.version(1).stores({
    values: "id",
-   listStatus: "whereTag",
+   listStatus: "userid",
 })
 
 export const resetUseGroup = async () => {
@@ -53,21 +53,41 @@ app.service('user_group').on('delete', async userGroup => {
 //    return useObservable(observable)
 // }
 
-
-export const getUserGroupListRef = (userid) => {
-   // asynchronously fetch values if status isn't ready (= values are not in cache)
-   db.listStatus.get(userid).then(listStatus => {
-      if (listStatus?.status !== 'ready') {
-         app.service('user_group').findMany({ where: whereDatabase }).then(list => {
-            for (const value of list) {
-               db.values.put(value)
-            }
-         })
+export const getUserGroupListPromise = async (userid) => {
+   const listStatus = await db.listStatus.get(userid)
+   if (listStatus?.status !== 'ready') {
+      const values = await app.service('user_group').findMany({
+         where: { user_id: userid },
+         include: {
+            user: true,
+            group: true,
+         },
+      })
+      for (const value of values) {
+         await db.values.put(value)
       }
-   })
-   const observable = liveQuery(() => db.values.filter(wherePredicate).toArray())
-   return useObservable(observable)
+      await db.listStatus.put({ userid, status: 'ready' })
+   }
+   return await db.values.filter(value => value.user_id === userid).toArray()
 }
+
+// export const getUserGroupListRef = (userid) => {
+//    // asynchronously fetch values if status isn't ready (= values are not in cache)
+//    db.listStatus.get(userid).then(listStatus => {
+//       if (listStatus?.status !== 'ready') {
+//          app.service('user_group').findMany({ where: { user_id: userid } }).then(values => {
+//             const promiseList = values.map(value => db.values.put(value))
+//             return Promise.all(promiseList)
+//          }).then(() => {
+//             db.listStatus.put({ userid, status: 'ready' })
+//          }).catch(err => {
+//             console.log('err', err)
+//          })
+//       }
+//    })
+//    const observable = liveQuery(() => db.values.filter(value => value.user_id === userid).toArray())
+//    return useObservable(observable)
+// }
 
 
 export const createUserGroup = async (data) => {

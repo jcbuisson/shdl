@@ -7,7 +7,7 @@
                <v-col cols="12" sm="6">
                   <v-text-field
                      label="email"
-                     :modelValue="data.email"
+                     :modelValue="user?.email"
                      @input="(e) => onFieldInputDebounced('email', e.target.value)"
                      :rules="emailRules"
                      variant="underlined"
@@ -15,7 +15,7 @@
                </v-col>
                <v-col cols="12" sm="6">
                   <jcb-upload ref="upload" chunksize="32768" accept="image/*">
-                     Cliquez ou glissez-déposez une photo ici
+                     Cliquez ici ou glissez-déposez une photo
                   </jcb-upload>
                </v-col>
             </v-row>
@@ -24,7 +24,7 @@
                <v-col cols="12" sm="6">
                   <v-text-field
                      label="Nom"
-                     :modelValue="data.lastname"
+                     :modelValue="user?.lastname"
                      @input="(e) => onFieldInputDebounced('lastname', e.target.value)"
                      variant="underlined"
                   ></v-text-field>
@@ -32,7 +32,7 @@
                <v-col cols="12" sm="6">
                   <v-text-field
                      label="Prénom"
-                     :modelValue="data.firstname"
+                     :modelValue="user?.firstname"
                      @input="(e) => onFieldInputDebounced('firstname', e.target.value)"
                      variant="underlined"
                   ></v-text-field>
@@ -43,12 +43,12 @@
                <v-col xs="12" sm="12">
                   <v-autocomplete
                      variant="underlined"
-                     :v-model="data.tabs"
+                     :v-model="usertabs"
                      @update:modelValue="onTabChange"
                      :items="tabs"
                      item-title="title"
                      item-value="uid"
-                     label="Onglets autorisés"
+                     label="Onglets"
                      chips
                      multiple
                   ></v-autocomplete>
@@ -59,7 +59,7 @@
                <v-col xs="12" sm="12">
                   <v-autocomplete
                      variant="underlined"
-                     v-model="data.groups"
+                     :modelValue="user?.groups"
                      @update:modelValue="onGroupChange"
                      :items="allGroups"
                      item-title="name"
@@ -80,11 +80,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getUserPromise, updateUser } from '/src/use/useUser.js'
-import { getGroupListRef } from '/src/use/useGroup.js'
+import { getUserRef, updateUser, updateUserGroups } from '/src/use/useUser'
+import { getGroupListRef } from '/src/use/useGroup'
 
 import 'jcb-upload'
 
@@ -95,12 +95,10 @@ const props = defineProps({
    },
 })
 
-const data = ref({})
+const usertabs = ref({})
 
-watch(() => props.userid, async (newValue, oldValue) => {
-   const dbValue = await getUserPromise(parseInt(props.userid))
-   data.value = { ...dbValue, tabs: [], groups: [] }
-}, { immediate: true })
+const userid = computed(() => parseInt(props.userid))
+const user = getUserRef(userid.value)
 
 const allGroups = getGroupListRef('all', {}, ()=>true)
 
@@ -122,8 +120,9 @@ const tabs = [
 
 const onFieldInput = async (field, value) => {
    try {
-      data.value[field] = value
-      await updateUser(parseInt(props.userid), { [field]: value })
+      // data.value[field] = value
+      // await updateUser(parseInt(props.userid), { [field]: value })
+      await updateUser(userid.value, { [field]: value })
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
@@ -135,14 +134,19 @@ const onTabChange = (value) => {
    console.log('onTabChange', value)
 }
 
-const onGroupChange = (newValues) => {
+const onGroupChange = async (newValues) => {
    console.log('onGroupChange', newValues)
-   const currentSet = new Set(data.groups)
+   const currentIdList = user?.value?.groups.map(g => g.id) || []
+   const currentSet = new Set(currentIdList)
    const newSet = new Set(newValues)
-   const toAdd = newValues.filter(g => !currentSet.has(g))
-   const toRemove = data.value.groups.filter(g => !newSet.has(g))
+   const toAdd = newValues.filter(gid => !currentSet.has(gid))
+   const toRemove = currentIdList.filter(gid => !newSet.has(gid))
+   console.log('currentSet', currentSet)
+   console.log('newSet', newSet)
    console.log('toAdd', toAdd)
    console.log('toRemove', toRemove)
+
+   await updateUserGroups(userid.value, toAdd, toRemove)
 }
 
 function displaySnackbar({ text, color, timeout }) {

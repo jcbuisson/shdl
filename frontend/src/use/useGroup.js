@@ -58,10 +58,13 @@ export const getGroupListRef = (whereTag, whereDatabase, wherePredicate) => {
    // asynchronously fetch values if status isn't ready (= values are not in cache)
    db.listStatus.get(whereTag).then(listStatus => {
       if (listStatus?.status !== 'ready') {
-         app.service('group').findMany({ where: whereDatabase }).then(list => {
-            for (const value of list) {
-               db.values.put(value)
-            }
+         app.service('group').findMany({ where: whereDatabase }).then(values => {
+            const promiseList = values.map(value => db.values.put(value))
+            return Promise.all(promiseList)
+         }).then(() => {
+            db.listStatus.put({ whereTag, status: 'ready' })
+         }).catch(err => {
+            console.log('err', err)
          })
       }
    })
