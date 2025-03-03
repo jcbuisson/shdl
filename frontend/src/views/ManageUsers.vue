@@ -11,7 +11,7 @@
             <div :style="{ height: `calc(100vh - 160px)`, 'overflow-y': 'auto' }">
                <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.id === user?.id">
                   <template v-slot:prepend>
-                     <v-avatar>
+                     <v-avatar @click="onAvatarClick(user)">
                         <v-img :src="user.pict"></v-img>
                      </v-avatar>
                   </template>
@@ -30,6 +30,23 @@
          <router-view></router-view>
       </template>
    </SplitPanel>
+
+   <v-dialog v-model="dialog" width="auto">
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-update"
+        text="Your application will relaunch automatically after the update is complete."
+        title="Update in progress"
+      >
+         <template v-slot:actions>
+            <v-btn
+               class="ms-auto"
+               text="Ok"
+               @click="dialog = false"
+            ></v-btn>
+         </template>
+      </v-card>
+   </v-dialog>
 </template>
 
 
@@ -65,4 +82,10 @@ function selectUser(user) {
    router.push(`/home/${props.signedinId}/users/${user.id}`)
 }
 
+const dialog = ref(false)
+
+function onAvatarClick(user) {
+   console.log('onAvatarClick', user)
+   dialog.value = true
+}
 </script>

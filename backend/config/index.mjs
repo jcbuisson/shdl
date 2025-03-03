@@ -24,5 +24,7 @@ export default {
    },
 
    JWT_PRIVATE_KEY: process.env.JWT_PRIVATE_KEY,
+
+   UPLOAD_AVATARS_PATH: process.env.UPLOAD_AVATARS_PATH,
 }
 

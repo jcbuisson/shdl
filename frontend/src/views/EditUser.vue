@@ -14,7 +14,7 @@
                   ></v-text-field>
                </v-col>
                <v-col cols="12" sm="6">
-                  <jcb-upload ref="upload" chunksize="32768" accept="image/*">
+                  <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
                      Cliquez ici ou glissez-déposez une photo
                   </jcb-upload>
                </v-col>
@@ -73,7 +73,7 @@
          </v-container>
       </v-form>
    </v-card>
-
+{{ user }}
    <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
       {{ snackbar.text }}
    </v-snackbar>
@@ -88,6 +88,8 @@ import { getGroupListRef } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import 'jcb-upload'
+import { app } from '/src/client-app.js'
+
 
 
 const props = defineProps({
@@ -96,10 +98,17 @@ const props = defineProps({
    },
 })
 
-const usertabs = ref({})
 
-const userid = computed(() => parseInt(props.userid))
-const user = getUserRef(userid.value)
+const userid = ref()
+
+watch(() => props.userid, (newValue, oldValue) => {
+   console.log('userid', props.userid)
+   userid.value = parseInt(props.userid)
+}, { immediate: true })
+
+const user = getUserRef(props.userid)
+
+const usertabs = ref({})
 
 const allGroups = getGroupListRef('all', {}, ()=>true)
 
@@ -136,15 +145,36 @@ const onTabChange = (value) => {
 
 const onGroupChange = async (newValues) => {
    extendExpiration()
-   const currentIdList = user?.value?.groups.map(g => g.id) || []
-   const currentSet = new Set(currentIdList)
-   const newSet = new Set(newValues)
-   const toAdd = newValues.filter(gid => !currentSet.has(gid))
-   const toRemove = currentIdList.filter(gid => !newSet.has(gid))
-   await updateUserGroups(userid.value, toAdd, toRemove)
+   await updateUserGroups(userid.value, newValues)
+
+   // const currentIdList = user?.value?.groups.map(g => g.id) || []
+   // const currentSet = new Set(currentIdList)
+   // const newSet = new Set(newValues)
+   // const toAdd = newValues.filter(gid => !currentSet.has(gid))
+   // const toRemove = currentIdList.filter(gid => !newSet.has(gid))
+   // await updateUserGroups(userid.value, toAdd, toRemove)
 }
 
 function displaySnackbar({ text, color, timeout }) {
    snackbar.value = { text, color, timeout, visible: true }
+}
+
+async function onUploadChunk(ev) {
+   console.log('onUploadChunk', ev.detail)
+   try {
+      await app.service('file-upload').appendToFile({
+         dirKey: 'UPLOAD_AVATARS_PATH',
+         filePath: ev.detail.file.name,
+         arrayBuffer: ev.detail.arrayBufferSlice,
+      })
+   } catch(err) {
+      console.log('err', err)
+   } finally {
+   }
+}
+
+async function onUploadEnd(ev) {
+   console.log('onUploadEnd', ev)
+   await updateUser(userid.value, { pict: `/static/upload/avatars/${ev.detail.file.name}` })
 }
 </script>

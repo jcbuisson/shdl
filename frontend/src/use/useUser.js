@@ -1,3 +1,4 @@
+import { computed } from 'vue'
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
@@ -64,6 +65,24 @@ export const getUserRef = (id) => {
    return useObservable(observable)
 }
 
+// export const getUserRef = computed(() => (id) => {
+//    // asynchronously fetch value if it is not in cache
+//    db.values.get(id).then(value => {
+//       if (value === undefined) {
+//          app.service('user').app.service('user').findUnique({
+//             where: { id },
+//             include: {
+//                groups: true,
+//             },
+//          }).then(value => {
+//             db.values.put(value)
+//          })
+//       }
+//    })
+//    const observable = liveQuery(() => db.values.get(id))
+//    return useObservable(observable)
+// })
+
 
 export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
    // asynchronously fetch values if status isn't ready (= values are not in cache)
@@ -109,13 +128,29 @@ export const updateUser = async (id, data) => {
    return user
 }
 
-export const updateUserGroups = async (id, connectIdList, disconnectIdList) => {
+// export const updateUserGroups = async (id, connectIdList, disconnectIdList) => {
+//    const user = await app.service('user').update({
+//       where: { id },
+//       data: {
+//          groups: {
+//             connect: connectIdList.map(id => ({ id })),
+//             disconnect: disconnectIdList.map(id => ({ id })),
+//          }
+//       },
+//       include: {
+//          groups: true,
+//       },
+//    })
+//    await db.values.put(user)
+//    return user
+// }
+
+export const updateUserGroups = async (id, newGroups) => {
    const user = await app.service('user').update({
       where: { id },
       data: {
          groups: {
-            connect: connectIdList.map(id => ({ id })),
-            disconnect: disconnectIdList.map(id => ({ id })),
+            set: newGroups.map(id => ({ id })),
          }
       },
       include: {
