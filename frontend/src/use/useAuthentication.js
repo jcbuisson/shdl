@@ -1,3 +1,4 @@
+import { useDebounceFn } from '@vueuse/core'
 import { app } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
@@ -46,6 +47,9 @@ export async function signout(user) {
    }
 }
 
-export async function extendExpiration() {
+export const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
+
+async function doExtendExpiration() {
+   console.log('DO extend expiration')
    await app.service('auth').extendExpiration()
 }

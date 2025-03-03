@@ -85,6 +85,7 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { getUserRef, updateUser, updateUserGroups } from '/src/use/useUser'
 import { getGroupListRef } from '/src/use/useGroup'
+import { extendExpiration } from "/src/use/useAuthentication"
 
 import 'jcb-upload'
 
@@ -120,8 +121,7 @@ const tabs = [
 
 const onFieldInput = async (field, value) => {
    try {
-      // data.value[field] = value
-      // await updateUser(parseInt(props.userid), { [field]: value })
+      extendExpiration()
       await updateUser(userid.value, { [field]: value })
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
@@ -135,17 +135,12 @@ const onTabChange = (value) => {
 }
 
 const onGroupChange = async (newValues) => {
-   console.log('onGroupChange', newValues)
+   extendExpiration()
    const currentIdList = user?.value?.groups.map(g => g.id) || []
    const currentSet = new Set(currentIdList)
    const newSet = new Set(newValues)
    const toAdd = newValues.filter(gid => !currentSet.has(gid))
    const toRemove = currentIdList.filter(gid => !newSet.has(gid))
-   console.log('currentSet', currentSet)
-   console.log('newSet', newSet)
-   console.log('toAdd', toAdd)
-   console.log('toRemove', toRemove)
-
    await updateUserGroups(userid.value, toAdd, toRemove)
 }
 
