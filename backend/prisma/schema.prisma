@@ -8,6 +8,15 @@ datasource db {
 }
 
 
+enum Tab {
+   user_management
+   group_management
+   test_management
+   student_followup
+   shdl_sandbox
+   craps_sandbox
+}
+
 model user {
    id                      Int        @id @default(autoincrement())
    created_at              DateTime   @default(now()) @db.Timestamptz(6)
@@ -18,23 +27,7 @@ model user {
    pict                    String     @default("/static/img/avatar.svg")
 
    groups                  group[]
-}
-
-enum Tab {
-   user_management
-   group_management
-   test_management
-   student_followup
-   shdl_sandbox
-   craps_sandbox
-}
-
-model user_tab {
-   id                      Int        @id @default(autoincrement())
-   user_id                 Int
-   tab                     Tab
-
-   @@unique([user_id, tab])
+   tabs                    Tab[]
 }
 
 // 'Enseignants', '1SN24D', '1APP24', 'Binôme X & Y'
@@ -44,17 +37,6 @@ model group {
 
    users                   user[]
 }
-
-// model user_group {
-//    id                      Int        @id @default(autoincrement())
-//    user_id                 Int
-//    group_id                Int
-
-//    user                    user       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-//    group                   group      @relation(fields: [group_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-//    @@unique([user_id, group_id])
-// }
 
 // groupe 1SN24D, 2024-12-10T14:00 à 2024-12-10T15:45
 model group_slot {

@@ -43,10 +43,10 @@
                <v-col xs="12" sm="12">
                   <v-autocomplete
                      variant="underlined"
-                     :v-model="usertabs"
+                     :modelValue="user?.tabs?.map(uid => tabs.find(tab => (tab.uid === uid)))"
                      @update:modelValue="onTabChange"
                      :items="tabs"
-                     item-title="title"
+                     item-title="name"
                      item-value="uid"
                      label="Onglets"
                      chips
@@ -73,7 +73,7 @@
          </v-container>
       </v-form>
    </v-card>
-{{ user }}
+
    <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
       {{ snackbar.text }}
    </v-snackbar>
@@ -122,12 +122,12 @@ const emailRules = [
 ]
 
 const tabs = [
-   { uid: 'user-manager', title: "Gestion utilisateurs" },
-   { uid: 'group-manager', title: "Gestion des groupes" },
-   { uid: 'test-manager', title: "Gestion des tests" },
-   { uid: 'student-manager', title: "Suivi des étudiants" },
-   { uid: 'shdl-sandbox', title: "SHDL Sandbox" },
-   { uid: 'craps-sandbox', title: "CRAPS sandbox" },
+   { uid: 'user_management', name: "Gestion utilisateurs" },
+   { uid: 'group_management', name: "Gestion des groupes" },
+   { uid: 'test_management', name: "Gestion des tests" },
+   { uid: 'student_followup', name: "Suivi des étudiants" },
+   { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
+   { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
 const onFieldInput = async (field, value) => {
@@ -148,13 +148,6 @@ const onTabChange = (value) => {
 const onGroupChange = async (newValues) => {
    extendExpiration()
    await updateUserGroups(userid.value, newValues)
-
-   // const currentIdList = user?.value?.groups.map(g => g.id) || []
-   // const currentSet = new Set(currentIdList)
-   // const newSet = new Set(newValues)
-   // const toAdd = newValues.filter(gid => !currentSet.has(gid))
-   // const toRemove = currentIdList.filter(gid => !newSet.has(gid))
-   // await updateUserGroups(userid.value, toAdd, toRemove)
 }
 
 function displaySnackbar({ text, color, timeout }) {
