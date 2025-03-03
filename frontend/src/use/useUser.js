@@ -166,6 +166,20 @@ export const updateUserGroups = async (id, newGroups) => {
    return user
 }
 
+export const updateUserTabs = async (id, tabs) => {
+   const user = await app.service('user').update({
+      where: { id },
+      data: {
+         tabs
+      },
+      include: {
+         groups: true,
+      },
+   })
+   await db.values.put(user)
+   return user
+}
+
 // export const removeUser = async (id) => {
 //    await app.service('user').delete({ where: { id }})
 //    delete userState.value.userCache[id]

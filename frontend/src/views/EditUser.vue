@@ -83,7 +83,7 @@
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getUserRef, getUserPromise, updateUser, updateUserGroups } from '/src/use/useUser'
+import { getUserRef, getUserPromise, updateUser, updateUserTabs, updateUserGroups } from '/src/use/useUser'
 import { getGroupListRef } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
@@ -141,8 +141,10 @@ const onFieldInput = async (field, value) => {
 }
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
-const onTabChange = (value) => {
-   console.log('onTabChange', value)
+const onTabChange = async (tabs) => {
+   console.log('onTabChange', tabs)
+   extendExpiration()
+   await updateUserTabs(userid.value, tabs)
 }
 
 const onGroupChange = async (newValues) => {
