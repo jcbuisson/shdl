@@ -100,9 +100,12 @@ export const updateUser = async (id, data) => {
    const user = await app.service('user').update({
       where: { id },
       data,
+      include: {
+         groups: true,
+      },
    })
    // update cache
-   await db.values.update(id, data)
+   await db.values.put(user)
    return user
 }
 
@@ -114,17 +117,12 @@ export const updateUserGroups = async (id, connectIdList, disconnectIdList) => {
             connect: connectIdList.map(id => ({ id })),
             disconnect: disconnectIdList.map(id => ({ id })),
          }
-      }
-   })
-   // update cache
-   const userWithGroups = await app.service('user').findUnique({
-      where: { id },
+      },
       include: {
          groups: true,
       },
    })
-   console.log('userWithGroups', id, userWithGroups)
-   await db.values.update(id, { groups: userWithGroups.groups })
+   await db.values.put(user)
    return user
 }
 
