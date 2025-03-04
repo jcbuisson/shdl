@@ -52,25 +52,7 @@ export const getUserPromise = async (id) => {
    return value
 }
 
-export const getUserRef = (id) => {
-   // asynchronously fetch value if it is not in cache
-   db.values.get(id).then(value => {
-      if (value === undefined) {
-         app.service('user').app.service('user').findUnique({
-            where: { id },
-            include: {
-               groups: true,
-            },
-         }).then(value => {
-            db.values.put(value)
-         })
-      }
-   })
-   const observable = liveQuery(() => db.values.get(id))
-   return useObservable(observable)
-}
-
-export const getUserObservable = computed(() => (id) => {
+export const getUserObservable = (id) => {
    console.log('zzz', id)
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
@@ -86,7 +68,11 @@ export const getUserObservable = computed(() => (id) => {
       }
    })
    return liveQuery(() => db.values.get(id))
-})
+}
+
+export const getUserRef = (id) => {
+   return useObservable(getUserObservable(id))
+}
 
 
 export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
@@ -114,13 +100,18 @@ export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
 
 
 export const createUser = async (data) => {
+   // optimistic update of cache
+   db.values.put(data)
    const user = await app.service('user').create({ data })
    // update cache
-   await db.values.put(user)
+   // await db.values.put(user)
    return user
 }
 
 export const updateUser = async (id, data) => {
+   // optimistic update of cache
+   db.values.update(id, data)
+   // execute on server
    const user = await app.service('user').update({
       where: { id },
       data,
@@ -128,8 +119,6 @@ export const updateUser = async (id, data) => {
          groups: true,
       },
    })
-   // update cache
-   await db.values.put(user)
    return user
 }
 

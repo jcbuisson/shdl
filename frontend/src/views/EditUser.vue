@@ -114,7 +114,7 @@ const userid = computed(() => parseInt(props.userid))
 const user = ref()
 
 watch(() => props.userid, async (newValue, oldValue) => {
-   const observable = getUserObservable.value(userid.value)
+   const observable = getUserObservable(userid.value)
    observable.subscribe(user_ => user.value = user_)
 }, { immediate: true })
 
@@ -161,6 +161,9 @@ function displaySnackbar({ text, color, timeout }) {
    snackbar.value = { text, color, timeout, visible: true }
 }
 
+
+//////////////////////        AVATAR UPLOAD        //////////////////////
+
 let avatarPath
 
 async function onUploadStart(ev) {
@@ -193,6 +196,8 @@ async function onUploadChunk(ev) {
 async function onUploadEnd(ev) {
    await updateUser(userid.value, { pict: `/static/upload/avatars/${avatarPath}` })
 }
+
+//////////////////////        AVATAR DISPLAY        //////////////////////
 
 const avatarDialog = ref(false)
 
