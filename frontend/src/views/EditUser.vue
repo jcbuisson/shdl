@@ -14,9 +14,14 @@
                   ></v-text-field>
                </v-col>
                <v-col cols="12" sm="6">
-                  <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
-                     Cliquez ici ou glissez-déposez une photo
-                  </jcb-upload>
+                  <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
+                     <v-avatar size="80" @click="onAvatarClick(user)">
+                        <v-img :src="user?.pict"></v-img>
+                     </v-avatar>
+                     <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-start="onUploadStart" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
+                        Cliquez ici ou glissez-déposez une photo
+                     </jcb-upload>
+                  </div>
                </v-col>
             </v-row>
 
@@ -77,11 +82,18 @@
    <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
       {{ snackbar.text }}
    </v-snackbar>
+
+   <v-dialog v-model="avatarDialog" width="auto">
+      <v-img :width="800" aspect-ratio="16/9" cover 
+         :src="user?.pict"
+      ></v-img>
+   </v-dialog>
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { v4 as uuidv4 } from 'uuid'
 
 import { getUserRef, getUserPromise, updateUser, updateUserTabs, updateUserGroups } from '/src/use/useUser'
 import { getGroupListRef } from '/src/use/useGroup'
@@ -109,8 +121,6 @@ watch(() => props.userid, async (newValue, oldValue) => {
    userid.value = parseInt(props.userid)
    user.value = await getUserPromise(userid.value)
 }, { immediate: true })
-
-const usertabs = ref({})
 
 const allGroups = getGroupListRef('all', {}, ()=>true)
 
@@ -156,20 +166,42 @@ function displaySnackbar({ text, color, timeout }) {
    snackbar.value = { text, color, timeout, visible: true }
 }
 
+let avatarPath
+
+async function onUploadStart(ev) {
+   let extension = ev.detail.file.type.substring(6)
+   if (extension === 'svg+xml') extension = 'svg'
+   const uuid = uuidv4()
+   avatarPath = `avatar-${props.userid}-${uuid}.${extension}`
+}
+
 async function onUploadChunk(ev) {
-   try {
-      await app.service('file-upload').appendToFile({
-         dirKey: 'UPLOAD_AVATARS_PATH',
-         filePath: ev.detail.file.name,
-         arrayBuffer: ev.detail.arrayBufferSlice,
-      })
-   } catch(err) {
-      console.log('err', err)
-   } finally {
+   const type = ev.detail.file.type // ex: image/jpg
+   if (type.startsWith('image')) {
+      const extension = ev.detail.file.type.substring(6)
+      const filePath = `avatar-${props.userid}.${extension}`
+      try {
+         await app.service('file-upload').appendToFile({
+            dirKey: 'UPLOAD_AVATARS_PATH',
+            filePath: avatarPath,
+            arrayBuffer: ev.detail.arrayBufferSlice,
+         })
+      } catch(err) {
+         console.log('err', err)
+      } finally {
+      }
+   } else {
+      alert("Fournissez un fichier avec une extension .jpg, .jpeg, .png, .gif, .webp")
    }
 }
 
 async function onUploadEnd(ev) {
-   await updateUser(userid.value, { pict: `/static/upload/avatars/${ev.detail.file.name}` })
+   await updateUser(userid.value, { pict: `/static/upload/avatars/${avatarPath}` })
+}
+
+const avatarDialog = ref(false)
+
+function onAvatarClick() {
+   avatarDialog.value = true
 }
 </script>

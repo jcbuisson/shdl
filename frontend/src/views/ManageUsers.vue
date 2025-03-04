@@ -31,7 +31,7 @@
       </template>
    </SplitPanel>
 
-   <v-dialog v-model="dialog" width="auto">
+   <v-dialog v-model="avatarDialog" width="auto">
       <v-img :width="800" aspect-ratio="16/9" cover 
          :src="selectedUser?.pict"
       ></v-img>
@@ -71,9 +71,9 @@ function selectUser(user) {
    router.push(`/home/${props.signedinId}/users/${user.id}`)
 }
 
-const dialog = ref(false)
+const avatarDialog = ref(false)
 
 function onAvatarClick() {
-   dialog.value = true
+   avatarDialog.value = true
 }
 </script>
