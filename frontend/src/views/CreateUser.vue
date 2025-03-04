@@ -58,9 +58,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
-import { getUserPromise, createUser } from '/src/use/useUser.js'
+import { getUserPromise, getUserObservable, createUser } from '/src/use/useUser.js'
 
 import 'jcb-upload'
 
@@ -70,6 +70,8 @@ const props = defineProps({
       type: String,
    },
 })
+
+const userid = computed(() => parseInt(props.userid))
 
 const data = ref({})
 
@@ -95,7 +97,10 @@ function submit() {
 }
 
 watch(() => props.userid, async (newValue, oldValue) => {
-   data.value = await getUserPromise(parseInt(props.userid))
+   // data.value = await getUserPromise(parseInt(props.userid))
+   const observable = getUserObservable(userid.value)
+   observable.subscribe(user => data.value = user)
+
 }, { immediate: true })
 
 </script>

@@ -1,7 +1,6 @@
-import { computed } from 'vue'
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
-import { useObservable } from "@vueuse/rxjs"
+import { useObservable, from } from "@vueuse/rxjs"
 
 import { app } from '/src/client-app.js'
 
@@ -39,18 +38,19 @@ export function getFullname(user) {
 }
 
 
-export const getUserPromise = async (id) => {
-   let value = await db.values.get(id)
-   if (value) return value
-   value = await app.service('user').findUnique({
-      where: { id },
-      include: {
-         groups: true,
-      },
-   })
-   await db.values.put(value)
-   return value
-}
+// export const getUserPromise = async (id) => {
+//    let value = await db.values.get(id)
+//    if (value) return value
+//    value = await app.service('user').findUnique({
+//       where: { id },
+//       include: {
+//          groups: true,
+//       },
+//    })
+//    await db.values.put(value)
+//    return value
+// }
+export const getUserPromise = (id) => from(getUserObservable(id))
 
 export const getUserObservable = (id) => {
    console.log('zzz', id)
