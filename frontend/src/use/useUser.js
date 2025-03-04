@@ -71,6 +71,7 @@ export const getUserRef = (id) => {
 }
 
 export const getUserComp = computed(() => (id) => {
+   console.log('zzz', id)
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
       if (value === undefined) {
@@ -85,7 +86,8 @@ export const getUserComp = computed(() => (id) => {
       }
    })
    const observable = liveQuery(() => db.values.get(id))
-   return useObservable(observable)
+   // return useObservable(observable)
+   return observable
 })
 
 
@@ -133,28 +135,12 @@ export const updateUser = async (id, data) => {
    return user
 }
 
-// export const updateUserGroups = async (id, connectIdList, disconnectIdList) => {
-//    const user = await app.service('user').update({
-//       where: { id },
-//       data: {
-//          groups: {
-//             connect: connectIdList.map(id => ({ id })),
-//             disconnect: disconnectIdList.map(id => ({ id })),
-//          }
-//       },
-//       include: {
-//          groups: true,
-//       },
-//    })
-//    await db.values.put(user)
-//    return user
-// }
-
 export const updateUserGroups = async (id, newGroups) => {
    const user = await app.service('user').update({
       where: { id },
       data: {
          groups: {
+            // connect, disconnect, set: https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries#disconnect-all-related-records
             set: newGroups.map(id => ({ id })),
          }
       },
