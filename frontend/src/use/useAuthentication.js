@@ -18,7 +18,7 @@ export const restartApp = async () => {
    clearCaches()
    try {
       // can fail if connection is broken
-      await app.service('auth').logout()
+      await app.service('auth').signout()
    } catch(err) {}
    router.push('/')
 }

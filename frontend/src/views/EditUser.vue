@@ -78,7 +78,7 @@
          </v-container>
       </v-form>
    </v-card>
-{{ userid }} {{ user }}
+
    <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
       {{ snackbar.text }}
    </v-snackbar>
@@ -95,10 +95,7 @@ import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 
-import { liveQuery } from "dexie"
-import { useObservable } from "@vueuse/rxjs"
-
-import { getUserRef, getUserComp, getUserPromise, updateUser, updateUserTabs, updateUserGroups } from '/src/use/useUser'
+import { getUserObservable, updateUser, updateUserTabs, updateUserGroups } from '/src/use/useUser'
 import { getGroupListRef } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
@@ -112,30 +109,13 @@ const props = defineProps({
    },
 })
 
-// const userid = ref()
-const userid = computed(() => {
-   console.log('props change', props.userid)
-   return parseInt(props.userid)
-})
+const userid = computed(() => parseInt(props.userid))
 
 const user = ref()
-// const obs = computed(() => {
-//    console.log('obs change', userid.value)
-//    return getUserComp.value(userid.value)
-// })
-
-// obs.value.subscribe(x => console.log('x', x))
-
-// const user = useObservable(liveQuery(() => xxx.value(userid.value)))
-// const user = useObservable(obs.value)
 
 watch(() => props.userid, async (newValue, oldValue) => {
-   console.log('userid', props.userid)
-   // userid.value = parseInt(props.userid)
-   // user.value = await getUserPromise(userid.value)
-   const obs = getUserComp.value(userid.value)
-   obs.subscribe(user_ => user.value = user_)
-
+   const observable = getUserObservable.value(userid.value)
+   observable.subscribe(user_ => user.value = user_)
 }, { immediate: true })
 
 const allGroups = getGroupListRef('all', {}, ()=>true)
@@ -168,7 +148,6 @@ const onFieldInput = async (field, value) => {
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 const onTabChange = async (tabs) => {
-   console.log('onTabChange', tabs)
    extendExpiration()
    await updateUserTabs(userid.value, tabs)
 }

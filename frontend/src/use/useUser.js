@@ -70,7 +70,7 @@ export const getUserRef = (id) => {
    return useObservable(observable)
 }
 
-export const getUserComp = computed(() => (id) => {
+export const getUserObservable = computed(() => (id) => {
    console.log('zzz', id)
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
@@ -85,9 +85,7 @@ export const getUserComp = computed(() => (id) => {
          })
       }
    })
-   const observable = liveQuery(() => db.values.get(id))
-   // return useObservable(observable)
-   return observable
+   return liveQuery(() => db.values.get(id))
 })
 
 
