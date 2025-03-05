@@ -96,7 +96,7 @@ const emailRules = [
 ]
 
 const tabs = [
-{ uid: 'user_management', name: "Gestion utilisateurs" },
+   { uid: 'user_management', name: "Gestion utilisateurs" },
    { uid: 'group_management', name: "Gestion des groupes" },
    { uid: 'test_management', name: "Gestion des tests" },
    { uid: 'student_followup', name: "Suivi des étudiants" },

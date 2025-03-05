@@ -87,9 +87,8 @@ export const getUserListObservable = (whereTag, whereDatabase, wherePredicate) =
 export const createUser = async (data) => {
    // optimistic update of cache
    db.values.put(data)
+   // execute on server
    const user = await app.service('user').create({ data })
-   // update cache
-   // await db.values.put(user)
    return user
 }
 
@@ -144,6 +143,8 @@ export const updateUserTabs = async (id, tabs) => {
 }
 
 export const removeUser = async (id) => {
-   await db.values.delete(id)
+   // optimistic update of cache
+   db.values.delete(id)
+   // execute on server
    await app.service('user').delete({ where: { id }})
 }
