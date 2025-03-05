@@ -108,23 +108,29 @@ export const updateUser = async (id, data) => {
 }
 
 export const updateUserGroups = async (id, newGroups) => {
+   // optimistic update of cache
+   const groups = newGroups.map(id => ({ id }))
+   db.values.update(id, { groups })
+   // execute on server
    const user = await app.service('user').update({
       where: { id },
       data: {
          groups: {
             // connect, disconnect, set: https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries#disconnect-all-related-records
-            set: newGroups.map(id => ({ id })),
+            set: groups,
          }
       },
       include: {
          groups: true,
       },
    })
-   await db.values.put(user)
    return user
 }
 
 export const updateUserTabs = async (id, tabs) => {
+   // optimistic update of cache
+   db.values.update(id, { tabs })
+   // execute on server
    const user = await app.service('user').update({
       where: { id },
       data: {
@@ -134,7 +140,6 @@ export const updateUserTabs = async (id, tabs) => {
          groups: true,
       },
    })
-   await db.values.put(user)
    return user
 }
 
