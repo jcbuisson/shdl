@@ -18,7 +18,9 @@
                   <v-list-item-title>{{ user.lastname }}</v-list-item-title>
                   <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
-                     <v-chip size="x-small">1SN24D</v-chip>
+                     <template v-for="group in user.groups">
+                        <v-chip size="x-small">{{ group.name }}</v-chip>
+                     </template>
                   </v-list-item-subtitle>
                </v-list-item>
 
@@ -40,9 +42,9 @@
 
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
-import { getUserListRef } from '/src/use/useUser.js'
+import { getUserListObservable } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -57,7 +59,12 @@ const props = defineProps({
 
 const filter = ref('')
 
-const userList = getUserListRef('all', {}, ()=>true)
+const userList = ref([])
+
+const userListObservable = getUserListObservable('all', {}, ()=>true)
+userListObservable.subscribe(list => {
+   userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+})
 
 function createUser() {
    router.push(`/home/${props.signedinId}/users/create`)

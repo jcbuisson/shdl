@@ -37,23 +37,7 @@ export function getFullname(user) {
    return user.lastname || user.firstname
 }
 
-
-// export const getUserPromise = async (id) => {
-//    let value = await db.values.get(id)
-//    if (value) return value
-//    value = await app.service('user').findUnique({
-//       where: { id },
-//       include: {
-//          groups: true,
-//       },
-//    })
-//    await db.values.put(value)
-//    return value
-// }
-export const getUserPromise = (id) => from(getUserObservable(id))
-
 export const getUserObservable = (id) => {
-   console.log('zzz', id)
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
       if (value === undefined) {
@@ -70,12 +54,14 @@ export const getUserObservable = (id) => {
    return liveQuery(() => db.values.get(id))
 }
 
+export const getUserPromise = (id) => from(getUserObservable(id))
+
 export const getUserRef = (id) => {
    return useObservable(getUserObservable(id))
 }
 
 
-export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
+export const getUserListObservable = (whereTag, whereDatabase, wherePredicate) => {
    // asynchronously fetch values if status isn't ready (= values are not in cache)
    db.listStatus.get(whereTag).then(listStatus => {
       if (listStatus?.status !== 'ready') {
@@ -94,8 +80,7 @@ export const getUserListRef = (whereTag, whereDatabase, wherePredicate) => {
          })
       }
    })
-   const observable = liveQuery(() => db.values.filter(wherePredicate).toArray())
-   return useObservable(observable)
+   return liveQuery(() => db.values.filter(wherePredicate).toArray())
 }
 
 

@@ -148,13 +148,23 @@ const onFieldInput = async (field, value) => {
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 const onTabChange = async (tabs) => {
-   extendExpiration()
-   await updateUserTabs(userid.value, tabs)
+   try {
+      extendExpiration()
+      await updateUserTabs(userid.value, tabs)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
 }
 
 const onGroupChange = async (newValues) => {
-   extendExpiration()
-   await updateUserGroups(userid.value, newValues)
+   try {
+      extendExpiration()
+      await updateUserGroups(userid.value, newValues)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
 }
 
 function displaySnackbar({ text, color, timeout }) {
@@ -195,6 +205,7 @@ async function onUploadChunk(ev) {
 
 async function onUploadEnd(ev) {
    await updateUser(userid.value, { pict: `/static/upload/avatars/${avatarPath}` })
+   displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
 }
 
 //////////////////////        AVATAR DISPLAY        //////////////////////
