@@ -3,7 +3,7 @@
       <template v-slot:left-panel>
          <v-card>
             <v-toolbar color="red-darken-4" density="compact">
-               <v-btn icon="mdi-magnify" variant="text"></v-btn>
+               <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
                <v-text-field v-model="filter" single-line></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
             </v-toolbar>
