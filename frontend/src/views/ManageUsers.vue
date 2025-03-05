@@ -81,10 +81,10 @@ function selectUser(user) {
    router.push(`/home/${props.signedinId}/users/${user.id}`)
 }
 
-function deleteUser(user) {
+async function deleteUser(user) {
    extendExpiration()
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
-      removeUser(user.id)
+      await removeUser(user.id)
       router.push(`/home/${props.signedinId}/users`)
    }
 }

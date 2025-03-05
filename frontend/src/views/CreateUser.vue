@@ -79,9 +79,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
 
 import { createUser } from '/src/use/useUser.js'
+import { getGroupListRef } from '/src/use/useGroup'
 
 import 'jcb-upload'
 
@@ -104,28 +104,21 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
-const onFieldInput = async (field, value) => {
-}
-const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
-
-const onTabChange = async (tabs) => {
-}
-
-const onGroupChange = async (newValues) => {
-}
+const allGroups = getGroupListRef('all', {}, ()=>true)
 
 function submit() {
    console.log('createUser')
+   // user.value.groups = user.value.groups.map()
    createUser(user.value)
 }
 
 </script>
 
 <style scoped>
-   .submit-block {
-      display: flex;
-      flex-direction: column;  
-      align-items: center;
-      padding: 20px;
-   }
+.submit-block {
+   display: flex;
+   flex-direction: column;  
+   align-items: center;
+   padding: 20px;
+}
 </style>

@@ -187,7 +187,6 @@ async function onUploadChunk(ev) {
    const type = ev.detail.file.type // ex: image/jpg
    if (type.startsWith('image')) {
       const extension = ev.detail.file.type.substring(6)
-      const filePath = `avatar-${props.userid}.${extension}`
       try {
          await app.service('file-upload').appendToFile({
             dirKey: 'UPLOAD_AVATARS_PATH',
