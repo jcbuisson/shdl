@@ -22,8 +22,11 @@
                         <v-chip size="x-small">{{ group.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
-               </v-list-item>
 
+                  <template v-slot:append>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
+                  </template>
+               </v-list-item>
             </div>
          </v-card>
       </template>
@@ -44,7 +47,7 @@
 <script setup>
 import { ref } from 'vue'
 
-import { getUserListObservable } from '/src/use/useUser.js'
+import { getUserListObservable, getFullname, removeUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -76,6 +79,14 @@ function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
    router.push(`/home/${props.signedinId}/users/${user.id}`)
+}
+
+function deleteUser(user) {
+   extendExpiration()
+   if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
+      removeUser(user.id)
+      router.push(`/home/${props.signedinId}/users`)
+   }
 }
 
 const avatarDialog = ref(false)

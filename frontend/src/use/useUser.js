@@ -87,9 +87,8 @@ export const getUserListObservable = (whereTag, whereDatabase, wherePredicate) =
 export const createUser = async (data) => {
    // optimistic update of cache
    db.values.put(data)
+   // execute on server
    const user = await app.service('user').create({ data })
-   // update cache
-   // await db.values.put(user)
    return user
 }
 
@@ -108,6 +107,9 @@ export const updateUser = async (id, data) => {
 }
 
 export const updateUserGroups = async (id, newGroups) => {
+   // optimistic update of cache
+   await db.values.put(user)
+   // execute on server
    const user = await app.service('user').update({
       where: { id },
       data: {
@@ -120,11 +122,13 @@ export const updateUserGroups = async (id, newGroups) => {
          groups: true,
       },
    })
-   await db.values.put(user)
    return user
 }
 
 export const updateUserTabs = async (id, tabs) => {
+   // optimistic update of cache
+   await db.values.put(user)
+   // execute on server
    const user = await app.service('user').update({
       where: { id },
       data: {
@@ -134,12 +138,12 @@ export const updateUserTabs = async (id, tabs) => {
          groups: true,
       },
    })
-   await db.values.put(user)
    return user
 }
 
-// export const removeUser = async (id) => {
-//    await app.service('user').delete({ where: { id }})
-//    delete userState.value.userCache[id]
-//    delete userState.value.userStatus[id]
-// }
+export const removeUser = async (id) => {
+   // optimistic update of cache
+   await db.values.delete(id)
+   // execute on server
+   await app.service('user').delete({ where: { id }})
+}
