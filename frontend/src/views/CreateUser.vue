@@ -107,8 +107,6 @@ const tabs = [
 const allGroups = getGroupListRef('all', {}, ()=>true)
 
 function submit() {
-   console.log('createUser')
-   // user.value.groups = user.value.groups.map()
    createUser(user.value)
 }
 

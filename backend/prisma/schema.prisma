@@ -18,7 +18,7 @@ enum Tab {
 }
 
 model user {
-   id                      Int        @id @default(autoincrement())
+   uid                     String     @unique
    created_at              DateTime   @default(now()) @db.Timestamptz(6)
    email                   String?    @unique(map: "user_sub_unique")
    password                String?
@@ -26,22 +26,45 @@ model user {
    lastname                String?
    pict                    String     @default("/static/img/avatar.svg")
 
-   groups                  group[]
-   tabs                    Tab[]
+   user_tab_relations      user_tab_relation[]
+   user_group_relations    user_group_relation[]
+}
+
+model user_tab_relation {
+   uid            String     @unique
+   createdAt      DateTime   @default(now()) @db.Timestamptz(6)
+   updatedAt      DateTime   @updatedAt @db.Timestamptz(6)
+   user_uid       String
+   tab            Tab
+
+   user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   @@unique([user_uid, tab])
 }
 
 // 'Enseignants', '1SN24D', '1APP24', 'Binôme X & Y'
 model group {
-   id                      Int        @id @default(autoincrement())
+   uid                     String     @unique
    name                    String     @unique(map: "group_name_unique")
 
-   users                   user[]
+   user_group_relations    user_group_relation[]
+}
+
+model user_group_relation {
+   uid            String     @unique
+   createdAt      DateTime   @default(now()) @db.Timestamptz(6)
+   updatedAt      DateTime   @updatedAt @db.Timestamptz(6)
+   user_uid       String
+   group_uid      String
+
+   user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   group group @relation(fields: [group_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   @@unique([user_uid, group_uid])
 }
 
 // groupe 1SN24D, 2024-12-10T14:00 à 2024-12-10T15:45
 model group_slot {
-   id                      Int        @id @default(autoincrement())
-   group_id                Int
+   uid                     String     @unique
+   group_uid               Int
    label                   String
    color                   String     @default("blue")
    start                   DateTime
@@ -49,16 +72,16 @@ model group_slot {
 }
 
 model shdl_test {
-   id                      Int        @id @default(autoincrement())
+   uid                     String     @unique
    color                   String     @default("blue")
    signature               String     // ex: "a, b, cin, s, cout"
    text                    String     // ex: "set rst 1\ncheck a 0"
 }
 
 model user_shdl_test {
-   id                      Int        @id @default(autoincrement())
-   user_id                 Int
-   shdl_test_id            Int
+   uid                     String     @unique
+   user_uid                Int
+   shdl_test_uid           Int
    date                    DateTime
    success                 Boolean
 }

@@ -1,10 +1,11 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
+import { v4 as uuidv4 } from 'uuid'
 
 import { app } from '/src/client-app.js'
 
-export const db = new Dexie("groupDatabase")
+export const db = new Dexie("groupDatabaseSHDL")
 
 db.version(1).stores({
    values: "id",
@@ -44,7 +45,7 @@ export const getGroupRef = (id) => {
    // asynchronously fetch value if it is not in cache
    db.values.get(id).then(value => {
       if (value === undefined) {
-         app.service('group').findUnique({ where: { id }}).then(value => {
+         app.service('group', { volatile: true }).findUnique({ where: { id }}).then(value => {
             db.values.put(value)
          })
       }
@@ -58,7 +59,7 @@ export const getGroupListRef = (whereTag, whereDatabase, wherePredicate) => {
    // asynchronously fetch values if status isn't ready (= values are not in cache)
    db.listStatus.get(whereTag).then(listStatus => {
       if (listStatus?.status !== 'ready') {
-         app.service('group').findMany({ where: whereDatabase }).then(values => {
+         app.service('group', { volatile: true }).findMany({ where: whereDatabase }).then(values => {
             const promiseList = values.map(value => db.values.put(value))
             return Promise.all(promiseList)
          }).then(() => {
@@ -73,15 +74,15 @@ export const getGroupListRef = (whereTag, whereDatabase, wherePredicate) => {
 }
 
 
-export const createGroup = async (data) => {
-   const group = await app.service('group').create({ data })
+export const addGroup = async (data) => {
+   const group = await app.service('group', { volatile: true }).create({ data })
    // update cache
    await db.values.put(group)
    return group
 }
 
 export const updateGroup = async (id, data) => {
-   const group = await app.service('group').update({
+   const group = await app.service('group', { volatile: true }).update({
       where: { id },
       data,
    })
@@ -91,7 +92,7 @@ export const updateGroup = async (id, data) => {
 }
 
 // export const removeGroup = async (id) => {
-//    await app.service('group').delete({ where: { id }})
+//    await app.service('group', { volatile: true }).delete({ where: { id }})
 //    delete groupState.value.groupCache[id]
 //    delete groupState.value.groupStatus[id]
 // }

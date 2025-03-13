@@ -3,6 +3,7 @@
 
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { v4 as uuidv4 } from 'uuid'
 
 import hooks from './auth.hooks.js'
 import config from '#config'
@@ -67,8 +68,9 @@ export default function (app) {
          try {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
+            const uid = uuidv4()
             const user = await prisma.user.create({
-               data: { email: payload.email, password, firstname, lastname }
+               data: { uid, email: payload.email, password, firstname, lastname }
             })
             return user
          } catch(err) {
@@ -85,7 +87,7 @@ export default function (app) {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
             const user = await prisma.user.update({
-               where: { id: payload.userid },
+               where: { id: payload.user_uid },
                data: {
                   password
                },
@@ -106,7 +108,7 @@ export default function (app) {
          const user = await prisma.user.findUnique({ where: { email }})
          if (!user) return
          // send reset password email
-         const token = jwt.sign({ userid: user.id }, config.JWT_PRIVATE_KEY, {
+         const token = jwt.sign({ user_uid: user.uid }, config.JWT_PRIVATE_KEY, {
             algorithm: "RS256",
             // expiresIn: "1h",
          })

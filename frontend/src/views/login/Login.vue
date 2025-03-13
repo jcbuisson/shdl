@@ -127,7 +127,7 @@ async function signIn () {
    try {
       const user = await signin(email.value, password.value)
       console.log('user', user)
-      router.push(`/home/${user.id}/users`)
+      router.push(`/home/${user.uid}/users`)
    } catch(err) {
       const text = errorCodes[err.code] || "Erreur inconnue"
       displaySnackbar({ text, color: 'error', timeout: 2000 })

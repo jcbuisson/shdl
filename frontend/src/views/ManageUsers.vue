@@ -46,8 +46,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
-import { getUserListObservable, getFullname, removeUser } from '/src/use/useUser.js'
+import { getUserListObservable, getFullname, addUser, removeUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -55,7 +56,7 @@ import SplitPanel from '/src/components/SplitPanel.vue'
 
 
 const props = defineProps({
-   signedinId: {
+   signedinUid: {
       type: String,
    },
 })
@@ -69,8 +70,9 @@ userListObservable.subscribe(list => {
    userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 })
 
-function createUser() {
-   router.push(`/home/${props.signedinId}/users/create`)
+async function createUser() {
+   const user = await addUser({})
+   selectUser(user)
 }
 
 const selectedUser = ref(null)
@@ -78,14 +80,14 @@ const selectedUser = ref(null)
 function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
-   router.push(`/home/${props.signedinId}/users/${user.id}`)
+   router.push(`/home/${props.signedinUid}/users/${user.uid}`)
 }
 
 async function deleteUser(user) {
    extendExpiration()
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
-      await removeUser(user.id)
-      router.push(`/home/${props.signedinId}/users`)
+      await removeUser(user.uid)
+      router.push(`/home/${props.signedinUid}/users`)
    }
 }
 

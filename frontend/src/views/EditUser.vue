@@ -104,17 +104,15 @@ import { app } from '/src/client-app.js'
 
 
 const props = defineProps({
-   userid: {
+   user_uid: {
       type: String,
    },
 })
 
-const userid = computed(() => parseInt(props.userid))
-
 const user = ref()
 
-watch(() => props.userid, async (newValue, oldValue) => {
-   const observable = getUserObservable(userid.value)
+watch(() => props.user_uid, async (newValue, oldValue) => {
+   const observable = getUserObservable(user_uid.value)
    observable.subscribe(user_ => user.value = user_)
 }, { immediate: true })
 
@@ -139,7 +137,7 @@ const tabs = [
 const onFieldInput = async (field, value) => {
    try {
       extendExpiration()
-      await updateUser(userid.value, { [field]: value })
+      await updateUser(user_uid.value, { [field]: value })
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
@@ -150,7 +148,7 @@ const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 const onTabChange = async (tabs) => {
    try {
       extendExpiration()
-      await updateUserTabs(userid.value, tabs)
+      await updateUserTabs(user_uid.value, tabs)
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
@@ -160,7 +158,7 @@ const onTabChange = async (tabs) => {
 const onGroupChange = async (newValues) => {
    try {
       extendExpiration()
-      await updateUserGroups(userid.value, newValues)
+      await updateUserGroups(user_uid.value, newValues)
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
@@ -180,7 +178,7 @@ async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
    const uuid = uuidv4()
-   avatarPath = `avatar-${props.userid}-${uuid}.${extension}`
+   avatarPath = `avatar-${props.user_uid}-${uuid}.${extension}`
 }
 
 async function onUploadChunk(ev) {
@@ -203,7 +201,7 @@ async function onUploadChunk(ev) {
 }
 
 async function onUploadEnd(ev) {
-   await updateUser(userid.value, { pict: `/static/upload/avatars/${avatarPath}` })
+   await updateUser(user_uid.value, { pict: `/static/upload/avatars/${avatarPath}` })
    displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
 }
 

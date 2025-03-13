@@ -4,7 +4,7 @@ import { liveQuery } from "dexie"
 import { useObservable } from "@vueuse/rxjs"
 
 
-export const db = new Dexie("appstateDatabase")
+export const db = new Dexie("appstateDatabaseSHDL")
 
 db.version(1).stores({
    keyval: "key",

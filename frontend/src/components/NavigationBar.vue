@@ -5,6 +5,7 @@
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
+      <v-btn size="small" @click="clear">clear</v-btn>
       <label>
          Université de Toulouse - INPT - ENSEEIHT - JCB
       </label>
@@ -51,17 +52,18 @@
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
 import { useRoute } from 'vue-router'
+import { useObservable } from "@vueuse/rxjs"
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
-import { getUserRef, getFullname } from '/src/use/useUser.js'
+import { getUserObservable, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
-import { restartApp, extendExpiration } from "/src/use/useAuthentication"
+import { restartApp, extendExpiration, clearCaches } from "/src/use/useAuthentication"
 
 
 const props = defineProps({
-   signedinId: {
+   signedinUid: {
       type: String,
    },
 })
@@ -72,7 +74,8 @@ const expiresAtHHmm = computed(() => {
    return format(new Date(expiresAt.value), "HH:mm:ss")
 })
 
-const signedinUser = getUserRef(parseInt(props.signedinId))
+const signedinObservable = getUserObservable(props.signedinUid)
+const signedinUser = useObservable(signedinObservable)
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
@@ -80,8 +83,8 @@ const isAuthenticated = computed(() => !!expiresAt.value)
 const route = useRoute()
 
 const tabs = [
-   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.signedinId}/users` },
-   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.signedinId}/groups` },
+   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.signedinUid}/users` },
+   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.signedinUid}/groups` },
    { uid: "c", name: "Tests", icon: 'mdi-eye', path: '#' },
    { uid: "d", name: "Suivi étudiants", icon: 'mdi-eye', path: '#' },
    { uid: "e", name: "SHDL Sandbox", icon: 'mdi-eye', path: '#' },
@@ -113,6 +116,10 @@ async function home() {
    const user15 = await app.service('user').findUnique({ where: { id: 15 }})
    console.log('user15', user15)
    onTabChange(0)
+}
+
+async function clear() {
+   await clearCaches()
 }
 </script>
 
