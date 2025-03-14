@@ -95,8 +95,8 @@ import { ref, watch, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 
-import { getUserObservable, updateUser, updateUserTabs, updateUserGroups } from '/src/use/useUser'
-import { getGroupListRef } from '/src/use/useGroup'
+import { getUserObservable, updateUser, updateUserTabs } from '/src/use/useUser'
+import { selectObservable as selectGroupObservable } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import 'jcb-upload'
@@ -110,13 +110,15 @@ const props = defineProps({
 })
 
 const user = ref()
+const allGroups = ref([])
 
-watch(() => props.user_uid, async (newValue, oldValue) => {
-   const observable = getUserObservable(user_uid.value)
-   observable.subscribe(user_ => user.value = user_)
+watch(() => props.user_uid, async (user_uid) => {
+   const userObservable = getUserObservable(user_uid)
+   userObservable.subscribe(user_ => user.value = user_)
 }, { immediate: true })
 
-const allGroups = getGroupListRef('all', {}, ()=>true)
+const groupListObservable = selectGroupObservable({})
+groupListObservable.subscribe(groupList => allGroups.value = groupList)
 
 const snackbar = ref({})
 
@@ -158,7 +160,7 @@ const onTabChange = async (tabs) => {
 const onGroupChange = async (newValues) => {
    try {
       extendExpiration()
-      await updateUserGroups(user_uid.value, newValues)
+      // await updateUserGroups(user_uid.value, newValues)
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })

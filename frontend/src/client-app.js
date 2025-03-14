@@ -1,6 +1,4 @@
-// COMMON TO NUTRIEDUC & INFIRMIER
-// TO ADAPT: SOCKET PATH
-
+import { ref } from 'vue'
 import { io } from "socket.io-client"
 import { useSessionStorage } from '@vueuse/core'
 
@@ -67,4 +65,18 @@ app.addConnectListener(async (socket) => {
          await restartApp()
       }
    })
+})
+
+export const onlineDate = ref()
+export const offlineDate = ref()
+
+app.addConnectListener(async (socket) => {
+   console.log('onConnect')
+   onlineDate.value = new Date()
+   offlineDate.value = null
+})
+
+app.addDisconnectListener(async (socket) => {
+   onlineDate.value = null
+   offlineDate.value = new Date()
 })

@@ -46,9 +46,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
 
-import { getUserListObservable, getFullname, addUser, removeUser } from '/src/use/useUser.js'
+import { selectObservable as selectUsersObservable, getFullname, addUser, removeUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -65,7 +64,7 @@ const filter = ref('')
 
 const userList = ref([])
 
-const userListObservable = getUserListObservable('all', {}, ()=>true)
+const userListObservable = selectUsersObservable({})
 userListObservable.subscribe(list => {
    userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 })
