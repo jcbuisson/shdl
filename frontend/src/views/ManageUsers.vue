@@ -52,6 +52,7 @@ import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
+// import SplitPanel from 'jcb-vertical-split-panel'
 
 
 const props = defineProps({

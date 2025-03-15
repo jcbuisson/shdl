@@ -60,7 +60,7 @@
                   <v-autocomplete
                      variant="underlined"
                      v-model="user.groups"
-                     :items="allGroups"
+                     :items="groupList"
                      item-title="name"
                      item-value="id"
                      label="Groupes"
@@ -80,8 +80,8 @@
 <script setup>
 import { ref } from 'vue'
 
-import { createUser } from '/src/use/useUser.js'
-import { getGroupListRef } from '/src/use/useGroup'
+import { addUser } from '/src/use/useUser.js'
+import { selectGroupsObservable } from '/src/use/useGroup'
 
 import 'jcb-upload'
 
@@ -104,10 +104,17 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
-const allGroups = getGroupListRef('all', {}, ()=>true)
+const groupList = getGroupListRef('all', {}, ()=>true)
+
+const groupList = ref([])
+
+const groupListObservable = selectGroupsObservable({})
+groupListObservable.subscribe(list => {
+   groupList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+})
 
 function submit() {
-   createUser(user.value)
+   addUser(user.value)
 }
 
 </script>

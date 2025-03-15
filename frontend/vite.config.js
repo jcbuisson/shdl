@@ -46,7 +46,7 @@ export default defineConfig({
       }),
    ],
    server: {
-   port: 8080,
+      port: 8080,
       open: true,
       host: true, // allows for external device connection on local network
       proxy: {

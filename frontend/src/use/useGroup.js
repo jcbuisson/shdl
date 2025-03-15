@@ -87,12 +87,12 @@ export async function addGroup(data) {
 }
 
 
-export const updateGroup = async (id, data) => {
+export const updateGroup = async (uid, data) => {
    // optimistic update of cache
-   db.values.update(id, data)
+   db.values.update(uid, data)
    // execute on server
    const group = await app.service('group', { volatile: true }).update({
-      where: { id },
+      where: { uid },
       data,
    })
    return group

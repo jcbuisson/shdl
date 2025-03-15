@@ -2,7 +2,8 @@
 // database services
 import userService from './database/user/user.service.js'
 import groupService from './database/group/group.service.js'
-import userGroupService from './database/user_group/user_group.service.js'
+import userTabRelationService from './database/user_tab_relation/user_tab_relation.service.js'
+import userGroupRelationService from './database/user_group_relation/user_group_relation.service.js'
 
 // custom services
 import authService from './custom/auth/auth.service.js'
@@ -15,7 +16,8 @@ export default function (app) {
    // add database services
    app.configure(userService)
    app.configure(groupService)
-   app.configure(userGroupService)
+   app.configure(userTabRelationService)
+   app.configure(userGroupRelationService)
 
    // add custom services
    app.configure(authService)

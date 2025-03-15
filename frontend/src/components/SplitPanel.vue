@@ -4,8 +4,7 @@
          <div class="split-container">
             <!-- Left Panel with Slot -->
             <div class="left-panel" :style="{ width: leftWidth + 'px' }">
-               <slot name="left-panel">
-               </slot>
+               <slot name="left-panel"></slot>
             </div>
 
             <!-- Draggable Splitter -->
@@ -13,8 +12,7 @@
 
             <!-- Right Panel with Slot -->
             <div class="right-panel" :style="{ width: `calc(100% - ${leftWidth}px)` }">
-               <slot name="right-panel">
-               </slot>
+               <slot name="right-panel"></slot>
             </div>
          </div>
       </v-col>

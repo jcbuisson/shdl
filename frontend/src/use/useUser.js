@@ -112,12 +112,12 @@ export async function addUser(data) {
    await app.service('user', { volatile: true }).create({ data: { uid, ...data } })
 }
 
-export const updateUser = async (id, data) => {
+export const updateUser = async (uid, data) => {
    // optimistic update of cache
-   db.values.update(id, data)
+   db.values.update(uid, data)
    // execute on server
    const user = await app.service('user', { volatile: true }).update({
-      where: { id },
+      where: { uid },
       data,
       include: {
          user_group_relations: true,
@@ -163,11 +163,11 @@ export const updateUserTabs = async (id, tabs) => {
    return user
 }
 
-export const removeUser = async (id) => {
+export const removeUser = async (uid) => {
    // optimistic update of cache
-   db.values.delete(id)
+   db.values.delete(uid)
    // execute on server
-   await app.service('user', { volatile: true }).delete({ where: { id }})
+   await app.service('user', { volatile: true }).delete({ where: { uid }})
 }
 
 export function getFullname(user) {

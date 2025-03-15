@@ -139,7 +139,7 @@ const tabs = [
 const onFieldInput = async (field, value) => {
    try {
       extendExpiration()
-      await updateUser(user_uid.value, { [field]: value })
+      await updateUser(props.user_uid, { [field]: value })
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
@@ -179,14 +179,14 @@ let avatarPath
 async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
-   const uuid = uuidv4()
-   avatarPath = `avatar-${props.user_uid}-${uuid}.${extension}`
+   // const uuid = uuidv4()
+   // avatarPath = `avatar-${props.user_uid}-${uuid}.${extension}`
+   avatarPath = `avatar-${props.user_uid}.${extension}`
 }
 
 async function onUploadChunk(ev) {
    const type = ev.detail.file.type // ex: image/jpg
    if (type.startsWith('image')) {
-      const extension = ev.detail.file.type.substring(6)
       try {
          await app.service('file-upload').appendToFile({
             dirKey: 'UPLOAD_AVATARS_PATH',
@@ -203,7 +203,7 @@ async function onUploadChunk(ev) {
 }
 
 async function onUploadEnd(ev) {
-   await updateUser(user_uid.value, { pict: `/static/upload/avatars/${avatarPath}` })
+   await updateUser(props.user_uid, { pict: `/static/upload/avatars/${avatarPath}` })
    displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
 }
 

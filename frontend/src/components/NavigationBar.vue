@@ -34,14 +34,14 @@
       </v-menu>
    </v-toolbar>
 
-   <v-tabs v-if="isAuthenticated" align-tabs="center" stacked bg-color="brown-darken-1" density="compact" slider-color="yellow"
+   <v-tabs v-if="isAuthenticated" aalign-tabs="center" bg-color="brown-darken-1" density="compact" slider-color="yellow"
          :model-value="currentTabIndex"
          @update:modelValue="onTabChange">
          
       <v-tabs-slider color="yellow"></v-tabs-slider>
 
       <v-tab :to="{path: tab.path}" router v-for="tab in tabs" :key="tab.uid">
-         <v-icon>{{ tab.icon }}</v-icon>
+         <!-- <v-icon>{{ tab.icon }}</v-icon> -->
          {{ tab.name }}
       </v-tab>
    </v-tabs>
