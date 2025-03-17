@@ -1,3 +1,6 @@
+
+// see App.vue
+
 import { ref } from 'vue'
 
 export const snackbar = ref({})

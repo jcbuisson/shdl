@@ -35,13 +35,28 @@ app.service('user_tab_relation').on('delete', async value => {
 
 /////////////              METHODS              /////////////
 
-export const updateUserTabs = async (user_uid, tabs) => {
+export async function updateUserTabs(user_uid, tabs) {
+   console.log(user_uid, tabs)
    // enlarge perimeter
-   addSynchroWhere({ user_uid }, db.whereList)
+   // addSynchroWhere({ user_uid }, db.whereList)
    // optimistic update of cache
    const currentTabs = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
    const toAdd = tabs.reduce((accu, tab) => currentTabs.includes(tab) ? accu : [tab, ...accu], [])
    const toRemove = currentTabs.reduce((accu, tab) => tabs.includes(tab) ? accu : [tab, ...accu], [])
+   console.log('toAdd', toAdd)
+   console.log('toRemove', toRemove)
+   for (const tab of toAdd) {
+      const uid = currentTabs.find(relation => relation.tab === tab).uid
+      console.log('uid', uid)
+      const relation = await app.service('user_tab_relation', { volatile: true }).create({ data: { uid, user_uid, tab }})
+   }
+   for (const tab of toRemove) {
+      await app.service('user_tab_relation', { volatile: true }).delete({
+         where: { user_uid, tab }
+      })
+   }
+
+
    // for (const tab of toAdd) {
    //    const uid = uuidv4()
    //    await db.values.add({ uid, user_uid, tab })
@@ -51,14 +66,16 @@ export const updateUserTabs = async (user_uid, tabs) => {
    //    await db.values.delete(relation.uid)
    // }
    // execute on server
-   for (const tab of toAdd) {
-      await app.service('user_tab_relation', { volatile: true }).create({ data: { uid, user_uid, tab }})
-   }
-   for (const tab of toRemove) {
-      // await app.service('user_tab_relation', { volatile: true }).delete({
-      //    where: { user_uid, tab }
-      // })
-   }
+   // for (const tab of toAdd) {
+   //    const uid = currentTabs.find(relation => relation.tab === tab).uid
+   //    const relation = await app.service('user_tab_relation', { volatile: true }).create({ data: { uid, user_uid, tab }})
+   //    console.log('relation', relation)
+   // }
+   // for (const tab of toRemove) {
+   //    await app.service('user_tab_relation', { volatile: true }).delete({
+   //       where: { user_uid, tab }
+   //    })
+   // }
 }
 
 

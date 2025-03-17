@@ -148,6 +148,20 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
+const onTabChange = async (tabs) => {
+   console.log('tabs', tabs)
+   userTabs.value = tabs
+   try {
+      extendExpiration()
+      await updateUserTabs(props.user_uid, tabs)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
+}
+
+const onTabChangeDebounced = useDebounceFn(onTabChange, 1000)
+
 
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
 
