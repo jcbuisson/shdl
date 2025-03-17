@@ -36,13 +36,15 @@ app.service('user_tab_relation').on('delete', async value => {
 /////////////              METHODS              /////////////
 
 export async function updateUserTabs(user_uid, tabs) {
-   console.log(user_uid, tabs)
+   console.log('updateUserTabs', user_uid, tabs)
    // enlarge perimeter
    // addSynchroWhere({ user_uid }, db.whereList)
    // optimistic update of cache
-   const currentTabs = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
+   const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
+   const currentTabs = currentRelations.map(relation => relation.tab)
    const toAdd = tabs.reduce((accu, tab) => currentTabs.includes(tab) ? accu : [tab, ...accu], [])
    const toRemove = currentTabs.reduce((accu, tab) => tabs.includes(tab) ? accu : [tab, ...accu], [])
+   console.log('currentTabs', currentTabs)
    console.log('toAdd', toAdd)
    console.log('toRemove', toRemove)
    for (const tab of toAdd) {
@@ -51,9 +53,8 @@ export async function updateUserTabs(user_uid, tabs) {
       const relation = await app.service('user_tab_relation', { volatile: true }).create({ data: { uid, user_uid, tab }})
    }
    for (const tab of toRemove) {
-      await app.service('user_tab_relation', { volatile: true }).delete({
-         where: { user_uid, tab }
-      })
+      const uid = currentRelations.find(relation => relation.tab === tab).uid
+      await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid }})
    }
 
 
