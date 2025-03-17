@@ -148,6 +148,11 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
+const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid: props.user_uid })
+userTabRelationListObservable.subscribe(relationList => {
+   userTabs.value = relationList.map(relation => relation.tab)
+})
+
 const onTabChange = async (tabs) => {
    console.log('tabs', tabs)
    userTabs.value = tabs
