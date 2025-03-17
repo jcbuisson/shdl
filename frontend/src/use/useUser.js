@@ -103,7 +103,6 @@ export const getUserListObservable = () => {
 
 export async function addUser(data) {
    const uid = uuidv4()
-   console.log('create user', uid)
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
@@ -146,22 +145,6 @@ export const updateUser = async (uid, data) => {
 //    })
 //    return user
 // }
-
-export const updateUserTabs = async (id, tabs) => {
-   // optimistic update of cache
-   db.values.update(id, { tabs })
-   // execute on server
-   const user = await app.service('user', { volatile: true }).update({
-      where: { id },
-      data: {
-         tabs
-      },
-      include: {
-         groups: true,
-      },
-   })
-   return user
-}
 
 export const removeUser = async (uid) => {
    // optimistic update of cache

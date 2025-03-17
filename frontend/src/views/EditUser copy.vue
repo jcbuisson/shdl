@@ -1,5 +1,6 @@
 <template>
    <v-card>
+      <!-- <v-form v-model="valid" lazy-validation> -->
       <v-form>
          <v-container>
             <v-row>
@@ -42,18 +43,51 @@
                   ></v-text-field>
                </v-col>
             </v-row>
+
+            <v-row>
+               <v-col xs="12" sm="12">
+                  <v-autocomplete
+                     variant="underlined"
+                     :modelValue="userTabs"
+                     @update:modelValue="onTabChange"
+                     :items="tabs"
+                     item-title="name"
+                     item-value="uid"
+                     label="Onglets"
+                     chips
+                     multiple
+                  ></v-autocomplete>
+               </v-col>
+            </v-row>
+
+            <v-row>
+               <v-col xs="12" sm="12">
+                  <v-autocomplete
+                     variant="underlined"
+                     :modelValue="user?.groups"
+                     @update:modelValue="onGroupChange"
+                     :items="groupList"
+                     item-title="name"
+                     item-value="id"
+                     label="Groupes"
+                     chips
+                     multiple
+                  ></v-autocomplete>
+               </v-col>
+            </v-row>
          </v-container>
       </v-form>
    </v-card>
 
-   <!-- avatar modal display-->
+   <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
+      {{ snackbar.text }}
+   </v-snackbar>
+
    <v-dialog v-model="avatarDialog" width="auto">
       <v-img :width="800" aspect-ratio="16/9" cover 
          :src="user?.pict"
       ></v-img>
    </v-dialog>
-
-{{ user }}
 </template>
 
 <script setup>
@@ -63,8 +97,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { getUserObservable, updateUser } from '/src/use/useUser'
 import { selectObservable as selectGroupObservable } from '/src/use/useGroup'
 import { selectObservable as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
-import { extendExpiration } from '/src/use/useAuthentication'
-import { displaySnackbar } from '/src/use/useSnackbar'
+import { extendExpiration } from "/src/use/useAuthentication"
 
 import 'jcb-upload'
 import { app } from '/src/client-app.js'
@@ -83,8 +116,35 @@ watch(() => props.user_uid, async (user_uid) => {
    userObservable.subscribe(user_ => user.value = user_)
 }, { immediate: true })
 
+const groupList = ref([])
+const groupListObservable = selectGroupObservable({})
+groupListObservable.subscribe(list => groupList.value = list)
 
-//////////////////////        TEXT FIELD EDITING        //////////////////////
+const userTabRelationList = ref([])
+const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid: props.user_uid })
+userTabRelationListObservable.subscribe(list => {
+   console.log('xxx')
+   userTabRelationList.value = list
+   userTabs.value = userTabRelationList.value.map(relation => relation.tab)
+})
+
+const userTabs = ref([])
+
+const snackbar = ref({})
+
+const emailRules = [
+   (v) => !!v || "L'email est obligatoire",
+   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
+]
+
+const tabs = [
+   { uid: 'user_management', name: "Gestion utilisateurs" },
+   { uid: 'group_management', name: "Gestion des groupes" },
+   { uid: 'test_management', name: "Gestion des tests" },
+   { uid: 'student_followup', name: "Suivi des étudiants" },
+   { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
+   { uid: 'craps_sandbox', name: "CRAPS sandbox" },
+]
 
 const onFieldInput = async (field, value) => {
    try {
@@ -96,6 +156,32 @@ const onFieldInput = async (field, value) => {
    }
 }
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
+
+const onTabChange = async (tabs) => {
+   console.log('tab change!!', tabs)
+   return
+   try {
+      extendExpiration()
+      await updateUserTabs(props.user_uid, tabs)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
+}
+
+const onGroupChange = async (newValues) => {
+   try {
+      extendExpiration()
+      // await updateUserGroups(props.user_uid, newValues)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
+}
+
+function displaySnackbar({ text, color, timeout }) {
+   snackbar.value = { text, color, timeout, visible: true }
+}
 
 
 //////////////////////        AVATAR UPLOAD        //////////////////////
@@ -140,5 +226,4 @@ const avatarDialog = ref(false)
 function onAvatarClick() {
    avatarDialog.value = true
 }
-
 </script>

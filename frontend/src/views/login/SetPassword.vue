@@ -37,16 +37,13 @@
 
       </div>
    </div>
-
-   <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
-      {{ snackbar.text }}
-   </v-snackbar>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { importSPKI, jwtVerify } from "jose"
 
+import { displaySnackbar } from '/src/use/useSnackbar'
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
@@ -70,11 +67,6 @@ const valid = ref()
 const password = ref('')
 const passwordConfirmed = ref('')
 const hiddenPassword = ref(true)
-const snackbar = ref({})
-
-function displaySnackbar({ text, color, timeout }) {
-   snackbar.value = { text, color, timeout, visible: true }
-}
 
 async function submit() {
    try {

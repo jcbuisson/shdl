@@ -54,16 +54,13 @@
       </div>
 
    </div>
-
-   <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
-      {{ snackbar.text }}
-   </v-snackbar>
 </template>
 
 
 <script setup>
 import { ref, computed } from 'vue'
 
+import { displaySnackbar } from '/src/use/useSnackbar'
 import router from '/src/router'
 import { signin, signup } from "/src/use/useAuthentication"
 
@@ -80,7 +77,6 @@ const password = ref('')
 const valid = ref(false)
 const mode = ref(props.initial_mode)
 const hiddenPassword = ref(true)
-const snackbar = ref({})
 
 const emailRules = [
    (v) => !!v || "L'email est obligatoire",
@@ -105,10 +101,6 @@ function onModeButtonTap() {
    } else {
       mode.value = 'connection'
    }
-}
-
-function displaySnackbar({ text, color, timeout }) {
-   snackbar.value = { text, color, timeout, visible: true }
 }
 
 function submit() {

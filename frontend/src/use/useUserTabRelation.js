@@ -35,6 +35,32 @@ app.service('user_tab_relation').on('delete', async value => {
 
 /////////////              METHODS              /////////////
 
+export const updateUserTabs = async (user_uid, tabs) => {
+   // enlarge perimeter
+   addSynchroWhere({ user_uid }, db.whereList)
+   // optimistic update of cache
+   const currentTabs = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
+   const toAdd = tabs.reduce((accu, tab) => currentTabs.includes(tab) ? accu : [tab, ...accu], [])
+   const toRemove = currentTabs.reduce((accu, tab) => tabs.includes(tab) ? accu : [tab, ...accu], [])
+   // for (const tab of toAdd) {
+   //    const uid = uuidv4()
+   //    await db.values.add({ uid, user_uid, tab })
+   // }
+   // for (const tab of toRemove) {
+   //    const relation = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid && value.tab === tab).first()
+   //    await db.values.delete(relation.uid)
+   // }
+   // execute on server
+   for (const tab of toAdd) {
+      await app.service('user_tab_relation', { volatile: true }).create({ data: { uid, user_uid, tab }})
+   }
+   for (const tab of toRemove) {
+      // await app.service('user_tab_relation', { volatile: true }).delete({
+      //    where: { user_uid, tab }
+      // })
+   }
+}
+
 
 /////////////          SYNCHRONIZATION          /////////////
 

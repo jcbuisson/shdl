@@ -18,16 +18,13 @@
 
       <v-menu :location="location">
          <template v-slot:activator="{ props }">
-            <v-btn v-if="isAuthenticated" v-bind="props">
-               {{ signedinUserFullname }}
-            </v-btn>
-            <v-btn v-else v-bind="props" @click="login">
-               Connexion
+            <v-btn v-bind="props">
+               {{ isAuthenticated ? signedinUserFullname : "Connexion" }}
             </v-btn>
          </template>
 
-         <v-list v-if="isAuthenticated">
-            <v-list-item>
+         <v-list>
+            <v-list-item  v-if="isAuthenticated">
                <v-list-item-title @click="logout">Déconnexion</v-list-item-title>
             </v-list-item>
          </v-list>

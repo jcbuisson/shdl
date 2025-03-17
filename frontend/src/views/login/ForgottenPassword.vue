@@ -26,16 +26,12 @@
 
       </div>
    </div>
-
-   <v-snackbar v-model="snackbar.visible" :timeout="snackbar.timeout" :color="snackbar.color">
-      {{ snackbar.text }}
-   </v-snackbar>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 
-import router from '/src/router'
+import { displaySnackbar } from '/src/use/useSnackbar'
 import { app } from '/src/client-app.js'
 
 const emailRules = [
@@ -45,11 +41,6 @@ const emailRules = [
 
 const valid = ref()
 const email = ref('')
-const snackbar = ref({})
-
-function displaySnackbar({ text, color, timeout }) {
-   snackbar.value = { text, color, timeout, visible: true }
-}
 
 async function submit() {
    try {
