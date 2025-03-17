@@ -63,9 +63,10 @@
                <v-col xs="12" sm="12">
                   <v-autocomplete
                      variant="underlined"
+                     v-model="userGroups"
                      :items="groupList"
                      item-title="name"
-                     item-value="id"
+                     item-value="uid"
                      label="Groupes"
                      chips
                      multiple
@@ -84,7 +85,7 @@
       ></v-img>
    </v-dialog>
 
-{{ user }}
+{{ userGroups }}
 </template>
 
 <script setup>
@@ -149,6 +150,8 @@ const tabs = [
 
 
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
+
+const userGroups = ref([])
 
 const groupList = ref([])
 const groupListObservable = selectGroupObservable({})
