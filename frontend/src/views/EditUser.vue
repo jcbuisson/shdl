@@ -93,6 +93,11 @@ const props = defineProps({
    },
 })
 
+const emailRules = [
+   (v) => !!v || "L'email est obligatoire",
+   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
+]
+
 const user = ref()
 
 watch(() => props.user_uid, async (user_uid) => {
@@ -127,6 +132,13 @@ const tabs = [
    { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
+
+
+//////////////////////        USER-GROUP RELATIONS        //////////////////////
+
+const groupList = ref([])
+const groupListObservable = selectGroupObservable({})
+groupListObservable.subscribe(list => groupList.value = list)
 
 
 //////////////////////        AVATAR UPLOAD        //////////////////////
