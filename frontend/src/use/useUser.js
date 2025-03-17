@@ -148,7 +148,8 @@ export const updateUser = async (uid, data) => {
 
 export const removeUser = async (uid) => {
    // optimistic update of cache
-   db.values.delete(uid)
+   // db.values.delete(uid)
+   db.values.update(uid, { deleted_: true })
    // execute on server
    await app.service('user', { volatile: true }).delete({ where: { uid }})
 }
