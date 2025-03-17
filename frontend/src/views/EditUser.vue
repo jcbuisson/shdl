@@ -59,6 +59,20 @@
                </v-col>
             </v-row>
 
+            <v-row>
+               <v-col xs="12" sm="12">
+                  <v-autocomplete
+                     variant="underlined"
+                     :items="groupList"
+                     item-title="name"
+                     item-value="id"
+                     label="Groupes"
+                     chips
+                     multiple
+                  ></v-autocomplete>
+               </v-col>
+            </v-row>
+
          </v-container>
       </v-form>
    </v-card>
