@@ -42,6 +42,23 @@
                   ></v-text-field>
                </v-col>
             </v-row>
+
+            <v-row>
+               <v-col xs="12" sm="12">
+                  <v-autocomplete
+                     variant="underlined"
+                     v-model="userTabs"
+                     @update:modelValue="onTabChange"
+                     :items="tabs"
+                     item-title="name"
+                     item-value="uid"
+                     label="Onglets"
+                     chips
+                     multiple
+                  ></v-autocomplete>
+               </v-col>
+            </v-row>
+
          </v-container>
       </v-form>
    </v-card>
@@ -96,6 +113,20 @@ const onFieldInput = async (field, value) => {
    }
 }
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
+
+
+//////////////////////        USER-TAB RELATIONS        //////////////////////
+
+const userTabs = ref([])
+
+const tabs = [
+   { uid: 'user_management', name: "Gestion utilisateurs" },
+   { uid: 'group_management', name: "Gestion des groupes" },
+   { uid: 'test_management', name: "Gestion des tests" },
+   { uid: 'student_followup', name: "Suivi des étudiants" },
+   { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
+   { uid: 'craps_sandbox', name: "CRAPS sandbox" },
+]
 
 
 //////////////////////        AVATAR UPLOAD        //////////////////////
