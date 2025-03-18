@@ -191,7 +191,7 @@ let avatarPath
 async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
-   // const uuid = uuidv4()
+   // const uuid = uid16(16)
    // avatarPath = `avatar-${props.user_uid}-${uuid}.${extension}`
    avatarPath = `avatar-${props.user_uid}.${extension}`
 }

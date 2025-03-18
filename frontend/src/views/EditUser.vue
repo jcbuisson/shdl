@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import { getUserObservable, updateUser } from '/src/use/useUser'
@@ -115,9 +115,21 @@ const emailRules = [
 
 const user = ref()
 
+let userSubscription
+let userTabRelationListSubscription
+
 watch(() => props.user_uid, async (user_uid) => {
+   console.log('CHANGE USERID')
+   if (userSubscription) userSubscription.unsubscribe()
    const userObservable = getUserObservable(user_uid)
-   userObservable.subscribe(user_ => user.value = user_)
+   userSubscription = userObservable.subscribe(user_ => user.value = user_)
+
+   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
+   const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid })
+   userTabRelationListSubscription = userTabRelationListObservable.subscribe(relationList => {
+      console.log('CHANGE RELATION', user_uid, relationList)
+      userTabs.value = relationList.map(relation => relation.tab)
+   })
 }, { immediate: true })
 
 
@@ -148,10 +160,6 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
-const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid: props.user_uid })
-userTabRelationListObservable.subscribe(relationList => {
-   userTabs.value = relationList.map(relation => relation.tab)
-})
 
 const onTabChange = async (tabs) => {
    console.log('tabs', tabs)
@@ -164,8 +172,6 @@ const onTabChange = async (tabs) => {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
    }
 }
-
-const onTabChangeDebounced = useDebounceFn(onTabChange, 1000)
 
 
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
@@ -184,7 +190,7 @@ let avatarPath
 async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
-   // const uuid = uuidv4()
+   // const uuid = uid16(16)
    // avatarPath = `avatar-${props.user_uid}-${uuid}.${extension}`
    avatarPath = `avatar-${props.user_uid}.${extension}`
 }

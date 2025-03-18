@@ -1,14 +1,15 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
-import { v4 as uuidv4 } from 'uuid'
+// import { v4 as uuidv4 } from 'uuid'
+import { uid as uid16 } from 'uid'
 
-import { wherePredicate, synchronize, addSynchroWhere } from '/src/lib/synchronize.js'
+import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
 import { app, offlineDate } from '/src/client-app.js'
 
 export const db = new Dexie("userTabRelationDatabaseSHDL")
 
 db.version(1).stores({
-   whereList: "id++",
+   whereList: "id++, where",
    values: "uid, createdAt, updatedAt, user_uid, tab, deleted_"
 })
 
@@ -35,41 +36,46 @@ app.service('user_tab_relation').on('delete', async value => {
 
 /////////////              METHODS              /////////////
 
-export async function updateUserTabs(user_uid, newTabs) {
-   try {
-      console.log('updateUserTabs', user_uid, newTabs)
-      // enlarge perimeter
-      addSynchroWhere({ user_uid }, db.whereList)
-      // optimistic update of cache
-      const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
-      const currentTabs = currentRelations.map(relation => relation.tab)
-      const toAdd = newTabs.filter(tab => !currentTabs.includes(tab))
-      const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
-      console.log('currentTabs', currentTabs)
-      console.log('toAdd', toAdd)
-      console.log('toRemove', toRemove)
-      for (const tab of toAdd) {
-         const uid = uuidv4()
-         await db.values.add({ uid, user_uid, tab })
-      }
-      for (const tab of toRemove) {
-         const uid = currentRelations.find(relation => relation.tab === tab).uid
-         // await db.values.delete(uid)
-         await db.values.update(uid, { deleted_: true })
-      }
+export const getRelationListFromUser = async (user_uid) => {
+   return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
+}
 
-      // execute on server
-      for (const tab of toAdd) {
-         const relation = await db.values.filter(value => value.tab === tab).first()
-         await app.service('user_tab_relation', { volatile: true }).create({ data: { uid: relation.uid, user_uid, tab }})
-      }
-      for (const tab of toRemove) {
-         const relation = await db.values.filter(value => value.tab === tab).first()
-         await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid: relation.uid }})
-      }
-   } catch(err) {
-      console.log('err', err)
+export async function updateUserTabs(user_uid, newTabs) {
+   // enlarge perimeter
+   addSynchroWhere({ user_uid }, db.whereList)
+
+   // optimistic update of cache
+   const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
+   const currentTabs = currentRelations.map(relation => relation.tab)
+   const toAdd = newTabs.filter(tab => !currentTabs.includes(tab))
+   const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
+   for (const tab of toAdd) {
+      const uid = uid16(16)
+      await db.values.add({ uid, user_uid, tab })
    }
+   for (const tab of toRemove) {
+      const uid = currentRelations.find(relation => relation.tab === tab).uid
+      await db.values.update(uid, { deleted_: true })
+   }
+   
+   // execute on server
+   for (const tab of toAdd) {
+      const relation = await db.values.filter(value => value.tab === tab).first()
+      await app.service('user_tab_relation', { volatile: true }).create({ data: { uid: relation.uid, user_uid, tab }})
+   }
+   for (const tab of toRemove) {
+      const relation = await db.values.filter(value => value.tab === tab).first()
+      await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid: relation.uid }})
+   }
+}
+
+export async function deleteRelation(uid) {
+   // // stop synchronizing on this perimeter
+   removeSynchroWhere({ uid }, db.whereList)
+   // optimistic update
+   await db.values.update(uid, { deleted_: true })
+   // perform request on backend (if connection is active)
+   await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid }})
 }
 
 

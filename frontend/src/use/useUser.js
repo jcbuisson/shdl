@@ -1,14 +1,16 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
-import { v4 as uuidv4 } from 'uuid'
+// import { v4 as uuidv4 } from 'uuid'
+import { uid as uid16 } from 'uid'
 
-import { wherePredicate, synchronize, addSynchroWhere } from '/src/lib/synchronize.js'
+import { getRelationListFromUser, deleteRelation } from '/src/use/useUserTabRelation'
+import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
 import { app, offlineDate } from '/src/client-app.js'
 
 export const db = new Dexie("userDatabaseSHDL")
 
 db.version(1).stores({
-   whereList: "id++",
+   whereList: "id++, where",
    values: "uid, createdAt, updatedAt, email, firstname, lastname, deleted_"
 })
 
@@ -35,62 +37,6 @@ app.service('user').on('delete', async user => {
 
 /////////////          METHODS          /////////////
 
-// export const getUserObservable = (id) => {
-//    // asynchronously fetch value if it is not in cache
-//    db.values.get(id).then(value => {
-//       if (value === undefined) {
-//          app.service('user').app.service('user').findUnique({
-//             where: { id },
-//             include: {
-//                groups: true,
-//             },
-//          }).then(value => {
-//             db.values.put(value)
-//          })
-//       }
-//    })
-//    return liveQuery(() => db.values.get(id))
-// }
-
-// export const getUserPromise = (id) => from(getUserObservable(id))
-
-// export const getUserRef = (id) => {
-//    return useObservable(getUserObservable(id))
-// }
-
-
-// export const getUserListObservable = (whereTag, whereDatabase, wherePredicate) => {
-//    // asynchronously fetch values if status isn't ready (= values are not in cache)
-//    db.listStatus.get(whereTag).then(listStatus => {
-//       if (listStatus?.status !== 'ready') {
-//          app.service('user').findMany({
-//             where: whereDatabase,
-//             include: {
-//                groups: true,
-//             },
-//          }).then(values => {
-//             const promiseList = values.map(value => db.values.put(value))
-//             return Promise.all(promiseList)
-//          }).then(() => {
-//             db.listStatus.put({ whereTag, status: 'ready' })
-//          }).catch(err => {
-//             console.log('err', err)
-//          })
-//       }
-//    })
-//    return liveQuery(() => db.values.filter(wherePredicate).toArray())
-// }
-
-
-// export const createEmptyUser = async (uid) => {
-//    const data = { uid }
-//    // optimistic update of cache
-//    db.values.put(data)
-//    // execute on server
-//    const user = await app.service('user').create({ data })
-//    return user
-// }
-
 export const getUserObservable = (uid) => {
    // return observable
    return liveQuery(() => db.values.filter(user => !user.deleted_ && user.uid === uid).first())
@@ -102,20 +48,21 @@ export const getUserListObservable = () => {
 }
 
 export async function addUser(data) {
-   const uid = uuidv4()
+   const uid = uid16(16)
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
    await db.values.add({ uid, ...data })
    // perform request on backend (if connection is active)
    await app.service('user', { volatile: true }).create({ data: { uid, ...data } })
+   return db.values.get(uid)
 }
 
 export const updateUser = async (uid, data) => {
    // optimistic update of cache
    db.values.update(uid, data)
    // execute on server
-   const user = await app.service('user', { volatile: true }).update({
+   await app.service('user', { volatile: true }).update({
       where: { uid },
       data,
       include: {
@@ -123,8 +70,27 @@ export const updateUser = async (uid, data) => {
          user_tab_relations: true,
       },
    })
-   return user
+   return db.values.get(uid)
 }
+
+// export const updateUserTabs = async (uid, newTabs) => {
+//    // optimistic update of cache
+//    db.values.update(uid, { groups })
+//    // execute on server
+//    const user = await app.service('user', { volatile: true }).update({
+//       where: { uid },
+//       data: {
+//          tabs: {
+//             // connect, disconnect, set: https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries#disconnect-all-related-records
+//             set: newTabs,
+//          }
+//       },
+//       include: {
+//          tabs: true,
+//       },
+//    })
+//    return user
+// }
 
 // export const updateUserGroups = async (id, newGroups) => {
 //    // optimistic update of cache
@@ -146,10 +112,15 @@ export const updateUser = async (uid, data) => {
 //    return user
 // }
 
-export const removeUser = async (uid) => {
+export const deleteUser = async (uid) => {
+   // stop synchronizing on this perimeter
+   removeSynchroWhere({ uid }, db.whereList)
    // optimistic update of cache
-   // db.values.delete(uid)
-   db.values.update(uid, { deleted_: true })
+   // cascade-delete associated relations
+   const relations = await getRelationListFromUser(uid)
+   await Promise.all(relations.map(relation => deleteRelation(relation)))
+   // delete user
+   await db.values.update(uid, { deleted_: true })
    // execute on server
    await app.service('user', { volatile: true }).delete({ where: { uid }})
 }
@@ -183,11 +154,6 @@ export function selectObservable(where) {
    const predicate = wherePredicate(where)
    return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
 }
-
-// export const getWhereListObservable = () => {
-//    return liveQuery(() => db.whereList.toArray())
-// }
-
 
 // export const synchronizePerimeter = async () => {
 //    await synchronizeAll(app, 'user', db.values, offlineDate.value, db.whereList)

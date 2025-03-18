@@ -9,7 +9,7 @@
             </v-toolbar>
          
             <div :style="{ height: `calc(100vh - 160px)`, 'overflow-y': 'auto' }">
-               <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.id === user?.id">
+               <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(user)">
                         <v-img :src="user.pict"></v-img>
@@ -24,7 +24,7 @@
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser_(user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -47,7 +47,7 @@
 <script setup>
 import { ref } from 'vue'
 
-import { selectObservable as selectUsersObservable, getFullname, addUser, removeUser } from '/src/use/useUser.js'
+import { selectObservable as selectUsersObservable, getFullname, addUser, deleteUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -83,10 +83,10 @@ function selectUser(user) {
    router.push(`/home/${props.signedinUid}/users/${user.uid}`)
 }
 
-async function deleteUser(user) {
+async function deleteUser_(user) {
    extendExpiration()
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
-      await removeUser(user.uid)
+      await deleteUser(user.uid)
       router.push(`/home/${props.signedinUid}/users`)
    }
 }

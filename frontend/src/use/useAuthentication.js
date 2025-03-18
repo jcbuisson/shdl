@@ -3,6 +3,9 @@ import { app } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
 import { resetUseUser } from '/src/use/useUser'
+import { resetUseGroup } from '/src/use/useGroup'
+import { resetUseUserTabRelation } from '/src/use/useUserTabRelation'
+// import { resetUseUserGroupRelation } from '/src/use/useUserGroupRelation'
 
 import router from '/src/router'
 
@@ -12,6 +15,9 @@ export async function clearCaches() {
    // resetUseAuthentication()
    await resetUseAppState()
    await resetUseUser()
+   await resetUseGroup()
+   await resetUseUserTabRelation()
+   // await resetUseUserGroupRelation()
 }
 
 export const restartApp = async () => {

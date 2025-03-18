@@ -68,7 +68,7 @@ export default function (app) {
          try {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
-            const uid = uuidv4()
+            const uid = uid16(16)
             const user = await prisma.user.create({
                data: { uid, email: payload.email, password, firstname, lastname }
             })
