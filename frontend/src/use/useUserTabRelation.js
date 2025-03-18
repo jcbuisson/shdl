@@ -51,7 +51,8 @@ export async function updateUserTabs(user_uid, newTabs) {
    const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
    for (const tab of toAdd) {
       const uid = uid16(16)
-      await db.values.add({ uid, user_uid, tab })
+      const x = await db.values.add({ uid, user_uid, tab })
+      console.log('added', x)
    }
    for (const tab of toRemove) {
       const uid = currentRelations.find(relation => relation.tab === tab).uid
@@ -60,11 +61,11 @@ export async function updateUserTabs(user_uid, newTabs) {
    
    // execute on server
    for (const tab of toAdd) {
-      const relation = await db.values.filter(value => value.tab === tab).first()
+      const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
       await app.service('user_tab_relation', { volatile: true }).create({ data: { uid: relation.uid, user_uid, tab }})
    }
    for (const tab of toRemove) {
-      const relation = await db.values.filter(value => value.tab === tab).first()
+      const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
       await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid: relation.uid }})
    }
 }

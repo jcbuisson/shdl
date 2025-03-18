@@ -113,6 +113,7 @@ export const updateUser = async (uid, data) => {
 // }
 
 export const deleteUser = async (uid) => {
+   console.log('deleteUser', uid)
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update of cache
