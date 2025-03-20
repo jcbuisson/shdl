@@ -36,8 +36,17 @@ app.service('user_tab_relation').on('delete', async value => {
 
 /////////////              METHODS              /////////////
 
-export const getRelationListFromUser = async (user_uid) => {
-   return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
+// return an Observable
+export function findMany(where) {
+   // start synchronization if `where` is new
+   if (addSynchroWhere(where, db.whereList)) {
+      synchronize(app, 'user_tab_relation', db.values, where, offlineDate.value).then(() => {
+         console.log('synchronize user_tab_relation', where, 'ended')
+      })
+   }
+   // return observable for `where` values
+   const predicate = wherePredicate(where)
+   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
 }
 
 export async function updateUserTabs(user_uid, newTabs) {
@@ -69,7 +78,7 @@ export async function updateUserTabs(user_uid, newTabs) {
    }
 }
 
-export async function deleteRelation(uid) {
+export async function remove(uid) {
    // // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update
@@ -79,25 +88,7 @@ export async function deleteRelation(uid) {
 }
 
 
-/////////////          SYNCHRONIZATION          /////////////
 
-export async function selectValues(where) {
-   if (addSynchroWhere(where, db.whereList)) {
-      await synchronize(app, 'user_tab_relation', db.values, where, offlineDate.value)
-   }
-   const predicate = wherePredicate(where)
-   const values = db.values.filter(value => !value.deleted_ && predicate(value)).toArray()
-   return values
-}
-
-export function findMany(where) {
-   // start synchronization if `where` is new
-   if (addSynchroWhere(where, db.whereList)) {
-      synchronize(app, 'user_tab_relation', db.values, where, offlineDate.value).then(() => {
-         console.log('synchronize user_tab_relation', where, 'ended')
-      })
-   }
-   // return observable for `where` values
-   const predicate = wherePredicate(where)
-   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
+export const getRelationListFromUser = async (user_uid) => {
+   return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
 }

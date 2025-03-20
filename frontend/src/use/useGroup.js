@@ -1,9 +1,7 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
-// import { v4 as uuidv4 } from 'uuid'
 import { uid as uid16 } from 'uid'
 
-// import { getGroupRelationsFromUser, deleteRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
 import { app, offlineDate } from '/src/client-app.js'
 
@@ -14,7 +12,7 @@ db.version(1).stores({
    values: "uid, createdAt, updatedAt, name, deleted_"
 })
 
-export const resetUseGroup = async () => {
+export const reset = async () => {
    await db.whereList.clear()
    await db.values.clear()
 }
@@ -35,16 +33,22 @@ app.service('group').on('delete', async group => {
 })
 
 
-export const getGroupPromise = async (id) => {
-   let value = await db.values.get(id)
-   if (value) return value
-   value = await app.service('group').findUnique({ where: { id }})
-   await db.values.put(value)
-   return value
+/////////////          METHODS          /////////////
+
+// return an Observable
+export function findMany(where) {
+   // start synchronization if `where` is new
+   if (addSynchroWhere(where, db.whereList)) {
+      synchronize(app, 'group', db.values, where, offlineDate.value).then(() => {
+         console.log('synchronize group', where, 'ended')
+      })
+   }
+   // return observable for `where` values
+   const predicate = wherePredicate(where)
+   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
 }
 
-
-export async function addGroup(data) {
+export async function create(data) {
    const uid = uid16(16)
    console.log('create user', uid)
    // enlarge perimeter
@@ -56,7 +60,7 @@ export async function addGroup(data) {
 }
 
 
-export const updateGroup = async (uid, data) => {
+export const update = async (uid, data) => {
    // optimistic update of cache
    db.values.update(uid, data)
    // execute on server
@@ -67,7 +71,7 @@ export const updateGroup = async (uid, data) => {
    return group
 }
 
-export const deleteGroup = async (uid) => {
+export const remove = async (uid) => {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update of cache
@@ -78,28 +82,4 @@ export const deleteGroup = async (uid) => {
    await db.values.update(uid, { deleted_: true })
    // execute on server
    await app.service('group', { volatile: true }).delete({ where: { uid }})
-}
-
-
-/////////////          SYNCHRONIZATION          /////////////
-
-export async function selectValues(where) {
-   if (addSynchroWhere(where, db.whereList)) {
-      await synchronize(app, 'group', db.values, where, offlineDate.value)
-   }
-   const predicate = wherePredicate(where)
-   const values = db.values.filter(value => !value.deleted_ && predicate(value)).toArray()
-   return values
-}
-
-export function findMany(where) {
-   // start synchronization if `where` is new
-   if (addSynchroWhere(where, db.whereList)) {
-      synchronize(app, 'group', db.values, where, offlineDate.value).then(() => {
-         console.log('synchronize group', where, 'ended')
-      })
-   }
-   // return observable for `where` values
-   const predicate = wherePredicate(where)
-   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
 }

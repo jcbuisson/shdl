@@ -64,6 +64,7 @@
                   <v-autocomplete
                      variant="underlined"
                      v-model="userGroups"
+                     @update:modelValue="onGroupChange"
                      :items="groupList"
                      item-title="name"
                      item-value="uid"
@@ -93,6 +94,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { findMany as findManyUser, update as updateUser } from '/src/use/useUser'
 import { findMany as findManyGroup } from '/src/use/useGroup'
 import { findMany as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
+import { findMany as selectUserGroupRelationObservable, updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
@@ -115,22 +117,27 @@ const user = ref()
 
 let userSubscription
 let userTabRelationListSubscription
+let userGroupRelationListSubscription
 
 watch(() => props.user_uid, async (user_uid) => {
-   console.log('CHANGE USERID')
    if (userSubscription) userSubscription.unsubscribe()
    userSubscription = findManyUser({ uid: user_uid}).subscribe(([user_]) => user.value = user_)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
    userTabRelationListSubscription = selectUserTabRelationObservable({ user_uid }).subscribe(relationList => {
-      console.log('CHANGE RELATION', user_uid, relationList)
       userTabs.value = relationList.map(relation => relation.tab)
+   })
+
+   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
+   userGroupRelationListSubscription = selectUserGroupRelationObservable({ user_uid }).subscribe(relationList => {
+      userGroups.value = relationList.map(relation => relation.group_uid)
    })
 }, { immediate: true })
 
 onUnmounted(() => {
    if (userSubscription) userSubscription.unsubscribe()
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
+   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
 })
 
 
@@ -162,7 +169,6 @@ const tabs = [
 ]
 
 const onTabChange = async (tabs) => {
-   userTabs.value = tabs
    try {
       extendExpiration()
       await updateUserTabs(props.user_uid, tabs)
@@ -176,10 +182,20 @@ const onTabChange = async (tabs) => {
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
 
 const userGroups = ref([])
-
 const groupList = ref([])
+
 const groupListObservable = findManyGroup({})
 groupListObservable.subscribe(list => groupList.value = list)
+
+const onGroupChange = async (groupUIDs) => {
+   try {
+      extendExpiration()
+      await updateUserGroups(props.user_uid, groupUIDs)
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+   }
+}
 
 
 //////////////////////        AVATAR UPLOAD        //////////////////////

@@ -3,8 +3,8 @@ import { liveQuery } from "dexie"
 // import { v4 as uuidv4 } from 'uuid'
 import { uid as uid16 } from 'uid'
 
-import { getRelationListFromUser as getTabRelationListFromUser, deleteRelation as deleteTabRelation } from '/src/use/useUserTabRelation'
-// import { getRelationListFromUser as getGroupRelationListFromUser, deleteRelation as deleteGroupRelation } from '/src/use/useUserGroupRelation'
+import { getRelationListFromUser as getTabRelationListFromUser, remove as deleteTabRelation } from '/src/use/useUserTabRelation'
+import { getRelationListFromUser as getGroupRelationListFromUser, remove as deleteGroupRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
 import { app, offlineDate } from '/src/client-app.js'
 
@@ -62,18 +62,18 @@ export async function create(data) {
    return user
 }
 
-// used on signin to create/update record of user
-export const put = async (value) => {
-   // put: create (if new) or update
-   return await db.values.put(value)
-}
-
 export const update = async (uid, data) => {
    // optimistic update of cache
    const user = await db.values.update(uid, data)
    // execute on server
    await app.service('user', { volatile: true }).update({ where: { uid }, data })
    return user
+}
+
+// special case of signin: create/update record of user
+export const put = async (value) => {
+   // put: create (if new) or update
+   return await db.values.put(value)
 }
 
 export const remove = async (uid) => {
@@ -83,9 +83,9 @@ export const remove = async (uid) => {
    // cascade-delete user-tab relations
    const userTabRelations = await getTabRelationListFromUser(uid)
    await Promise.all(userTabRelations.map(relation => deleteTabRelation(relation)))
-   // // cascade-delete user-group relations
-   // const userGroupRelations = await getGroupRelationListFromUser(uid)
-   // await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
+   // cascade-delete user-group relations
+   const userGroupRelations = await getGroupRelationListFromUser(uid)
+   await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
    // delete user
    await db.values.update(uid, { deleted_: true })
    // execute on server (cascade-delete is done by rdbms)
