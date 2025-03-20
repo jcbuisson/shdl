@@ -49,12 +49,11 @@
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
 import { useRoute } from 'vue-router'
-import { useObservable } from "@vueuse/rxjs"
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
-import { getUserObservable, getFullname } from '/src/use/useUser.js'
+import { findMany, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, extendExpiration, clearCaches } from "/src/use/useAuthentication"
 
@@ -65,14 +64,9 @@ const props = defineProps({
    },
 })
 
+const signedinUser = ref()
+findMany({ uid: props.signedinUid }).subscribe(([user]) => signedinUser.value = user)
 
-const expiresAtHHmm = computed(() => {
-   if (!expiresAt.value) return ''
-   return format(new Date(expiresAt.value), "HH:mm:ss")
-})
-
-const signedinObservable = getUserObservable(props.signedinUid)
-const signedinUser = useObservable(signedinObservable)
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
@@ -118,6 +112,11 @@ async function home() {
 async function clear() {
    await clearCaches()
 }
+
+const expiresAtHHmm = computed(() => {
+   if (!expiresAt.value) return ''
+   return format(new Date(expiresAt.value), "HH:mm:ss")
+})
 </script>
 
 <style>

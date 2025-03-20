@@ -13,7 +13,7 @@ db.version(1).stores({
    values: "uid, createdAt, updatedAt, user_uid, tab, deleted_"
 })
 
-export const resetUseUserTabRelation = async () => {
+export const reset = async () => {
    await db.whereList.clear()
    await db.values.clear()
 }
@@ -51,8 +51,7 @@ export async function updateUserTabs(user_uid, newTabs) {
    const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
    for (const tab of toAdd) {
       const uid = uid16(16)
-      const x = await db.values.add({ uid, user_uid, tab })
-      console.log('added', x)
+      await db.values.add({ uid, user_uid, tab })
    }
    for (const tab of toRemove) {
       const uid = currentRelations.find(relation => relation.tab === tab).uid
@@ -91,7 +90,7 @@ export async function selectValues(where) {
    return values
 }
 
-export function selectObservable(where) {
+export function findMany(where) {
    // start synchronization if `where` is new
    if (addSynchroWhere(where, db.whereList)) {
       synchronize(app, 'user_tab_relation', db.values, where, offlineDate.value).then(() => {

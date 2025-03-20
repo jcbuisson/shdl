@@ -9,11 +9,9 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
       return accu
    }, {})
 
-   
    // call sync service on `where` perimeter
    const { toAdd, toUpdate, toDelete } = await app.service('sync').go(modelName, where, cutoffDate, clientValuesDict)
    console.log('synchronize', toAdd, toUpdate, toDelete)
-
 
    // update client cache according to server sync directives
    // 1- add missing elements

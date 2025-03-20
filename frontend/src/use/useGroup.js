@@ -71,10 +71,10 @@ export const deleteGroup = async (uid) => {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update of cache
-   // // cascade-delete associated relations
-   // const relations = await getGroupRelationsFromUser(uid)
-   // await Promise.all(relations.map(relation => deleteRelation(relation)))
-   // delete user
+   // // cascade-delete user-group relations
+   // const userGroupRelations = await getGroupRelationListFromUser(uid)
+   // await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
+   // delete group
    await db.values.update(uid, { deleted_: true })
    // execute on server
    await app.service('group', { volatile: true }).delete({ where: { uid }})
@@ -92,7 +92,7 @@ export async function selectValues(where) {
    return values
 }
 
-export function selectObservable(where) {
+export function findMany(where) {
    // start synchronization if `where` is new
    if (addSynchroWhere(where, db.whereList)) {
       synchronize(app, 'group', db.values, where, offlineDate.value).then(() => {

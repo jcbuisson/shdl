@@ -91,12 +91,12 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getUserObservable, updateUser } from '/src/use/useUser'
-import { selectObservable as selectGroupObservable } from '/src/use/useGroup'
-import { selectObservable as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
+import { findMany as findManyUser, updateUser } from '/src/use/useUser'
+import { findMany as findManyGroup } from '/src/use/useGroup'
+import { findMany as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import 'jcb-upload'
@@ -112,23 +112,20 @@ const props = defineProps({
 const user = ref()
 
 watch(() => props.user_uid, async (user_uid) => {
-   const userObservable = getUserObservable(user_uid)
-   userObservable.subscribe(user_ => user.value = user_)
+   findManyUser({ uid: user_uid }).subscribe(([user_]) => user.value = user_)
 }, { immediate: true })
 
 const groupList = ref([])
-const groupListObservable = selectGroupObservable({})
-groupListObservable.subscribe(list => groupList.value = list)
+findManyGroup({}).subscribe(list => groupList.value = list)
+
+const userTabs = ref([])
 
 const userTabRelationList = ref([])
-const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid: props.user_uid })
-userTabRelationListObservable.subscribe(list => {
-   console.log('xxx')
+selectUserTabRelationObservable({ user_uid: props.user_uid }).subscribe(list => {
    userTabRelationList.value = list
    userTabs.value = userTabRelationList.value.map(relation => relation.tab)
 })
 
-const userTabs = ref([])
 
 const snackbar = ref({})
 

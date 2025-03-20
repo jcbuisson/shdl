@@ -80,8 +80,8 @@
 <script setup>
 import { ref } from 'vue'
 
-import { addUser } from '/src/use/useUser.js'
-import { selectGroupsObservable } from '/src/use/useGroup'
+import { create as createUser } from '/src/use/useUser.js'
+import { findManyGroup } from '/src/use/useGroup'
 
 import 'jcb-upload'
 
@@ -108,13 +108,13 @@ const groupList = getGroupListRef('all', {}, ()=>true)
 
 const groupList = ref([])
 
-const groupListObservable = selectGroupsObservable({})
+const groupListObservable = findManyGroup({})
 groupListObservable.subscribe(list => {
    groupList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 })
 
 function submit() {
-   addUser(user.value)
+   createUser(user.value)
 }
 
 </script>

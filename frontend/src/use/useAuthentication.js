@@ -2,10 +2,10 @@ import { useDebounceFn } from '@vueuse/core'
 import { app } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
-import { resetUseUser } from '/src/use/useUser'
+import { reset as resetUseUser, put as putUser } from '/src/use/useUser'
 import { resetUseGroup } from '/src/use/useGroup'
-import { resetUseUserTabRelation } from '/src/use/useUserTabRelation'
-// import { resetUseUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { reset as resetUseUserTabRelation } from '/src/use/useUserTabRelation'
+// import { reset as resetUseUserGroupRelation } from '/src/use/useUserGroupRelation'
 
 import router from '/src/router'
 
@@ -17,7 +17,7 @@ export async function clearCaches() {
    await resetUseUser()
    await resetUseGroup()
    await resetUseUserTabRelation()
-   // await resetUseUserGroupRelation()
+   // await reset as resetUseUserGroupRelation()
 }
 
 export const restartApp = async () => {
@@ -37,6 +37,7 @@ export const restartApp = async () => {
 export async function signin(email, password) {
    const { user, expiresAt } = await app.service('auth').signin(email, password)
    await setExpiresAt(expiresAt)
+   await putUser(user)
    return user
 }
 

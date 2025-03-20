@@ -5,7 +5,7 @@
             <v-toolbar color="red-darken-4" density="compact">
                <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
                <v-text-field v-model="filter" single-line></v-text-field>
-               <v-btn icon="mdi-plus" variant="text" @click="createUser"></v-btn>
+               <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
          
             <div :style="{ height: `calc(100vh - 160px)`, 'overflow-y': 'auto' }">
@@ -24,7 +24,7 @@
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser_(user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -47,7 +47,7 @@
 <script setup>
 import { ref } from 'vue'
 
-import { selectObservable as selectUsersObservable, getFullname, addUser, deleteUser } from '/src/use/useUser.js'
+import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -65,13 +65,13 @@ const filter = ref('')
 
 const userList = ref([])
 
-const userListObservable = selectUsersObservable({})
-userListObservable.subscribe(list => {
+findManyUser({}).subscribe(list => {
+   console.log('findManyUser', list)
    userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 })
 
-async function createUser() {
-   const user = await addUser({})
+async function addUser() {
+   const user = await createUser({})
    selectUser(user)
 }
 
@@ -83,10 +83,10 @@ function selectUser(user) {
    router.push(`/home/${props.signedinUid}/users/${user.uid}`)
 }
 
-async function deleteUser_(user) {
+async function deleteUser(user) {
    extendExpiration()
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
-      await deleteUser(user.uid)
+      await removeUser(user.uid)
       router.push(`/home/${props.signedinUid}/users`)
    }
 }

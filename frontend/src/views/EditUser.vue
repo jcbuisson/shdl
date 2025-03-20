@@ -84,17 +84,15 @@
          :src="user?.pict"
       ></v-img>
    </v-dialog>
-
-{{ userGroups }}
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { getUserObservable, updateUser } from '/src/use/useUser'
-import { selectObservable as selectGroupObservable } from '/src/use/useGroup'
-import { selectObservable as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
+import { findMany as findManyUser, update as updateUser } from '/src/use/useUser'
+import { findMany as findManyGroup } from '/src/use/useGroup'
+import { findMany as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
@@ -121,16 +119,19 @@ let userTabRelationListSubscription
 watch(() => props.user_uid, async (user_uid) => {
    console.log('CHANGE USERID')
    if (userSubscription) userSubscription.unsubscribe()
-   const userObservable = getUserObservable(user_uid)
-   userSubscription = userObservable.subscribe(user_ => user.value = user_)
+   userSubscription = findManyUser({ uid: user_uid}).subscribe(([user_]) => user.value = user_)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   const userTabRelationListObservable = selectUserTabRelationObservable({ user_uid })
-   userTabRelationListSubscription = userTabRelationListObservable.subscribe(relationList => {
+   userTabRelationListSubscription = selectUserTabRelationObservable({ user_uid }).subscribe(relationList => {
       console.log('CHANGE RELATION', user_uid, relationList)
       userTabs.value = relationList.map(relation => relation.tab)
    })
 }, { immediate: true })
+
+onUnmounted(() => {
+   if (userSubscription) userSubscription.unsubscribe()
+   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
+})
 
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////
@@ -160,9 +161,7 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
-
 const onTabChange = async (tabs) => {
-   console.log('tabs', tabs)
    userTabs.value = tabs
    try {
       extendExpiration()
@@ -179,7 +178,7 @@ const onTabChange = async (tabs) => {
 const userGroups = ref([])
 
 const groupList = ref([])
-const groupListObservable = selectGroupObservable({})
+const groupListObservable = findManyGroup({})
 groupListObservable.subscribe(list => groupList.value = list)
 
 
