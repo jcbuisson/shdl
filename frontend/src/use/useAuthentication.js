@@ -1,5 +1,5 @@
 import { useDebounceFn } from '@vueuse/core'
-import { app } from '/src/client-app.js'
+import { app, isConnected } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
 import { reset as resetUseUser, put as putUser } from '/src/use/useUser'
@@ -57,6 +57,7 @@ export async function signout(user) {
 export const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
 
 async function doExtendExpiration() {
+   if (!isConnected.value) return
    console.log('DO extend expiration')
    await app.service('auth', { volatile: true }).extendExpiration()
 }

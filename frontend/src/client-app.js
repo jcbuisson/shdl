@@ -2,8 +2,8 @@ import { ref, computed } from 'vue'
 import { io } from "socket.io-client"
 import { useSessionStorage } from '@vueuse/core'
 
-// import expressXClient from '@jcbuisson/express-x-client'
-import expressXClient from './client.mjs'
+import expressXClient from '@jcbuisson/express-x-client'
+// import expressXClient from './client.mjs'
 
 import { setExpiresAt } from "/src/use/useAppState"
 import { restartApp } from "/src/use/useAuthentication"
@@ -81,3 +81,13 @@ app.addDisconnectListener(async (socket) => {
 })
 
 export const isConnected = computed(() => !!connectedDate.value)
+
+export function connect() {
+   console.log('connecting...')
+   socket.connect()
+}
+
+export function disconnect() {
+   console.log('disconnecting...')
+   socket.disconnect()
+}

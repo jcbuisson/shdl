@@ -3,7 +3,7 @@ import { liveQuery } from "dexie"
 // import { v4 as uuidv4 } from 'uuid'
 import { uid as uid16 } from 'uid'
 
-import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
+import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 export const db = new Dexie("userTabRelationDatabaseSHDL")
@@ -40,7 +40,7 @@ app.service('user_tab_relation').on('delete', async value => {
 
 // return an Observable
 export function findMany(where) {
-   // start synchronization if `where` is new
+   // run synchronization if connected and if `where` is new
    if (addSynchroWhere(where, db.whereList)) {
       synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value).then(() => {
          console.log('synchronize user_tab_relation', where, 'ended')
@@ -69,7 +69,7 @@ export async function updateUserTabs(user_uid, newTabs) {
       await db.values.update(uid, { deleted_: true })
    }
    
-   // execute on server
+   // execute on server, asynchronously, if connection is active
    for (const tab of toAdd) {
       const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
       if (isConnected.value) app.service('user_tab_relation').create({ data: { uid: relation.uid, user_uid, tab }})
@@ -90,6 +90,10 @@ export async function remove(uid) {
       app.service('user_tab_relation').delete({ where: { uid }})
    }
 }
+
+app.addConnectListener(async () => {
+   await synchronizeWhereList(app, 'user_tab_relation', db.values, disconnectedDate.value, db.whereList)
+})
 
 
 

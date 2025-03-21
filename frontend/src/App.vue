@@ -11,6 +11,5 @@
 
 <script setup>
 import ReloadPrompt from '/src/components/ReloadPrompt.vue'
-
 import { snackbar } from '/src/use/useSnackbar'
 </script>

@@ -20,6 +20,7 @@ enum Tab {
 model user {
    uid                     String     @unique
    created_at              DateTime   @default(now()) @db.Timestamptz(6)
+   updatedAt               DateTime   @updatedAt @db.Timestamptz(6)
    email                   String?    @unique(map: "user_sub_unique")
    password                String?
    firstname               String?
@@ -31,19 +32,21 @@ model user {
 }
 
 model user_tab_relation {
-   uid            String     @unique
-   createdAt      DateTime   @default(now()) @db.Timestamptz(6)
-   updatedAt      DateTime   @updatedAt @db.Timestamptz(6)
-   user_uid       String
-   tab            Tab
+   uid                String     @unique
+   createdAt          DateTime   @default(now()) @db.Timestamptz(6)
+   updatedAt          DateTime   @updatedAt @db.Timestamptz(6)
+   user_uid           String
+   tab                Tab
 
-   user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   user               user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    @@unique([user_uid, tab])
 }
 
 // 'Enseignants', '1SN24D', '1APP24', 'Binôme X & Y'
 model group {
    uid                     String     @unique
+   createdAt               DateTime   @default(now()) @db.Timestamptz(6)
+   updatedAt               DateTime   @updatedAt @db.Timestamptz(6)
    name                    String     @unique(map: "group_name_unique")
 
    user_group_relations    user_group_relation[]

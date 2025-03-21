@@ -2,7 +2,7 @@ import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 
-import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
+import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 export const db = new Dexie("groupDatabaseSHDL")
@@ -40,7 +40,7 @@ app.service('group').on('delete', async group => {
 // return an Observable
 export function findMany(where) {
    const isNew = addSynchroWhere(where, db.whereList)
-   // start synchronization if `where` is new and online
+   // run synchronization if connected and if `where` is new
    if (isNew && isConnected.value) {
       synchronize(app, 'group', db.values, where, disconnectedDate.value)
    }
@@ -54,21 +54,20 @@ export async function create(data) {
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
-   const value = await db.values.add({ uid, ...data })
+   const value = await db.values.add({ uid, ...data, createdAt: new Date(), updatedAt: new Date() })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
-      app.service('group').create({ data: { uid, ...data } })
+      app.service('user').create({ data: { uid, ...data } })
    }
    return value
 }
 
-
 export const update = async (uid, data) => {
    // optimistic update of cache
-   const value = await db.values.update(uid, data)
+   const value = await db.values.update(uid, {...data, updatedAt: new Date()})
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
-      app.service('group').update({ where: { uid }, data })
+      app.service('user').update({ where: { uid }, data })
    }
    return value
 }
@@ -87,3 +86,7 @@ export const remove = async (uid) => {
       app.service('group').delete({ where: { uid }})
    }
 }
+
+app.addConnectListener(async () => {
+   await synchronizeWhereList(app, 'group', db.values, disconnectedDate.value, db.whereList)
+})

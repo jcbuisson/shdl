@@ -68,9 +68,9 @@ export async function removeSynchroWhere(where, whereDb) {
    await whereDb.filter(w => isSubset(w, where)).delete()
 }
 
-// export async function synchronizeAll(app, modelName, clientCache, cutoffDate, whereDb) {
-//    const whereList = await getWhereList(whereDb)
-//    for (const where of whereList) {
-//       await synchronize(app, modelName, clientCache, where, cutoffDate)
-//    }
-// }
+export async function synchronizeWhereList(app, modelName, clientCache, cutoffDate, whereDb) {
+   const whereList = await getWhereList(whereDb)
+   for (const where of whereList) {
+      await synchronize(app, modelName, clientCache, where, cutoffDate)
+   }
+}

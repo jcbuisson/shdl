@@ -3,7 +3,7 @@
 
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { v4 as uuidv4 } from 'uuid'
+import { uid as uid16 } from 'uid'
 
 import hooks from './auth.hooks.js'
 import config from '#config'

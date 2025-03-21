@@ -5,7 +5,7 @@
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
-      <v-btn size="small" @click="clear">clear</v-btn>
+      <v-btn size="small" @click="toggleCnx">{{ isConnected ? 'disconnect' : 'connect'}}</v-btn>
       <label>
          Université de Toulouse - INPT - ENSEEIHT - JCB
       </label>
@@ -51,7 +51,7 @@ import { format } from 'date-fns'
 import { useRoute } from 'vue-router'
 
 import router from '/src/router'
-import { app } from '/src/client-app.js'
+import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { findMany, getFullname } from '/src/use/useUser.js'
 import { expiresAt } from '/src/use/useAppState.js'
@@ -109,14 +109,18 @@ async function home() {
    onTabChange(0)
 }
 
-async function clear() {
-   await clearCaches()
-}
-
 const expiresAtHHmm = computed(() => {
    if (!expiresAt.value) return ''
    return format(new Date(expiresAt.value), "HH:mm:ss")
 })
+
+function toggleCnx() {
+   if (isConnected.value) {
+      disconnect()
+   } else {
+      connect()
+   }
+}
 </script>
 
 <style>
