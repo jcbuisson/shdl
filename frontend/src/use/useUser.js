@@ -57,22 +57,22 @@ export async function create(data) {
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
-   const value = await db.values.add({ uid, ...data, createdAt: new Date(), updatedAt: new Date() })
+   await db.values.add({ uid, ...data, createdAt: new Date(), updatedAt: new Date() })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
       app.service('user').create({ data: { uid, ...data } })
    }
-   return value
+   return await db.values.get(uid)
 }
 
 export const update = async (uid, data) => {
    // optimistic update of cache
-   const value = await db.values.update(uid, {...data, updatedAt: new Date()})
+   await db.values.update(uid, { ...data, updatedAt: new Date() })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
       app.service('user').update({ where: { uid }, data })
    }
-   return value
+   return await db.values.get(uid)
 }
 
 export const remove = async (uid) => {
