@@ -58,5 +58,5 @@ export const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
 
 async function doExtendExpiration() {
    console.log('DO extend expiration')
-   await app.service('auth').extendExpiration()
+   await app.service('auth', { volatile: true }).extendExpiration()
 }

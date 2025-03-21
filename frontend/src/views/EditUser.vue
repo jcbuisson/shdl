@@ -93,8 +93,8 @@ import { useDebounceFn } from '@vueuse/core'
 
 import { findMany as findManyUser, update as updateUser } from '/src/use/useUser'
 import { findMany as findManyGroup } from '/src/use/useGroup'
-import { findMany as selectUserTabRelationObservable, updateUserTabs } from '/src/use/useUserTabRelation'
-import { findMany as selectUserGroupRelationObservable, updateUserGroups } from '/src/use/useUserGroupRelation'
+import { findMany as findManyUserTabRelation, updateUserTabs } from '/src/use/useUserTabRelation'
+import { findMany as findManyUserGroupRelation, updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
@@ -124,12 +124,12 @@ watch(() => props.user_uid, async (user_uid) => {
    userSubscription = findManyUser({ uid: user_uid}).subscribe(([user_]) => user.value = user_)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   userTabRelationListSubscription = selectUserTabRelationObservable({ user_uid }).subscribe(relationList => {
+   userTabRelationListSubscription = findManyUserTabRelation({ user_uid }).subscribe(relationList => {
       userTabs.value = relationList.map(relation => relation.tab)
    })
 
    if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
-   userGroupRelationListSubscription = selectUserGroupRelationObservable({ user_uid }).subscribe(relationList => {
+   userGroupRelationListSubscription = findManyUserGroupRelation({ user_uid }).subscribe(relationList => {
       userGroups.value = relationList.map(relation => relation.group_uid)
    })
 }, { immediate: true })

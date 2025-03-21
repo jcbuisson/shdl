@@ -4,7 +4,7 @@ import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
-import { app, offlineDate } from '/src/client-app.js'
+import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 export const db = new Dexie("userTabRelationDatabaseSHDL")
 
@@ -17,6 +17,8 @@ export const reset = async () => {
    await db.whereList.clear()
    await db.values.clear()
 }
+
+/////////////          PUB / SUB          /////////////
 
 app.service('user_tab_relation').on('create', async value => {
    console.log('USER_TAB_RELATION EVENT created', value)
@@ -34,13 +36,13 @@ app.service('user_tab_relation').on('delete', async value => {
 })
 
 
-/////////////              METHODS              /////////////
+/////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
 export function findMany(where) {
    // start synchronization if `where` is new
    if (addSynchroWhere(where, db.whereList)) {
-      synchronize(app, 'user_tab_relation', db.values, where, offlineDate.value).then(() => {
+      synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value).then(() => {
          console.log('synchronize user_tab_relation', where, 'ended')
       })
    }
@@ -70,25 +72,27 @@ export async function updateUserTabs(user_uid, newTabs) {
    // execute on server
    for (const tab of toAdd) {
       const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
-      await app.service('user_tab_relation', { volatile: true }).create({ data: { uid: relation.uid, user_uid, tab }})
+      if (isConnected.value) app.service('user_tab_relation').create({ data: { uid: relation.uid, user_uid, tab }})
    }
    for (const tab of toRemove) {
       const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
-      await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid: relation.uid }})
+      if (isConnected.value) app.service('user_tab_relation').delete({ where: { uid: relation.uid }})
    }
 }
 
 export async function remove(uid) {
-   // // stop synchronizing on this perimeter
+   // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update
    await db.values.update(uid, { deleted_: true })
-   // perform request on backend (if connection is active)
-   await app.service('user_tab_relation', { volatile: true }).delete({ where: { uid }})
+   // execute on server, asynchronously, if connection is active
+   if (isConnected.value) {
+      app.service('user_tab_relation').delete({ where: { uid }})
+   }
 }
 
 
 
-export const getRelationListFromUser = async (user_uid) => {
+export const getRelationListOfUser = async (user_uid) => {
    return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
 }

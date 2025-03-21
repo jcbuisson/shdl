@@ -1,13 +1,12 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { io } from "socket.io-client"
 import { useSessionStorage } from '@vueuse/core'
 
-import expressXClient from '@jcbuisson/express-x-client'
-// import expressXClient from './client.mjs'
+// import expressXClient from '@jcbuisson/express-x-client'
+import expressXClient from './client.mjs'
 
 import { setExpiresAt } from "/src/use/useAppState"
 import { restartApp } from "/src/use/useAuthentication"
-import router from '/src/router'
 
 
 const socketOptions = {
@@ -26,7 +25,7 @@ export const app = expressXClient(socket, { debug: true })
 export const cnxid = useSessionStorage('cnxid', '')
 
 app.addErrorListener((socket, err) => {
-   console.log('CNX ERROR!!!', socket.id, err.code)
+   console.log('CNX ERROR!!!', socket.id, err)
 })
 
 app.addConnectListener(async (socket) => {
@@ -67,16 +66,18 @@ app.addConnectListener(async (socket) => {
    })
 })
 
-export const onlineDate = ref()
-export const offlineDate = ref()
+export const connectedDate = ref()
+export const disconnectedDate = ref()
 
 app.addConnectListener(async (socket) => {
    console.log('onConnect')
-   onlineDate.value = new Date()
-   offlineDate.value = null
+   connectedDate.value = new Date()
+   disconnectedDate.value = null
 })
 
 app.addDisconnectListener(async (socket) => {
-   onlineDate.value = null
-   offlineDate.value = new Date()
+   connectedDate.value = null
+   disconnectedDate.value = new Date()
 })
+
+export const isConnected = computed(() => !!connectedDate.value)

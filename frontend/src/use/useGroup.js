@@ -3,7 +3,7 @@ import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere } from '/src/lib/synchronize.js'
-import { app, offlineDate } from '/src/client-app.js'
+import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 export const db = new Dexie("groupDatabaseSHDL")
 
@@ -16,6 +16,8 @@ export const reset = async () => {
    await db.whereList.clear()
    await db.values.clear()
 }
+
+/////////////          PUB / SUB          /////////////
 
 app.service('group').on('create', async group => {
    console.log('GROUP EVENT created', group)
@@ -33,15 +35,14 @@ app.service('group').on('delete', async group => {
 })
 
 
-/////////////          METHODS          /////////////
+/////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
 export function findMany(where) {
-   // start synchronization if `where` is new
-   if (addSynchroWhere(where, db.whereList)) {
-      synchronize(app, 'group', db.values, where, offlineDate.value).then(() => {
-         console.log('synchronize group', where, 'ended')
-      })
+   const isNew = addSynchroWhere(where, db.whereList)
+   // start synchronization if `where` is new and online
+   if (isNew && isConnected.value) {
+      synchronize(app, 'group', db.values, where, disconnectedDate.value)
    }
    // return observable for `where` values
    const predicate = wherePredicate(where)
@@ -50,36 +51,39 @@ export function findMany(where) {
 
 export async function create(data) {
    const uid = uid16(16)
-   console.log('create user', uid)
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
-   await db.values.add({ uid, ...data })
-   // perform request on backend (if connection is active)
-   await app.service('group', { volatile: true }).create({ data: { uid, ...data } })
+   const value = await db.values.add({ uid, ...data })
+   // execute on server, asynchronously, if connection is active
+   if (isConnected.value) {
+      app.service('group').create({ data: { uid, ...data } })
+   }
+   return value
 }
 
 
 export const update = async (uid, data) => {
    // optimistic update of cache
-   db.values.update(uid, data)
-   // execute on server
-   const group = await app.service('group', { volatile: true }).update({
-      where: { uid },
-      data,
-   })
-   return group
+   const value = await db.values.update(uid, data)
+   // execute on server, asynchronously, if connection is active
+   if (isConnected.value) {
+      app.service('group').update({ where: { uid }, data })
+   }
+   return value
 }
 
 export const remove = async (uid) => {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    // optimistic update of cache
-   // // cascade-delete user-group relations
-   // const userGroupRelations = await getGroupRelationListFromUser(uid)
-   // await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
+   // cascade-delete user-group relations
+   const userGroupRelations = await getGroupRelationListOfUser(uid)
+   await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
    // delete group
    await db.values.update(uid, { deleted_: true })
-   // execute on server
-   await app.service('group', { volatile: true }).delete({ where: { uid }})
+   // execute on server, asynchronously, if connection is active (cascade-delete is done by rdbms)
+   if (isConnected.value) {
+      app.service('group').delete({ where: { uid }})
+   }
 }
