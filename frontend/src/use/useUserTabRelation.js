@@ -62,7 +62,8 @@ export async function updateUserTabs(user_uid, newTabs) {
    const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
    for (const tab of toAdd) {
       const uid = uid16(16)
-      await db.values.add({ uid, user_uid, tab })
+      const now = new Date()
+      await db.values.add({ uid, user_uid, tab, createdAt: now, updatedAt: now })
    }
    for (const tab of toRemove) {
       const uid = currentRelations.find(relation => relation.tab === tab).uid

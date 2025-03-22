@@ -60,7 +60,8 @@ export async function updateUserGroups(user_uid, newGroupUIDs) {
    const toRemove = currentGroupUIDs.filter(group_uid => !newGroupUIDs.includes(group_uid))
    for (const group_uid of toAdd) {
       const uid = uid16(16)
-      await db.values.add({ uid, user_uid, group_uid })
+      const now = new Date()
+      await db.values.add({ uid, user_uid, group_uid, createdAt: now, updatedAt: now })
    }
    for (const group_uid of toRemove) {
       const uid = currentRelations.find(relation => relation.group_uid === group_uid).uid
