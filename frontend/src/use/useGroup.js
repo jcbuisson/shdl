@@ -9,7 +9,7 @@ export const db = new Dexie("groupDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "id++, where",
-   values: "uid, createdAt, updatedAt, name, deleted_"
+   values: "uid, created_at, updated_at, name, deleted_"
 })
 
 export const reset = async () => {
@@ -54,7 +54,7 @@ export async function create(data) {
    // enlarge perimeter
    addSynchroWhere({ uid }, db.whereList)
    // optimistic update
-   const value = await db.values.add({ uid, ...data, createdAt: new Date(), updatedAt: new Date() })
+   const value = await db.values.add({ uid, ...data, created_at: new Date(), updated_at: new Date() })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
       app.service('user').create({ data: { uid, ...data } })
@@ -64,7 +64,7 @@ export async function create(data) {
 
 export const update = async (uid, data) => {
    // optimistic update of cache
-   const value = await db.values.update(uid, {...data, updatedAt: new Date()})
+   const value = await db.values.update(uid, {...data, updated_at: new Date()})
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
       app.service('user').update({ where: { uid }, data })

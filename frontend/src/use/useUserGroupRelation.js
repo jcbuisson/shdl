@@ -9,7 +9,7 @@ export const db = new Dexie("userGroupRelationDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "id++, where",
-   values: "uid, createdAt, updatedAt, user_uid, group_uid, deleted_"
+   values: "uid, created_at, updated_at, user_uid, group_uid, deleted_"
 })
 
 export const reset = async () => {
@@ -61,7 +61,7 @@ export async function updateUserGroups(user_uid, newGroupUIDs) {
    for (const group_uid of toAdd) {
       const uid = uid16(16)
       const now = new Date()
-      await db.values.add({ uid, user_uid, group_uid, createdAt: now, updatedAt: now })
+      await db.values.add({ uid, user_uid, group_uid, created_at: now, updated_at: now })
    }
    for (const group_uid of toRemove) {
       const uid = currentRelations.find(relation => relation.group_uid === group_uid).uid

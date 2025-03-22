@@ -12,4 +12,7 @@
 <script setup>
 import ReloadPrompt from '/src/components/ReloadPrompt.vue'
 import { snackbar } from '/src/use/useSnackbar'
+
+// import { app } from '/src/client-app.js'
+
 </script>

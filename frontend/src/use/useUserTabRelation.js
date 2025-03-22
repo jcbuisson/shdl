@@ -1,6 +1,5 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
-// import { v4 as uuidv4 } from 'uuid'
 import { uid as uid16 } from 'uid'
 
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
@@ -10,7 +9,7 @@ export const db = new Dexie("userTabRelationDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "id++, where",
-   values: "uid, createdAt, updatedAt, user_uid, tab, deleted_"
+   values: "uid, created_at, updated_at, user_uid, tab, deleted_"
 })
 
 export const reset = async () => {
@@ -63,7 +62,7 @@ export async function updateUserTabs(user_uid, newTabs) {
    for (const tab of toAdd) {
       const uid = uid16(16)
       const now = new Date()
-      await db.values.add({ uid, user_uid, tab, createdAt: now, updatedAt: now })
+      await db.values.add({ uid, user_uid, tab, created_at: now, updated_at: now })
    }
    for (const tab of toRemove) {
       const uid = currentRelations.find(relation => relation.tab === tab).uid
