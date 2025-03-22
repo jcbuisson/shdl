@@ -93,9 +93,10 @@ export default function (app) {
             await databaseService.create({ data })
          }
          for (const data of updateDatabase) {
+            // delete data.uid
             await databaseService.update({
                where: { uid: data.uid },
-               data: { name: data.name }
+               data
             })
          }
          for (const uid of deleteDatabase) {
