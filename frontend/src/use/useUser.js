@@ -4,7 +4,7 @@ import { uid as uid16 } from 'uid'
 
 import { getRelationListOfUser as getTabRelationListOfUser, remove as removeTabRelation } from '/src/use/useUserTabRelation'
 import { getRelationListOfUser as getGroupRelationListOfUser, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
-import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeWhereList } from '/src/lib/synchronize.js'
+import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 export const db = new Dexie("userDatabaseSHDL")
@@ -93,9 +93,13 @@ export const remove = async (uid) => {
    }
 }
 
-app.addConnectListener(async () => {
-   await synchronizeWhereList(app, 'user', db.values, disconnectedDate.value, db.whereList)
-})
+// app.addConnectListener(async () => {
+//    await synchronizeWhereList(app, 'user', db.values, disconnectedDate.value, db.whereList)
+// })
+
+export async function synchronizeWhereList() {
+   await synchronizeModelWhereList(app, 'user', db.values, disconnectedDate.value, db.whereList)
+}
 
 /////////////          UTILITIES          /////////////
 
