@@ -38,12 +38,11 @@ app.service('user_tab_relation').on('delete', async value => {
 /////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
-export function findMany(where) {
+export async function findMany(where) {
+   const isNew = await addSynchroWhere(where, db.whereList)
    // run synchronization if connected and if `where` is new
-   if (addSynchroWhere(where, db.whereList)) {
-      synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value).then(() => {
-         console.log('synchronize user_tab_relation', where, 'ended')
-      })
+   if (isNew && isConnected.value) {
+      synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value)
    }
    // return observable for `where` values
    const predicate = wherePredicate(where)
@@ -52,7 +51,7 @@ export function findMany(where) {
 
 export async function updateUserTabs(user_uid, newTabs) {
    // enlarge perimeter
-   addSynchroWhere({ user_uid }, db.whereList)
+   await addSynchroWhere({ user_uid }, db.whereList)
 
    // optimistic update of cache
    const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()

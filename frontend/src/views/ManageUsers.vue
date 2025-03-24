@@ -45,7 +45,7 @@
 
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser.js'
 import { extendExpiration } from "/src/use/useAuthentication"
@@ -64,9 +64,13 @@ const props = defineProps({
 const filter = ref('')
 
 const userList = ref([])
+let userListSubscription
 
-const userListSubscription = findManyUser({}).subscribe(list => {
-   userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+onMounted(async () => {
+   const userObservable = await findManyUser({})
+   userListSubscription = userObservable.subscribe(list => {
+      userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+   })
 })
 
 onUnmounted(() => {

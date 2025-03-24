@@ -38,8 +38,8 @@ app.service('group').on('delete', async group => {
 /////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
-export function findMany(where) {
-   const isNew = addSynchroWhere(where, db.whereList)
+export async function findMany(where) {
+   const isNew = await addSynchroWhere(where, db.whereList)
    // run synchronization if connected and if `where` is new
    if (isNew && isConnected.value) {
       synchronize(app, 'group', db.values, where, disconnectedDate.value)
@@ -52,7 +52,7 @@ export function findMany(where) {
 export async function create(data) {
    const uid = uid16(16)
    // enlarge perimeter
-   addSynchroWhere({ uid }, db.whereList)
+   await addSynchroWhere({ uid }, db.whereList)
    // optimistic update
    const value = await db.values.add({ uid, ...data, created_at: new Date(), updated_at: new Date() })
    // execute on server, asynchronously, if connection is active

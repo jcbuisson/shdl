@@ -116,26 +116,35 @@ const emailRules = [
 const user = ref()
 
 let userSubscription
+let groupSubscription
 let userTabRelationListSubscription
 let userGroupRelationListSubscription
 
 watch(() => props.user_uid, async (user_uid) => {
    if (userSubscription) userSubscription.unsubscribe()
-   userSubscription = findManyUser({ uid: user_uid}).subscribe(([user_]) => user.value = user_)
+   const userObservable = await findManyUser({ uid: user_uid})
+   userSubscription = userObservable.subscribe(([user_]) => user.value = user_)
+
+   if (groupSubscription) groupSubscription.unsubscribe()
+   const groupObservable = await findManyGroup({})
+   groupSubscription = groupObservable.subscribe(list => groupList.value = list)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   userTabRelationListSubscription = findManyUserTabRelation({ user_uid }).subscribe(relationList => {
+   const userTabRelationObservable = await findManyUserTabRelation({ user_uid })
+   userTabRelationListSubscription = userTabRelationObservable.subscribe(relationList => {
       userTabs.value = relationList.map(relation => relation.tab)
    })
 
    if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
-   userGroupRelationListSubscription = findManyUserGroupRelation({ user_uid }).subscribe(relationList => {
+   const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid })
+   userGroupRelationListSubscription = userGroupRelationObservable.subscribe(relationList => {
       userGroups.value = relationList.map(relation => relation.group_uid)
    })
 }, { immediate: true })
 
 onUnmounted(() => {
    if (userSubscription) userSubscription.unsubscribe()
+   if (groupSubscription) groupSubscription.unsubscribe()
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
    if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
 })
@@ -183,9 +192,6 @@ const onTabChange = async (tabs) => {
 
 const userGroups = ref([])
 const groupList = ref([])
-
-const groupListObservable = findManyGroup({})
-groupListObservable.subscribe(list => groupList.value = list)
 
 const onGroupChange = async (groupUIDs) => {
    try {

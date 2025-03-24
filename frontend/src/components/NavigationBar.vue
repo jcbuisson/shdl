@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { format } from 'date-fns'
 import { useRoute } from 'vue-router'
 
@@ -65,7 +65,11 @@ const props = defineProps({
 })
 
 const signedinUser = ref()
-findMany({ uid: props.signedinUid }).subscribe(([user]) => signedinUser.value = user)
+
+onMounted(async () => {
+   const userObservable = await findMany({ uid: props.signedinUid })
+   userObservable.subscribe(([user]) => signedinUser.value = user)
+})
 
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 

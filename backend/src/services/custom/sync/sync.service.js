@@ -87,17 +87,11 @@ export default function (app) {
          console.log('deleteClient', deleteClient)
          console.log('updateClient', updateClient)
       
-         // STEP4: execute database changes
+         // STEP4: execute database changes, except updates which is done after by the client with complete data
          for (const data of addDatabase) {
             await databaseService.create({ data })
          }
-         // for (const data of updateDatabase) {
-         //    // delete data.uid
-         //    await databaseService.update({
-         //       where: { uid: data.uid },
-         //       data
-         //    })
-         // }
+
          for (const uid of deleteDatabase) {
             await databaseService.delete({ where: { uid } })
          }
