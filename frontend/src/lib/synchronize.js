@@ -1,4 +1,6 @@
 
+import { sortedJson, Mutex } from "/src/lib/utilities"
+
 // ex: where = { uid: 'azer' }
 export async function synchronize(app, modelName, clientCache, where, cutoffDate) {
    const requestPredicate = wherePredicate(where)
@@ -55,55 +57,58 @@ export function wherePredicate(where) {
    }
 }
 
-function isIncluded(where, whereList) {
-   for (const w of whereList) {
-      if (isSubset(w, where)) return true
-   }
-   return false
-}
-
 function isSubset(subset, fullObject) {
-   return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
+   // return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
+   for (const key in fullObject) {
+      if (fullObject[key] !== subset[key]) return false
+   }
+   return true
 }
+console.log('isSubset({a: 1, b: 2}, {b: 2})=true', isSubset({a: 1, b: 2}, {b: 2}))
+console.log('isSubset({}, {})=true', isSubset({}, {}))
+console.log('isSubset({a: 1}, {})=true', isSubset({a: 1}, {}))
+console.log('isSubset({a: 1}, {b: 2})=false', isSubset({a: 1}, {b: 2}))
+console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
 
-function isMoreSpecific(subset, fullObject) {
-   return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
-}
  
 async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
    return list.map(elt => elt.where)
 }
 
-// export async function addSynchroWhere(where, whereDb) {
-//    const whereList = await getWhereList(whereDb)
-//    // if `where` is identical or more specific than an element of `whereList`, return false
-//    console.log('isIncluded', whereDb.db.idbdb.name, isIncluded(where, whereList), where, whereList)
-//    if (isIncluded(where, whereList)) return false
-//    console.log('adding where', whereDb.db.idbdb.name, where)
-//    await whereDb.add({ where })
-//    return true
-// }
+const mutex = new Mutex()
 
 export async function addSynchroWhere(where, whereDb) {
+   await mutex.acquire()
+   let over = false
+   let added = false
    const whereList = await getWhereList(whereDb)
    for (const w of whereList) {
-      // if `where` is more specific than one of the elements of `whereList`, do nothing
-      if (isMoreSpecific(where, w)) return false
-      // if one of the elements of `whereList` is more specific than `where`, replace it by `where`
-      if (isMoreSpecific(w, where)) {
-         await whereDb.delete(w.uid)
-         await whereDb.add({ where })
-         return true
+      // if `where` is included in `w`, stops
+      if (isSubset(where, w)) { over = true; break }
+
+      if (isSubset(w, where)) {
+         await whereDb.delete(sortedJson(w))
+         await whereDb.add({ sortedjson: sortedJson(where), where })
+         over = true
+         added = true
+         break
       }
    }
-   // `where` is not included, nor includes, one of the elements of `whereList`: append it to the existing set
-   await whereDb.add({ where })
-   return true
+   if (!over && !added) {
+      // add `where` to the existing set
+      await whereDb.add({ sortedjson: sortedJson(where), where })
+      added = true
+   }
+   await mutex.release()
+   return added
 }
 
 export async function removeSynchroWhere(where, whereDb) {
-   await whereDb.filter(w => isSubset(w, where)).delete()
+   await mutex.acquire()
+   const sortedjson = sortedJson(where)
+   await whereDb.filter(value => value.sortedjson === sortedjson).delete()
+   await mutex.release()
 }
 
 export async function synchronizeModelWhereList(app, modelName, clientCache, cutoffDate, whereDb) {

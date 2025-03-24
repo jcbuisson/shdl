@@ -10,7 +10,7 @@ import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 export const db = new Dexie("userDatabaseSHDL")
 
 db.version(1).stores({
-   whereList: "id++, where",
+   whereList: "sortedjson, where",
    values: "uid, created_at, updated_at, email, firstname, lastname, deleted_"
 })
 
