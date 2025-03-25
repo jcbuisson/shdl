@@ -8,7 +8,7 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
    // collect meta-data of local values
    const allValues = await clientCache.toArray()
    const clientValuesDict = allValues.reduce((accu, elt) => {
-      if (requestPredicate(elt)) accu[elt.uid] = {
+      if (!elt.deleted_ && requestPredicate(elt)) accu[elt.uid] = {
          uid: elt.uid,
          created_at: elt.created_at,
          updated_at: elt.updated_at,
@@ -17,8 +17,8 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
    }, {})
 
    // call sync service on `where` perimeter
-   const { toAdd, toUpdate, toDelete, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientValuesDict)
-   console.log('synchronize', toAdd, toUpdate, toDelete, updateDatabase)
+   const { toAdd, toUpdate, toDelete, addDatabase, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientValuesDict)
+   console.log('synchronize', toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
 
    // update client cache according to server sync directives
    // 1- add missing elements
@@ -36,7 +36,13 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
       await clientCache.update(elt.uid, fullElt)
    }
 
-   // update elements of `updateDatabase` with full data
+   // 4- create elements of `addDatabase` with full data
+   for (const elt of addDatabase) {
+      const fullElt = await clientCache.get(elt.uid)
+      await app.service(modelName).create(fullElt)
+   }
+
+   // 5- update elements of `updateDatabase` with full data
    for (const elt of updateDatabase) {
       const fullElt = await clientCache.get(elt.uid)
       await app.service(modelName).update({
@@ -81,27 +87,27 @@ const mutex = new Mutex()
 export async function addSynchroWhere(where, whereDb) {
    await mutex.acquire()
    let over = false
-   let added = false
+   let modified = false
    const whereList = await getWhereList(whereDb)
    for (const w of whereList) {
-      // if `where` is included in `w`, stops
+      // if `where` is included in `w`, do nothing and exit
       if (isSubset(where, w)) { over = true; break }
-
+      // if `where` is more general than `w`, replace `w` by `where`
       if (isSubset(w, where)) {
          await whereDb.delete(sortedJson(w))
          await whereDb.add({ sortedjson: sortedJson(where), where })
          over = true
-         added = true
+         modified = true
          break
       }
    }
-   if (!over && !added) {
+   if (!over && !modified) {
       // add `where` to the existing set
       await whereDb.add({ sortedjson: sortedJson(where), where })
-      added = true
+      modified = true
    }
    await mutex.release()
-   return added
+   return modified
 }
 
 export async function removeSynchroWhere(where, whereDb) {

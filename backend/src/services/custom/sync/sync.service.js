@@ -4,6 +4,7 @@ export default function (app) {
    app.createService('sync', {
 
       go: async (modelName, where, cutoffDate, clientValuesDict) => {
+         console.log('>>>>> SYNC', modelName, where, cutoffDate)
          const databaseService = app.service(modelName)
    
          // STEP 1: get existing database `where` values
@@ -87,20 +88,19 @@ export default function (app) {
          console.log('deleteClient', deleteClient)
          console.log('updateClient', updateClient)
       
-         // STEP4: execute database changes, except updates which is done after by the client with complete data
-         for (const data of addDatabase) {
-            await databaseService.create({ data })
-         }
-
+         // STEP4: execute database deletions
+         // create/updates are done after by the client with complete data
          for (const uid of deleteDatabase) {
             await databaseService.delete({ where: { uid } })
          }
       
-         // STEP5: return to client changes to perform on its cache
+         // STEP5: return to client changes to perform on its cache, and crete/update on database with full data
          return {
             toAdd: addClient,
             toUpdate: updateClient,
             toDelete: deleteClient,
+
+            addDatabase,
             updateDatabase,
          }
       },
