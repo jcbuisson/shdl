@@ -13,7 +13,7 @@ import { onMounted, onUnmounted } from 'vue'
 
 import NavigationBar from '/src/components/NavigationBar.vue'
 
-import { app } from '/src/client-app.js'
+import { app, isConnected } from '/src/client-app.js'
 
 import { synchronizeWhereList as synchronizeUserWhereList } from '/src/use/useUser'
 import { synchronizeWhereList as synchronizeGroupWhereList } from '/src/use/useGroup'
@@ -39,13 +39,13 @@ app.addConnectListener(async () => {
 
 let interval
 
-// onMounted(() => {
-//    interval = setInterval(() => {
-//       app.service('auth', { volatile: true, timeout: 9999999999}).ping()
-//    }, 30000)
-// })
+onMounted(() => {
+   interval = setInterval(() => {
+      if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
+   }, 30000)
+})
 
-// onUnmounted(() => {
-//    clearInterval(interval)
-// })
+onUnmounted(() => {
+   clearInterval(interval)
+})
 </script>

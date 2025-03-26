@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import { findMany as findManyUser, update as updateUser } from '/src/use/useUser'
@@ -120,14 +120,23 @@ let groupSubscription
 let userTabRelationListSubscription
 let userGroupRelationListSubscription
 
+
+onMounted(async () => {
+   const groupObservable = await findManyGroup({})
+   groupSubscription = groupObservable.subscribe(list => groupList.value = list)
+})
+
+onUnmounted(() => {
+   if (userSubscription) userSubscription.unsubscribe()
+   if (groupSubscription) groupSubscription.unsubscribe()
+   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
+   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
+})
+
 watch(() => props.user_uid, async (user_uid) => {
    if (userSubscription) userSubscription.unsubscribe()
    const userObservable = await findManyUser({ uid: user_uid})
    userSubscription = userObservable.subscribe(([user_]) => user.value = user_)
-
-   if (groupSubscription) groupSubscription.unsubscribe()
-   const groupObservable = await findManyGroup({})
-   groupSubscription = groupObservable.subscribe(list => groupList.value = list)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
    const userTabRelationObservable = await findManyUserTabRelation({ user_uid })
@@ -141,13 +150,6 @@ watch(() => props.user_uid, async (user_uid) => {
       userGroups.value = relationList.map(relation => relation.group_uid)
    })
 }, { immediate: true })
-
-onUnmounted(() => {
-   if (userSubscription) userSubscription.unsubscribe()
-   if (groupSubscription) groupSubscription.unsubscribe()
-   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
-})
 
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////

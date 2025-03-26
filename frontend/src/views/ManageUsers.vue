@@ -19,7 +19,8 @@
                   <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
                      <template v-for="group in user.groups">
-                        <v-chip size="x-small">{{ group.name }}</v-chip>
+                        <!-- <v-chip size="x-small">{{ group.name }}</v-chip> -->
+                        <v-chip size="x-small">xxx</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
@@ -48,6 +49,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser.js'
+import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
 
@@ -68,8 +70,15 @@ let userListSubscription
 
 onMounted(async () => {
    const userObservable = await findManyUser({})
-   userListSubscription = userObservable.subscribe(list => {
+   userListSubscription = userObservable.subscribe(async list => {
       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+
+      for (const user of userList.value) {
+         const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
+         userGroupRelationObservable.subscribe(relationList => {
+            user.groups = relationList.map(relation => relation.group_uid)
+         })
+      }
    })
 })
 
