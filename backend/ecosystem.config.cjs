@@ -3,7 +3,7 @@ module.exports = {
    apps : [
 
       {
-         name: "offline",
+         name: "shdl",
          script: "./src/app.js",
          watch: false,
       },
