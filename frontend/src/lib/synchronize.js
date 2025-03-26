@@ -1,55 +1,61 @@
 
 import { sortedJson, Mutex } from "/src/lib/utilities"
 
+const mutex = new Mutex()
+
 // ex: where = { uid: 'azer' }
 export async function synchronize(app, modelName, clientCache, where, cutoffDate) {
+   await mutex.acquire()
+
    const requestPredicate = wherePredicate(where)
 
    // collect meta-data of local values
+   // values with deleted_ = true must be present
    const allValues = await clientCache.toArray()
-   const clientValuesDict = allValues.reduce((accu, elt) => {
-      if (!elt.deleted_ && requestPredicate(elt)) accu[elt.uid] = {
+   const clientMetadataDict = allValues.reduce((accu, elt) => {
+      if (requestPredicate(elt)) accu[elt.uid] = {
          uid: elt.uid,
          created_at: elt.created_at,
          updated_at: elt.updated_at,
+         deleted_: elt.deleted_,
       }
       return accu
    }, {})
-
+   
    // call sync service on `where` perimeter
-   const { toAdd, toUpdate, toDelete, addDatabase, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientValuesDict)
+   const { toAdd, toUpdate, toDelete, addDatabase, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientMetadataDict)
    console.log('synchronize', toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
 
-   // update client cache according to server sync directives
-   // 1- add missing elements
+   // 1- add missing elements in cache
    for (const elt of toAdd) {
       await clientCache.add(elt)
    }
-   // 2- delete removed elements
+   // 2- delete elements from cache
    for (const uid of toDelete) {
       await clientCache.delete(uid)
    }
-   // 3- update elements
+   // 3- update elements of cache
    for (const elt of toUpdate) {
       // get full value of element to update
       const fullElt = await app.service(modelName).findUnique({ where: { uid: elt.uid }})
       await clientCache.update(elt.uid, fullElt)
    }
 
-   // 4- create elements of `addDatabase` with full data
+   // 4- create elements of `addDatabase` with full data from cache
    for (const elt of addDatabase) {
-      const fullElt = await clientCache.get(elt.uid)
-      await app.service(modelName).create(fullElt)
+      const fullValue = await clientCache.get(elt.uid)
+      await app.service(modelName).create({ data: fullValue })
    }
 
-   // 5- update elements of `updateDatabase` with full data
+   // 5- update elements of `updateDatabase` with full data from cache
    for (const elt of updateDatabase) {
-      const fullElt = await clientCache.get(elt.uid)
+      const fullValue = await clientCache.get(elt.uid)
       await app.service(modelName).update({
          where: { uid: elt.uid },
-         data: fullElt,
+         data: fullValue,
       })
    }
+   await mutex.release()
    return clientCache
 }
 
@@ -81,8 +87,6 @@ async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
    return list.map(elt => elt.where)
 }
-
-const mutex = new Mutex()
 
 export async function addSynchroWhere(where, whereDb) {
    await mutex.acquire()

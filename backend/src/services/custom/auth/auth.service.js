@@ -125,6 +125,9 @@ export default function (app) {
       // See hooks
       extendExpiration: async () => {
       },
+
+      ping: async () => {
+      },
    })
 
    app.service('auth').hooks(hooks)

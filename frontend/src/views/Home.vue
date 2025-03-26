@@ -9,6 +9,8 @@
 </template>
 
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
+
 import NavigationBar from '/src/components/NavigationBar.vue'
 
 import { app } from '/src/client-app.js'
@@ -27,10 +29,23 @@ const props = defineProps({
 // synchronize when connection starts or restarts
 // (situated here because of import circularity issues)
 app.addConnectListener(async () => {
+   console.log(">>>>>>>>>>>>>>>> SYNC ALL")
    // order matters
    await synchronizeUserWhereList()
    await synchronizeGroupWhereList()
    await synchronizeUserTabRelationWhereList()
    await synchronizeUserGroupRelationWhereList()
 })
+
+let interval
+
+// onMounted(() => {
+//    interval = setInterval(() => {
+//       app.service('auth', { volatile: true, timeout: 9999999999}).ping()
+//    }, 30000)
+// })
+
+// onUnmounted(() => {
+//    clearInterval(interval)
+// })
 </script>

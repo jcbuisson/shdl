@@ -64,3 +64,29 @@ export const extendExpiration = (duration) => async (context) => {
       context.socket.emit('expiresAt', null)
    }
 }
+
+export const checkExpiration = async (context) => {
+   // do nothing if it's not a client call from a ws connexion
+   if (!context.socket) return
+   const expiresAt = context.socket?.data?.expiresAt
+   if (expiresAt) {
+      const expiresAtDate = new Date(expiresAt)
+      const now = new Date()
+      if (now > expiresAtDate) {
+         // expiration date is met
+         // clear socket.data
+         context.socket.data = {}
+         // leave all rooms except socket#id
+         const rooms = new Set(context.socket.rooms)
+         for (const room of rooms) {
+            if (room === context.socket.id) continue
+            context.socket.leave(room)
+         }
+         // send an event to the client socket
+         context.socket.emit('expiresAt', null)
+      }
+   } else {
+      // send an event to the client socket
+      context.socket.emit('expiresAt', null)
+   }
+}

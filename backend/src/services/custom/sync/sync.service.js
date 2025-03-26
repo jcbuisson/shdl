@@ -3,7 +3,7 @@ export default function (app) {
 
    app.createService('sync', {
 
-      go: async (modelName, where, cutoffDate, clientValuesDict) => {
+      go: async (modelName, where, cutoffDate, clientMetadataDict) => {
          console.log('>>>>> SYNC', modelName, where, cutoffDate)
          const databaseService = app.service(modelName)
    
@@ -14,7 +14,7 @@ export default function (app) {
             accu[value.uid] = value
             return accu
          }, {})
-         console.log('clientValuesDict', clientValuesDict)
+         console.log('clientMetadataDict', clientMetadataDict)
          console.log('databaseValuesDict', databaseValuesDict)
       
          // STEP 2: compute intersections between client and database uids
@@ -23,14 +23,14 @@ export default function (app) {
          const databaseAndClientIds = new Set()
       
          for (const uid in databaseValuesDict) {
-            if (uid in clientValuesDict) {
+            if (uid in clientMetadataDict) {
                databaseAndClientIds.add(uid)
             } else {
                onlyDatabaseIds.add(uid)
             }
          }
       
-         for (const uid in clientValuesDict) {
+         for (const uid in clientMetadataDict) {
             if (uid in databaseValuesDict) {
                databaseAndClientIds.add(uid)
             } else {
@@ -56,7 +56,7 @@ export default function (app) {
          }
       
          for (const uid of onlyClientIds) {
-            const clientValue = clientValuesDict[uid]
+            const clientValue = clientMetadataDict[uid]
             if (clientValue.deleted_) continue
             if (new Date(clientValue.created_at) > cutoffDate) {
                addDatabase.push(clientValue)
@@ -67,7 +67,7 @@ export default function (app) {
       
          for (const uid of databaseAndClientIds) {
             const databaseValue = databaseValuesDict[uid]
-            const clientValue = clientValuesDict[uid]
+            const clientValue = clientMetadataDict[uid]
             if (clientValue.deleted_) {
                deleteDatabase.push(uid)
                deleteClient.push(uid) // also ask the client to remove the record with deleted_=true

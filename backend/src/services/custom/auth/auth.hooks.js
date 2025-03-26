@@ -2,7 +2,7 @@
 import config from '#config'
 
 import { protect } from '#root/src/common-server.mjs'
-import { extendExpiration } from '#root/src/hooks.mjs'
+import { extendExpiration, checkExpiration } from '#root/src/hooks.mjs'
 
 
 async function afterSignin(context) {
@@ -35,6 +35,7 @@ function afterSignout(context) {
 export default {
    before: {
       extendExpiration: [extendExpiration(config.SESSION_EXPIRE_DELAY)],
+      ping: [checkExpiration],
    },
    after: {
       signin: [afterSignin, protect('password')],
