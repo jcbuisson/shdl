@@ -19,8 +19,7 @@
                   <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
                      <template v-for="group in user.groups">
-                        <!-- <v-chip size="x-small">{{ group.name }}</v-chip> -->
-                        <v-chip size="x-small">xxx</v-chip>
+                        <v-chip size="x-small">{{ group }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
