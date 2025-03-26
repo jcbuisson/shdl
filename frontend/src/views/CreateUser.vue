@@ -81,7 +81,7 @@
 import { ref } from 'vue'
 
 import { create as createUser } from '/src/use/useUser.js'
-import { findManyGroup } from '/src/use/useGroup'
+import { findMany as findManyGroup } from '/src/use/useGroup'
 
 import 'jcb-upload'
 
