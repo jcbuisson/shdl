@@ -19,7 +19,7 @@
                   <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
                      <template v-for="group in user.groups">
-                        <v-chip size="x-small">{{ group }}</v-chip>
+                        <v-chip size="x-small">{{ group.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
@@ -47,7 +47,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser.js'
+import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser'
+import { getFromCache as getGroupFromCache } from '/src/use/useGroup'
 import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
@@ -74,8 +75,12 @@ onMounted(async () => {
 
       for (const user of userList.value) {
          const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
-         userGroupRelationObservable.subscribe(relationList => {
-            user.groups = relationList.map(relation => relation.group_uid)
+         userGroupRelationObservable.subscribe(async relationList => {
+            user.groups = []
+            for (const group_uid of relationList.map(relation => relation.group_uid)) {
+               const group = await getGroupFromCache(group_uid)
+               user.groups.push(group)
+            }
          })
       }
    })

@@ -35,6 +35,10 @@ app.service('group').on('delete', async group => {
 })
 
 
+export async function getFromCache(uid) {
+   return await db.values.get(uid)
+}
+
 /////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
