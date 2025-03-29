@@ -57,18 +57,19 @@ export default function (app) {
       
          for (const uid of onlyClientIds) {
             const clientValue = clientMetadataDict[uid]
-            if (clientValue.deleted_) continue
-            if (new Date(clientValue.created_at) > cutoffDate) {
+            if (clientValue.deleted_at) {
+               deleteClient.push(uid)
+            } else if (new Date(clientValue.created_at) > cutoffDate) {
                addDatabase.push(clientValue)
             } else {
-               deleteClient.push(uid)
+               // deleteClient.push(uid)
             }
          }
       
          for (const uid of databaseAndClientIds) {
             const databaseValue = databaseValuesDict[uid]
             const clientValue = clientMetadataDict[uid]
-            if (clientValue.deleted_) {
+            if (clientValue.deleted_at) {
                deleteDatabase.push(uid)
                deleteClient.push(uid) // also ask the client to remove the record with deleted_=true
             } else {
