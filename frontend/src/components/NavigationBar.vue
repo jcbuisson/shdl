@@ -7,13 +7,10 @@
       <v-spacer></v-spacer>
       <v-btn size="small" @click="toggleCnx">{{ isConnected ? 'disconnect' : 'connect'}}</v-btn>
       <label>
-         Université de Toulouse - INPT - ENSEEIHT - JCB
+         Université de Toulouse - ENSEEIHT - JCB
       </label>
       <label>
          v2.0.0
-      </label>
-      <label>
-         {{ reactiveExpiresAt }} {{ expiresAtHHmm }}
       </label>
 
       <v-menu :location="location">
