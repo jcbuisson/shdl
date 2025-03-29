@@ -10,14 +10,13 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
    const requestPredicate = wherePredicate(where)
 
    // collect meta-data of local values
-   // values with deleted_ = true must be present
    const allValues = await clientCache.toArray()
    const clientMetadataDict = allValues.reduce((accu, elt) => {
       if (requestPredicate(elt)) accu[elt.uid] = {
          uid: elt.uid,
          created_at: elt.created_at,
          updated_at: elt.updated_at,
-         deleted_: elt.deleted_,
+         deleted_at: elt.deleted_at,
       }
       return accu
    }, {})

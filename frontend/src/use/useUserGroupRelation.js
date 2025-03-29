@@ -9,7 +9,7 @@ export const db = new Dexie("userGroupRelationDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "sortedjson, where",
-   values: "uid, created_at, updated_at, user_uid, group_uid, deleted_"
+   values: "uid, created_at, updated_at, deleted_at, user_uid, group_uid"
 })
 
 export const reset = async () => {
@@ -46,7 +46,7 @@ export async function findMany(where) {
    }
    // return observable for `where` values
    const predicate = wherePredicate(where)
-   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
+   return liveQuery(() => db.values.filter(value => !value.deleted_at && predicate(value)).toArray())
 }
 
 export async function updateUserGroups(user_uid, newGroupUIDs) {
@@ -82,11 +82,15 @@ export async function updateUserGroups(user_uid, newGroupUIDs) {
 export async function remove(uid) {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
+   const deleted_at = new Date()
    // optimistic update
-   await db.values.update(uid, { deleted_: true })
+   await db.values.update(uid, { deleted_at })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
-      app.service('user_group_relation').delete({ where: { uid }})
+      app.service('user_group_relation').update({
+         where: { uid },
+         data: { deleted_at }
+      })
    }
 }
 
@@ -100,5 +104,5 @@ export async function synchronizeWhereList() {
 
 
 export const getRelationListOfUser = async (user_uid) => {
-   return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
+   return await db.values.filter(relation => !relation.deleted_at && relation.user_uid === user_uid).toArray()
 }

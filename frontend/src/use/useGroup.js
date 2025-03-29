@@ -9,7 +9,7 @@ export const db = new Dexie("groupDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "sortedjson, where",
-   values: "uid, created_at, updated_at, name, deleted_"
+   values: "uid, created_at, updated_at, deleted_at, name"
 })
 
 export const reset = async () => {
@@ -50,7 +50,7 @@ export async function findMany(where) {
    }
    // return observable for `where` values
    const predicate = wherePredicate(where)
-   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
+   return liveQuery(() => db.values.filter(value => !value.deleted_at && predicate(value)).toArray())
 }
 
 export async function create(data) {
@@ -79,15 +79,28 @@ export const update = async (uid, data) => {
 export const remove = async (uid) => {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
+   const deleted_at = new Date()
    // optimistic update of cache
-   // cascade-delete user-group relations
+   // soft-delete associated user-group relations in cache
    const userGroupRelations = await getGroupRelationListOfUser(uid)
    await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
-   // delete group
-   await db.values.update(uid, { deleted_: true })
-   // execute on server, asynchronously, if connection is active (cascade-delete is done by rdbms)
+   // soft-delete group in cache
+   await db.values.update(uid, { deleted_at })
+
+   // soft-delete in database, if connected
    if (isConnected.value) {
-      app.service('group').delete({ where: { uid }})
+      // soft-delete associated user-group relations in database
+      for (const relation of userGroupRelations) {
+         app.service('user_group_relation').update({
+            where: { uid: relation.uid },
+            data: { deleted_at }
+         })
+      }
+      // soft-delete group in database
+      app.service('group').update({
+         where: { uid },
+         data: { deleted_at }
+      })
    }
 }
 

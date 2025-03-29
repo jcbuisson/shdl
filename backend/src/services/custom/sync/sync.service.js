@@ -88,13 +88,16 @@ export default function (app) {
          console.log('deleteClient', deleteClient)
          console.log('updateClient', updateClient)
       
-         // STEP4: execute database deletions
-         // create/updates are done after by the client with complete data
+         // STEP4: execute database soft-deletions
+         // database creations & updates are done later by the client with complete data (this function only has client values's meta-data)
          for (const uid of deleteDatabase) {
-            await databaseService.delete({ where: { uid } })
+            await databaseService.update({
+               where: { uid },
+               data: { deleted_at: new Date() }
+            })
          }
       
-         // STEP5: return to client changes to perform on its cache, and crete/update on database with full data
+         // STEP5: return to client the changes to perform on its cache, and create/update to perform on database with full data
          return {
             toAdd: addClient,
             toUpdate: updateClient,

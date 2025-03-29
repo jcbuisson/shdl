@@ -9,7 +9,7 @@ export const db = new Dexie("userTabRelationDatabaseSHDL")
 
 db.version(1).stores({
    whereList: "sortedjson, where",
-   values: "uid, created_at, updated_at, user_uid, tab, deleted_"
+   values: "uid, created_at, updated_at, deleted_at, user_uid, tab"
 })
 
 export const reset = async () => {
@@ -82,11 +82,15 @@ export async function updateUserTabs(user_uid, newTabs) {
 export async function remove(uid) {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
+   const deleted_at = new Date()
    // optimistic update
-   await db.values.update(uid, { deleted_: true })
+   await db.values.update(uid, { deleted_at })
    // execute on server, asynchronously, if connection is active
    if (isConnected.value) {
-      app.service('user_tab_relation').delete({ where: { uid }})
+      app.service('user_tab_relation').update({
+         where: { uid },
+         data: { deleted_at }
+      })
    }
 }
 
@@ -100,5 +104,5 @@ export async function synchronizeWhereList() {
 
 
 export const getRelationListOfUser = async (user_uid) => {
-   return await db.values.filter(relation => !relation.deleted_ && relation.user_uid === user_uid).toArray()
+   return await db.values.filter(relation => !relation.deleted_at && relation.user_uid === user_uid).toArray()
 }
