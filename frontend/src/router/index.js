@@ -50,6 +50,18 @@ const routes = [
             path: 'groups',
             props: true,
             component: () => import('/src/views/ManageGroups.vue'),
+            children: [
+               {
+                  path: 'create',
+                  props: true,
+                  component: () => import('/src/views/CreateGroup.vue'),
+               },
+               {
+                  path: ':group_uid',
+                  props: true,
+                  component: () => import('/src/views/EditGroup.vue'),
+               },
+            ],      
          },
       ],
    },

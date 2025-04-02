@@ -102,8 +102,9 @@ onUnmounted(() => {
 })
 
 async function addUser() {
-   const user = await createUser({})
-   selectUser(user)
+   router.push(`/home/${props.signedinUid}/users/create`)
+   // const user = await createUser({})
+   // selectUser(user)
 }
 
 const selectedUser = ref(null)
