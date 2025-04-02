@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 import { create as createUser } from '/src/use/useUser'
 import { findMany as findManyGroup } from '/src/use/useGroup'
@@ -109,10 +109,17 @@ const tabs = [
 ]
 
 const groupList = ref([])
+let subscription
 
-const groupListObservable = findManyGroup({})
-groupListObservable.subscribe(list => {
-   groupList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+onMounted(async () => {
+   const groupListObservable = await findManyGroup({})
+   subscription = groupListObservable.subscribe(list => {
+      groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
+   })
+})
+
+onUnmounted(() => {
+   subscription.unsubscribe()
 })
 
 async function submit() {
