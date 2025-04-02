@@ -44,10 +44,10 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { synchronizeWhereList as synchronizeUserWhereList, reset as resetUser, findMany, getFullname } from '/src/use/useUser'
-import { synchronizeWhereList as synchronizeGroupWhereList, reset as resetGroup } from '/src/use/useGroup'
-import { synchronizeWhereList as synchronizeUserTabRelationWhereList, reset as resetUserTabRelation } from '/src/use/useUserTabRelation'
-import { synchronizeWhereList as synchronizeUserGroupRelationWhereList, reset as resetUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { synchronizeWhereList as synchronizeUserWhereList, findMany, getFullname } from '/src/use/useUser'
+import { synchronizeWhereList as synchronizeGroupWhereList } from '/src/use/useGroup'
+import { synchronizeWhereList as synchronizeUserTabRelationWhereList } from '/src/use/useUserTabRelation'
+import { synchronizeWhereList as synchronizeUserGroupRelationWhereList } from '/src/use/useUserGroupRelation'
 
 import GithubLink from '/src/components/GithubLink.vue'
 

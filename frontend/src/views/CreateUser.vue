@@ -80,8 +80,12 @@
 <script setup>
 import { ref } from 'vue'
 
-import { create as createUser } from '/src/use/useUser.js'
+import { create as createUser } from '/src/use/useUser'
 import { findMany as findManyGroup } from '/src/use/useGroup'
+import { extendExpiration } from "/src/use/useAuthentication"
+
+import router from '/src/router'
+import { displaySnackbar } from '/src/use/useSnackbar'
 
 import 'jcb-upload'
 
@@ -104,8 +108,6 @@ const tabs = [
    { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
-// const groupList = getGroupListRef('all', {}, ()=>true)
-
 const groupList = ref([])
 
 const groupListObservable = findManyGroup({})
@@ -113,8 +115,15 @@ groupListObservable.subscribe(list => {
    groupList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 })
 
-function submit() {
-   createUser(user.value)
+async function submit() {
+   try {
+      extendExpiration()
+      await createUser(user.value)
+      displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
+   }
+   router.back()
 }
 
 </script>

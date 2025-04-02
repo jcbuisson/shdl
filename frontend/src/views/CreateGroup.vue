@@ -23,7 +23,10 @@
 import { ref } from 'vue'
 
 import { create as createGroup } from '/src/use/useGroup'
+import { extendExpiration } from "/src/use/useAuthentication"
+
 import router from '/src/router'
+import { displaySnackbar } from '/src/use/useSnackbar'
 
 
 const group = ref({})
@@ -31,7 +34,13 @@ const group = ref({})
 const valid = ref()
 
 async function submit() {
-   await createGroup(group.value)
+   try {
+      extendExpiration()
+      await createGroup(group.value)
+      displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
+   }
    router.back()
 }
 </script>
