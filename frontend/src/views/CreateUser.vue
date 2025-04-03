@@ -125,12 +125,12 @@ onUnmounted(() => {
 async function submit() {
    try {
       extendExpiration()
-      await createUser(user.value)
+      const user = await createUser(user.value)
       displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
+      router.push(`/home/${props.signedinUid}/users/${user.uid}`)
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
    }
-   router.back()
 }
 
 </script>

@@ -94,15 +94,6 @@ export async function remove(uid) {
    }
 }
 
-// app.addConnectListener(async () => {
-//    await synchronizeWhereList(app, 'user_group_relation', db.values, disconnectedDate.value, db.whereList)
-// })
-
 export async function synchronizeWhereList() {
    await synchronizeModelWhereList(app, 'user_group_relation', db.values, disconnectedDate.value, db.whereList)
-}
-
-
-export const getRelationListOfUser = async (user_uid) => {
-   return await db.values.filter(relation => !relation.deleted_at && relation.user_uid === user_uid).toArray()
 }

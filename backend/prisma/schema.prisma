@@ -50,7 +50,7 @@ model group {
    created_at              DateTime   @default(now()) @db.Timestamptz(6)
    updated_at              DateTime   @updatedAt @db.Timestamptz(6)
    deleted_at              DateTime?
-   name                    String     @unique(map: "group_name_unique")
+   name                    String
 
    user_group_relations    user_group_relation[]
 }

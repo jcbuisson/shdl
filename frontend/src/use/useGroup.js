@@ -1,8 +1,9 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
+import { firstValueFrom } from 'rxjs'
 
-import { getRelationListOfUser as getGroupRelationListOfUser } from '/src/use/useUserGroupRelation'
+import { db as userGroupRelationDB, findMany as findManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
@@ -81,33 +82,22 @@ export const remove = async (uid) => {
    // stop synchronizing on this perimeter
    removeSynchroWhere({ uid }, db.whereList)
    const deleted_at = new Date()
-   // optimistic update of cache
-   // soft-delete associated user-group relations in cache
-   const userGroupRelations = await getGroupRelationListOfUser(uid)
-   await Promise.all(userGroupRelations.map(relation => deleteGroupRelation(relation)))
-   // soft-delete group in cache
-   await db.values.update(uid, { deleted_at })
 
-   // soft-delete in database, if connected
+   // (soft)remove relations to users in cache, and in database if connected
+   const obs = await findManyUserGroupRelation({ group_uid: uid })
+   const userGroupRelations = await firstValueFrom(obs)
+   await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation)))
+
+   // (soft)remove group in cache
+   await db.values.update(uid, { deleted_at })
+   // and in database, if connected
    if (isConnected.value) {
-      // soft-delete associated user-group relations in database
-      for (const relation of userGroupRelations) {
-         app.service('user_group_relation').update({
-            where: { uid: relation.uid },
-            data: { deleted_at }
-         })
-      }
-      // soft-delete group in database
       app.service('group').update({
          where: { uid },
          data: { deleted_at }
       })
    }
 }
-
-// app.addConnectListener(async () => {
-//    await synchronizeWhereList(app, 'group', db.values, disconnectedDate.value, db.whereList)
-// })
 
 export async function synchronizeWhereList() {
    await synchronizeModelWhereList(app, 'group', db.values, disconnectedDate.value, db.whereList)

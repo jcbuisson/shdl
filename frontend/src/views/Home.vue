@@ -39,6 +39,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useRoute} from 'vue-router'
+import { firstValueFrom } from 'rxjs'
 
 import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
@@ -77,7 +78,7 @@ let interval
 
 onMounted(async () => {
    const userObservable = await findMany({ uid: props.signedinUid })
-   userObservable.subscribe(([user]) => signedinUser.value = user)
+   signedinUser.value = (await firstValueFrom(userObservable))[0]
 
    interval = setInterval(() => {
       if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive

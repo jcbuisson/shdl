@@ -29,8 +29,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { firstValueFrom } from 'rxjs'
 
-import { findMany as findManyGroup, create as createGroup, remove as removeGroup } from '/src/use/useGroup'
+import { findMany as findManyGroup, remove as removeGroup } from '/src/use/useGroup'
+import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -75,7 +77,13 @@ function selectGroup(group) {
 }
 
 async function deleteGroup(group) {
-   if (window.confirm(`Supprimer ${group.name} ?`)) {
+   const observable = await findManyUserGroupRelation({ group_uid: group.uid })
+   const userGroupRelations = await firstValueFrom(observable)
+   let doit = true
+   if (userGroupRelations.length > 0) {
+      doit &= window.confirm(`Supprimer ${group.name} ? ${userGroupRelations.length > 1 ? `${userGroupRelations.length} utilisateurs appartiennent` : 'un utilisateur appartient'} encore à ce groupe`)
+   }
+   if (doit) {
       await removeGroup(group.uid)
       router.push(`/home/${props.signedinUid}/groups`)
    }
