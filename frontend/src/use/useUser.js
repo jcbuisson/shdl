@@ -2,8 +2,8 @@ import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 
-import { getRelationListOfUser as getTabRelationListOfUser, remove as removeTabRelation } from '/src/use/useUserTabRelation'
-import { remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
+import { findMany as findManyUserTabRelation, remove as removeTabRelation } from '/src/use/useUserTabRelation'
+import { findMany as findManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
@@ -79,33 +79,18 @@ export const remove = async (uid) => {
    // stop synchronizing on this perimeter
    await removeSynchroWhere({ uid }, db.whereList)
    const deleted_at = new Date()
-   // optimistic update of cache
-   // soft-delete associated user-tab relations in cache
-   const userTabRelations = await getTabRelationListOfUser(uid)
-   await Promise.all(userTabRelations.map(relation => removeTabRelation(relation)))
-   // soft-delete associated user-group relations in cache
-   const userGroupRelations = await getGroupRelationListOfUser(uid)
-   await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation)))
-   // soft-delete user in cache
-   await db.values.update(uid, { deleted_at })
 
-   // soft-delete in database, if connected
+   // (soft)remove relations to groups in cache, and in database if connected
+   const userGroupRelations = await firstValueFrom(await findManyUserGroupRelation({ user_uid: uid }))
+   await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation)))
+   // (soft)remove relations to tabs in cache, and in database if connected
+   const userTabRelations = await firstValueFrom(await findManyUserTabRelation({ user_uid: uid }))
+   await Promise.all(userTabRelations.map(relation => removeTabRelation(relation)))
+
+   // (soft)remove user in cache
+   await db.values.update(uid, { deleted_at })
+   // and in database, if connected
    if (isConnected.value) {
-      // soft-delete associated user-tab relations in database
-      for (const relation of userTabRelations) {
-         app.service('user_tab_relation').update({
-            where: { uid: relation.uid },
-            data: { deleted_at }
-         })
-      }
-      // soft-delete associated user-group relations in database
-      for (const relation of userGroupRelations) {
-         app.service('user_group_relation').update({
-            where: { uid: relation.uid },
-            data: { deleted_at }
-         })
-      }
-      // soft-delete user in database
       app.service('user').update({
          where: { uid },
          data: { deleted_at }

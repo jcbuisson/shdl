@@ -94,10 +94,6 @@ export async function remove(uid) {
    }
 }
 
-// app.addConnectListener(async () => {
-//    await synchronizeWhereList(app, 'user_tab_relation', db.values, disconnectedDate.value, db.whereList)
-// })
-
 export async function synchronizeWhereList() {
    await synchronizeModelWhereList(app, 'user_tab_relation', db.values, disconnectedDate.value, db.whereList)
 }
