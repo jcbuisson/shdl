@@ -3,7 +3,7 @@ import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 import { firstValueFrom } from 'rxjs'
 
-import { findMany as findManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
+import { getMany as getManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
@@ -42,6 +42,11 @@ export async function getFromCache(uid) {
 }
 
 /////////////          CRUD METHODS WITH SYNC          /////////////
+
+export async function getMany(where) {
+   const predicate = wherePredicate(where)
+   return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
+}
 
 // return an Observable
 export async function findMany(where) {
@@ -84,8 +89,7 @@ export const remove = async (uid) => {
    const deleted_at = new Date()
 
    // (soft)remove relations to users in cache, and in database if connected
-   const obs = await findManyUserGroupRelation({ group_uid: uid })
-   const userGroupRelations = await firstValueFrom(obs)
+   const userGroupRelations = await getManyUserGroupRelation({ group_uid: uid })
    await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation)))
 
    // (soft)remove group in cache

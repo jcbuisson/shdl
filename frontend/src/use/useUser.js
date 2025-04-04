@@ -3,8 +3,8 @@ import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 import { firstValueFrom } from 'rxjs'
 
-import { findMany as findManyUserTabRelation, remove as removeTabRelation } from '/src/use/useUserTabRelation'
-import { findMany as findManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
+import { getMany as getManyUserTabRelation, remove as removeTabRelation } from '/src/use/useUserTabRelation'
+import { getMany as getManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
@@ -40,6 +40,11 @@ app.service('user').on('delete', async user => {
 
 
 /////////////          CRUD METHODS WITH SYNC          /////////////
+
+export async function getMany(where) {
+   const predicate = wherePredicate(where)
+   return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
+}
 
 // return an Observable
 export async function findMany(where) {
@@ -82,10 +87,10 @@ export const remove = async (uid) => {
    const deleted_at = new Date()
 
    // (soft)remove relations to groups in cache, and in database if connected
-   const userGroupRelations = await firstValueFrom(await findManyUserGroupRelation({ user_uid: uid }))
+   const userGroupRelations = await getManyUserGroupRelation({ user_uid: uid })
    await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation)))
    // (soft)remove relations to tabs in cache, and in database if connected
-   const userTabRelations = await firstValueFrom(await findManyUserTabRelation({ user_uid: uid }))
+   const userTabRelations = await getManyUserTabRelation({ user_uid: uid })
    await Promise.all(userTabRelations.map(relation => removeTabRelation(relation)))
 
    // (soft)remove user in cache

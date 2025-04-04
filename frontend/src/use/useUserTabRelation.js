@@ -37,6 +37,11 @@ app.service('user_tab_relation').on('delete', async value => {
 
 /////////////          CRUD METHODS WITH SYNC          /////////////
 
+export async function getMany(where) {
+   const predicate = wherePredicate(where)
+   return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
+}
+
 // return an Observable
 export async function findMany(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
@@ -91,6 +96,14 @@ export async function remove(uid) {
          where: { uid },
          data: { deleted_at }
       })
+   }
+}
+
+export async function synchronizeWhere(where) {
+   const isNew = await addSynchroWhere(where, db.whereList)
+   // run synchronization if connected and if `where` is new
+   if (isNew && isConnected.value) {
+      await synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value)
    }
 }
 

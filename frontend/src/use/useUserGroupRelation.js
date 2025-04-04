@@ -37,6 +37,11 @@ app.service('user_group_relation').on('delete', async value => {
 
 /////////////          CRUD METHODS WITH SYNC          /////////////
 
+export async function getMany(where) {
+   const predicate = wherePredicate(where)
+   return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
+}
+
 // return an Observable
 export async function findMany(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
