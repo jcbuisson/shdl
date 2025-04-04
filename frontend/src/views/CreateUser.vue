@@ -42,7 +42,7 @@
 
             <v-row>
                <v-col xs="12" md="12">
-                  <v-autocomplete
+                  <v-select
                      variant="underlined"
                      v-model="data.tabs"
                      :items="tabs"
@@ -51,13 +51,14 @@
                      label="Onglets"
                      chips
                      multiple
-                  ></v-autocomplete>
+                     :rules="tabsRules"
+                  ></v-select>
                </v-col>
             </v-row>
 
             <v-row>
                <v-col xs="12" md="12">
-                  <v-autocomplete
+                  <v-select
                      variant="underlined"
                      v-model="data.groups"
                      :items="groupList"
@@ -66,7 +67,7 @@
                      label="Groupes"
                      chips
                      multiple
-                  ></v-autocomplete>
+                  ></v-select>
                </v-col>
             </v-row>
          </v-container>
@@ -104,6 +105,10 @@ const valid = ref()
 const emailRules = [
    (v) => !!v || "L'email est obligatoire",
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
+]
+
+const tabsRules = [
+   (v) => !!v && Object.keys(v).length > 0 || "Choisir au moins un onglet"
 ]
 
 const tabs = [

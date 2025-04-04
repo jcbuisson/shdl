@@ -48,7 +48,7 @@
 
             <v-row>
                <v-col xs="12" md="12">
-                  <v-autocomplete
+                  <v-select
                      variant="underlined"
                      v-model="userTabs"
                      @update:modelValue="onTabChange"
@@ -58,13 +58,13 @@
                      label="Onglets"
                      chips
                      multiple
-                  ></v-autocomplete>
+                  ></v-select>
                </v-col>
             </v-row>
 
             <v-row>
                <v-col xs="12" md="12">
-                  <v-autocomplete
+                  <v-select
                      variant="underlined"
                      v-model="userGroups"
                      @update:modelValue="onGroupChange"
@@ -74,7 +74,7 @@
                      label="Groupes"
                      chips
                      multiple
-                  ></v-autocomplete>
+                  ></v-select>
                </v-col>
             </v-row>
 
