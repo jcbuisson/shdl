@@ -46,6 +46,11 @@ export async function getMany(where) {
    return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
 }
 
+export async function getFirst(where) {
+   const predicate = wherePredicate(where)
+   return await db.values.filter(value => !value.deleted_at && predicate(value)).first()
+}
+
 // return an Observable
 export async function findMany(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
@@ -103,6 +108,7 @@ export const remove = async (uid) => {
       })
    }
 }
+
 
 export async function synchronizeWhere(where) {
    const isNew = await addSynchroWhere(where, db.whereList)

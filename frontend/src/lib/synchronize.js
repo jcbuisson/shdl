@@ -36,8 +36,8 @@ export async function synchronize(app, modelName, clientCache, where, cutoffDate
    // 3- update elements of cache
    for (const elt of toUpdate) {
       // get full value of element to update
-      const fullElt = await app.service(modelName).findUnique({ where: { uid: elt.uid }})
-      await clientCache.update(elt.uid, fullElt)
+      const fullValue = await app.service(modelName).findUnique({ where: { uid: elt.uid }})
+      await clientCache.update(elt.uid, fullValue)
    }
 
    // 4- create elements of `addDatabase` with full data from cache

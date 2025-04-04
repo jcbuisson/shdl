@@ -99,6 +99,7 @@ export async function remove(uid) {
    }
 }
 
+
 export async function synchronizeWhere(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
    // run synchronization if connected and if `where` is new
