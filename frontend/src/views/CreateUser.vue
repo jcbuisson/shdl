@@ -3,7 +3,7 @@
       <v-form v-model="valid" lazy-validation>
          <v-container>
             <v-row>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="email"
                      v-model="data.email"
@@ -11,7 +11,7 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
                      <v-avatar size="80" @click="onAvatarClick(data)">
                         <v-img :src="data?.pict"></v-img>
@@ -24,14 +24,14 @@
             </v-row>
 
             <v-row>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="Nom"
                      v-model="data.lastname"
                      variant="underlined"
                   ></v-text-field>
                </v-col>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="Prénom"
                      v-model="data.firstname"
@@ -41,7 +41,7 @@
             </v-row>
 
             <v-row>
-               <v-col xs="12" sm="12">
+               <v-col xs="12" md="12">
                   <v-autocomplete
                      variant="underlined"
                      v-model="data.tabs"
@@ -56,7 +56,7 @@
             </v-row>
 
             <v-row>
-               <v-col xs="12" sm="12">
+               <v-col xs="12" md="12">
                   <v-autocomplete
                      variant="underlined"
                      v-model="data.groups"

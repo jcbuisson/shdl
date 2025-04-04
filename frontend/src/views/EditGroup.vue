@@ -3,7 +3,7 @@
       <v-form>
          <v-container>
             <v-row>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="Nom"
                      :modelValue="group?.name"

@@ -3,7 +3,7 @@
       <v-form>
          <v-container>
             <v-row>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="3">
                   <v-text-field
                      label="email"
                      :modelValue="user?.email"
@@ -12,7 +12,10 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="3">
+                  <v-btn flat color="primary" @click="validateEmail">Init. mot de passe...</v-btn>
+               </v-col>
+               <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
                      <v-avatar size="80" @click="onAvatarClick(user)">
                         <v-img :src="user?.pict"></v-img>
@@ -25,7 +28,7 @@
             </v-row>
 
             <v-row>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="Nom"
                      :modelValue="user?.lastname"
@@ -33,7 +36,7 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
-               <v-col cols="12" sm="6">
+               <v-col cols="12" md="6">
                   <v-text-field
                      label="Prénom"
                      :modelValue="user?.firstname"
@@ -44,7 +47,7 @@
             </v-row>
 
             <v-row>
-               <v-col xs="12" sm="12">
+               <v-col xs="12" md="12">
                   <v-autocomplete
                      variant="underlined"
                      v-model="userTabs"
@@ -60,7 +63,7 @@
             </v-row>
 
             <v-row>
-               <v-col xs="12" sm="12">
+               <v-col xs="12" md="12">
                   <v-autocomplete
                      variant="underlined"
                      v-model="userGroups"
@@ -249,4 +252,15 @@ function onAvatarClick() {
    avatarDialog.value = true
 }
 
+
+async function validateEmail() {
+   try {
+      await app.service('auth').forgottenPassword(user.value.email)
+      const text = `Des instructions viennent d'être envoyées à l'adresse '${user.value.email}'`
+      displaySnackbar({ text, color: 'success', timeout: 5000 })
+   } catch(err) {
+      console.log('err', err)
+      displaySnackbar({ text: "Erreur inconnue", color: 'error', timeout: 2000 })
+   }
+}
 </script>
