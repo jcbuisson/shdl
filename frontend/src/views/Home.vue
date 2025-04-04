@@ -45,7 +45,7 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { synchronizeWhereList as synchronizeUserWhereList, getMany as getManyUser, getFullname } from '/src/use/useUser'
+import { synchronizeWhere as synchronizeUserWhere, synchronizeWhereList as synchronizeUserWhereList, getMany as getManyUser, getFullname } from '/src/use/useUser'
 import { synchronizeWhereList as synchronizeGroupWhereList } from '/src/use/useGroup'
 import { getMany as getManyUserTabRelation, synchronizeWhere as synchronizeUserTabRelationWhere, synchronizeWhereList as synchronizeUserTabRelationWhereList } from '/src/use/useUserTabRelation'
 import { synchronizeWhereList as synchronizeUserGroupRelationWhereList } from '/src/use/useUserGroupRelation'
@@ -80,21 +80,10 @@ let interval
 
 onMounted(async () => {
    
-   await synchronizeUserWhereList()
+   await synchronizeUserWhere({ uid: props.signedinUid })
    signedinUser.value = (await getManyUser({ uid: props.signedinUid }))[0]
 
    await synchronizeUserTabRelationWhere({ user_uid: props.signedinUid })
-   await synchronizeUserTabRelationWhereList()
-   // const userTabRelations = await firstValueFrom(await findManyUserTabRelation({ user_uid: props.signedinUid }))
-   // console.log('userTabRelations', userTabRelations)
-   // userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
-
-   // const obs = await findManyUserTabRelation({ user_uid: props.signedinUid })
-   // obs.subscribe(async relations => {
-   //    console.log('relations', relations)
-   //    userTabs.value = tabs.filter(tab => relations.find(relation => relation.tab === tab.uid))
-   // })
-
    const userTabRelations = await getManyUserTabRelation({ user_uid: props.signedinUid })
    userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
 

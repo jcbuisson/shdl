@@ -103,6 +103,14 @@ export const remove = async (uid) => {
    }
 }
 
+export async function synchronizeWhere(where) {
+   const isNew = await addSynchroWhere(where, db.whereList)
+   // run synchronization if connected and if `where` is new
+   if (isNew && isConnected.value) {
+      await synchronize(app, 'group', db.values, where, disconnectedDate.value)
+   }
+}
+
 export async function synchronizeWhereList() {
    await synchronizeModelWhereList(app, 'group', db.values, disconnectedDate.value, db.whereList)
 }
