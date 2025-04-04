@@ -1,7 +1,6 @@
 # SHDL - Simple Hardware Description Language
 
-University of Toulouse
-ENSEEIHT
+Credit: University of Toulouse, ENSEEIHT
 
 
 # Authentication expiration

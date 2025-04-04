@@ -6,7 +6,7 @@
                <v-col cols="12" sm="6">
                   <v-text-field
                      label="Nom"
-                     v-model="group.name"
+                     v-model="data.name"
                      variant="underlined"
                   ></v-text-field>
                </v-col>
@@ -29,15 +29,22 @@ import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 
-const group = ref({})
+const props = defineProps({
+   signedinUid: {
+      type: String,
+   },
+})
+
+const data = ref({})
 
 const valid = ref()
 
 async function submit() {
    try {
       extendExpiration()
-      await createGroup(group.value)
+      const group = await createGroup(data.value)
       displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
+      router.push(`/home/${props.signedinUid}/groups/${group.uid}`)
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
    }
