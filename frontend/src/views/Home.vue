@@ -25,7 +25,7 @@
 
       <template v-slot:extension>
          <v-tabs slider-color="indigo" v-model="routeTabIndex">
-            <v-tab :to="{path: tab.path}" router v-for="tab in tabs" :key="tab.uid">
+            <v-tab :to="{path: tab.path}" router v-for="tab in userTabs" :key="tab.uid">
                {{ tab.name }}
             </v-tab>
          </v-tabs>
@@ -47,8 +47,9 @@ import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
 import { synchronizeWhereList as synchronizeUserWhereList, findMany, getFullname } from '/src/use/useUser'
 import { synchronizeWhereList as synchronizeGroupWhereList } from '/src/use/useGroup'
-import { synchronizeWhereList as synchronizeUserTabRelationWhereList } from '/src/use/useUserTabRelation'
+import { findMany as findManyUserTabRelation, synchronizeWhereList as synchronizeUserTabRelationWhereList } from '/src/use/useUserTabRelation'
 import { synchronizeWhereList as synchronizeUserGroupRelationWhereList } from '/src/use/useUserGroupRelation'
+import { tabs } from '/src/use/useTabs'
 
 import GithubLink from '/src/components/GithubLink.vue'
 
@@ -60,6 +61,7 @@ const props = defineProps({
 
 const signedinUser = ref()
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
+const userTabs = ref()
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
@@ -77,8 +79,19 @@ app.addConnectListener(async () => {
 let interval
 
 onMounted(async () => {
-   const userObservable = await findMany({ uid: props.signedinUid })
-   signedinUser.value = (await firstValueFrom(userObservable))[0]
+   
+   await synchronizeUserWhereList()
+   signedinUser.value = (await firstValueFrom(await findMany({ uid: props.signedinUid })))[0]
+
+   await synchronizeUserTabRelationWhereList()
+   // const userTabRelations = await firstValueFrom(await findManyUserTabRelation({ user_uid: props.signedinUid }))
+   // console.log('userTabRelations', userTabRelations)
+   // userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
+
+   const obs = await findManyUserTabRelation({ user_uid: props.signedinUid })
+   obs.subscribe(async relations => {
+      userTabs.value = tabs.filter(tab => relations.find(relation => relation.tab === tab.uid))
+   })
 
    interval = setInterval(() => {
       if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
@@ -89,14 +102,6 @@ onUnmounted(() => {
    clearInterval(interval)
 })
 
-const tabs = [
-   { uid: "a", name: "Utilisateurs", icon: 'mdi-eye', path: `/home/${props.signedinUid}/users` },
-   { uid: "b", name: "Groupes", icon: 'mdi-eye', path: `/home/${props.signedinUid}/groups` },
-   { uid: "c", name: "Tests", icon: 'mdi-eye', path: '#' },
-   { uid: "d", name: "Suivi étudiants", icon: 'mdi-eye', path: '#' },
-   { uid: "e", name: "SHDL Sandbox", icon: 'mdi-eye', path: '#' },
-   { uid: "f", name: "CRAPS Sandbox", icon: 'mdi-eye', path: '#' },
-]
 
 const route = useRoute()
 const routeTabIndex = computed(() => tabs.findIndex(tab => route.path.includes(tab.path)))

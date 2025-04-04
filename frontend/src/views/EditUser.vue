@@ -100,6 +100,7 @@ import { findMany as findManyUserTabRelation, updateUserTabs } from '/src/use/us
 import { findMany as findManyUserGroupRelation, updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
+import { tabs } from '/src/use/useTabs'
 
 import 'jcb-upload'
 import { app } from '/src/client-app.js'
@@ -173,14 +174,6 @@ const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 const userTabs = ref([])
 
-const tabs = [
-   { uid: 'user_management', name: "Gestion utilisateurs" },
-   { uid: 'group_management', name: "Gestion des groupes" },
-   { uid: 'test_management', name: "Gestion des tests" },
-   { uid: 'student_followup', name: "Suivi des étudiants" },
-   { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
-   { uid: 'craps_sandbox', name: "CRAPS sandbox" },
-]
 
 const onTabChange = async (tabs) => {
    try {

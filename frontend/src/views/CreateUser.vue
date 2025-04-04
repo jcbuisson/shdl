@@ -88,6 +88,7 @@ import { extendExpiration } from "/src/use/useAuthentication"
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
+import { tabs } from '/src/use/useTabs'
 
 import 'jcb-upload'
 
@@ -104,20 +105,11 @@ const valid = ref()
 
 const emailRules = [
    (v) => !!v || "L'email est obligatoire",
-   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
+   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "L'email doit être valide"
 ]
 
 const tabsRules = [
    (v) => !!v && Object.keys(v).length > 0 || "Choisir au moins un onglet"
-]
-
-const tabs = [
-   { uid: 'user_management', name: "Gestion utilisateurs" },
-   { uid: 'group_management', name: "Gestion des groupes" },
-   { uid: 'test_management', name: "Gestion des tests" },
-   { uid: 'student_followup', name: "Suivi des étudiants" },
-   { uid: 'shdl_sandbox', name: "SHDL Sandbox" },
-   { uid: 'craps_sandbox', name: "CRAPS sandbox" },
 ]
 
 const groupList = ref([])
