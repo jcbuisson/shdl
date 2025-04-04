@@ -87,7 +87,7 @@ export default function (app) {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
             const user = await prisma.user.update({
-               where: { id: payload.user_uid },
+               where: { uid: payload.user_uid },
                data: {
                   password
                },
