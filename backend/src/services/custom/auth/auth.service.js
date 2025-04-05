@@ -66,12 +66,20 @@ export default function (app) {
 
       createAccountWithToken: async (token, password, firstname, lastname) => {
          try {
+            // create user
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
             const uid = uid16(16)
             const user = await prisma.user.create({
                data: { uid, email: payload.email, password, firstname, lastname }
             })
+            // give user tabs 'shdl_sandbox' and 'craps_sandbox'
+            for (const tab of ['shdl_sandbox', 'craps_sandbox']) {
+               const uid = uid16(16)
+               await prisma.user_tab_relation.create({
+                  data: { uid, user_uid: user.uid, tab }
+               })
+            }
             return user
          } catch(err) {
             if (err.code === 'jwt-error') {

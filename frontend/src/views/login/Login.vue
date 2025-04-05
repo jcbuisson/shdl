@@ -94,6 +94,7 @@ const submitButtonText = computed(() => isConnection.value ? "Se connecter" : "V
 const modeButtonText = computed(() => isConnection.value ? "Créer un compte" : "Retour à la connexion")
 
 function onModeButtonTap() {
+   console.log('onModeButtonTap')
    email.value = ''
    password.value = ''
    if (isConnection.value) {

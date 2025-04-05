@@ -24,7 +24,7 @@
 
       <template v-slot:extension>
          <v-tabs slider-color="indigo" v-model="routeTabIndex">
-            <v-tab :to="{path: tab.path}" router v-for="tab in userTabs" :key="tab.uid">
+            <v-tab :to="{path: `/home/${signedinUid}/${tab.path}`}" router v-for="tab in userTabs" :key="tab.uid">
                {{ tab.name }}
             </v-tab>
          </v-tabs>
@@ -61,10 +61,14 @@ const signedinUser = ref()
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 const userTabs = ref()
 
+const route = useRoute()
+const routeTabIndex = ref()
+// const routeTabIndex = computed(() => tabs.findIndex(tab => route.path.includes(tab.path)))
+
 const isAuthenticated = computed(() => !!expiresAt.value)
 
 // synchronize when connection starts or restarts
-// (situated here because of import circularity issues)
+// (placed here because of import circularity issues)
 app.addConnectListener(async () => {
    console.log(">>>>>>>>>>>>>>>> SYNC ALL")
    // order matters
@@ -77,13 +81,20 @@ app.addConnectListener(async () => {
 let interval
 
 onMounted(async () => {
-   
+   // sign-in user
    await synchronizeUserWhere({ uid: props.signedinUid })
    signedinUser.value = await getFirstUser({ uid: props.signedinUid })
-
+   // its tab relations
    await synchronizeUserTabRelationWhere({ user_uid: props.signedinUid })
    const userTabRelations = await getManyUserTabRelation({ user_uid: props.signedinUid })
    userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
+
+   const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.path))
+   if (indexFromRoute !== undefined) {
+      routeTabIndex.value = indexFromRoute
+   } else {
+      routeTabIndex.value = 0
+   }
 
    interval = setInterval(() => {
       if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
@@ -94,9 +105,6 @@ onUnmounted(() => {
    clearInterval(interval)
 })
 
-
-const route = useRoute()
-const routeTabIndex = computed(() => tabs.findIndex(tab => route.path.includes(tab.path)))
 
 function toggleCnx() {
    if (isConnected.value) {
