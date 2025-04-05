@@ -63,6 +63,26 @@ const routes = [
                },
             ],      
          },
+         {
+            path: 'followup',
+            props: true,
+            component: () => import('/src/views/ManageStudents.vue'),
+         },
+         {
+            path: 'tests',
+            props: true,
+            component: () => import('/src/views/ManageTests.vue'),
+         },
+         {
+            path: 'shdl',
+            props: true,
+            component: () => import('/src/views/SHDLSandbox.vue'),
+         },
+         {
+            path: 'craps',
+            props: true,
+            component: () => import('/src/views/CRAPSSandbox.vue'),
+         },
       ],
    },
 

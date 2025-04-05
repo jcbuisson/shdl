@@ -24,7 +24,7 @@
 
       <template v-slot:extension>
          <v-tabs slider-color="indigo" v-model="routeTabIndex">
-            <v-tab :to="{path: `/home/${signedinUid}/${tab.path}`}" router v-for="tab in userTabs" :key="tab.uid">
+            <v-tab :to="{path: `/home/${signedinUid}/${tab.uid}`}" router v-for="tab in userTabs" :key="tab.uid">
                {{ tab.name }}
             </v-tab>
          </v-tabs>
@@ -49,6 +49,8 @@ import { getMany as getManyUserTabRelation, synchronizeWhere as synchronizeUserT
 import { synchronizeWhereList as synchronizeUserGroupRelationWhereList } from '/src/use/useUserGroupRelation'
 import { tabs } from '/src/use/useTabs'
 
+import router from '/src/router'
+
 import GithubLink from '/src/components/GithubLink.vue'
 
 const props = defineProps({
@@ -63,7 +65,6 @@ const userTabs = ref()
 
 const route = useRoute()
 const routeTabIndex = ref()
-// const routeTabIndex = computed(() => tabs.findIndex(tab => route.path.includes(tab.path)))
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
@@ -84,16 +85,16 @@ onMounted(async () => {
    // sign-in user
    await synchronizeUserWhere({ uid: props.signedinUid })
    signedinUser.value = await getFirstUser({ uid: props.signedinUid })
-   // its tab relations
+   // tab relations of user
    await synchronizeUserTabRelationWhere({ user_uid: props.signedinUid })
    const userTabRelations = await getManyUserTabRelation({ user_uid: props.signedinUid })
    userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
 
-   const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.path))
-   if (indexFromRoute !== undefined) {
+   const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.uid))
+   if (indexFromRoute >= 0) {
       routeTabIndex.value = indexFromRoute
    } else {
-      routeTabIndex.value = 0
+      router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
    }
 
    interval = setInterval(() => {

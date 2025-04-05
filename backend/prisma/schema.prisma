@@ -9,12 +9,12 @@ datasource db {
 
 
 enum Tab {
-   user_management
-   group_management
-   test_management
-   student_followup
-   shdl_sandbox
-   craps_sandbox
+   users       // users management
+   groups      // groups management
+   test        // test management
+   followup    // students followup
+   shdl        // shdl sandbox
+   craps       // craps sandbox
 }
 
 model user {

@@ -1,0 +1,3 @@
+<template>
+   MANAGE STUDENTS
+</template>
