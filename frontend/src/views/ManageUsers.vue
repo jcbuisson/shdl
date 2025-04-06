@@ -45,7 +45,8 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute} from 'vue-router'
 
 import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser'
 import { findMany as findManyGroup, getFromCache as getGroupFromCache } from '/src/use/useGroup'
@@ -103,11 +104,17 @@ onUnmounted(() => {
 
 async function addUser() {
    router.push(`/home/${props.signedinUid}/users/create`)
-   // const user = await createUser({})
-   // selectUser(user)
 }
 
 const selectedUser = ref(null)
+const route = useRoute()
+
+const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
+
+watch(() => [route.path, userList.value], async () => {
+   const user_uid = route.path.match(routeRegex)[1]
+   selectedUser.value = userList.value.find(user => user.uid === user_uid)
+}, { immediate: true })
 
 function selectUser(user) {
    extendExpiration()
