@@ -1,7 +1,6 @@
 import Dexie from "dexie"
 import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
-import { firstValueFrom } from 'rxjs'
 
 import { getMany as getManyUserTabRelation, remove as removeTabRelation } from '/src/use/useUserTabRelation'
 import { getMany as getManyUserGroupRelation, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
