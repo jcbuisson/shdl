@@ -63,7 +63,7 @@
                      v-model="data.groups"
                      :items="groupList"
                      item-title="name"
-                     item-value="id"
+                     item-value="uid"
                      label="Groupes"
                      chips
                      multiple
@@ -84,6 +84,8 @@ import { firstValueFrom } from 'rxjs'
 
 import { findMany as findManyUser, create as createUser } from '/src/use/useUser'
 import { findMany as findManyGroup } from '/src/use/useGroup'
+import { updateUserTabs } from '/src/use/useUserTabRelation'
+import { updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import router from '/src/router'
@@ -134,7 +136,13 @@ async function submit() {
       if (other) {
          alert(`Il existe déjà un utilisateur avec cet email : ${data.value.email}`)
       } else {
-         const user = await createUser(data.value)
+         const user = await createUser({
+            email: data.value.email,
+            firstname: data.value.firstname,
+            lastname: data.value.lastname,
+         })
+         await updateUserTabs(user.uid, data.value.tabs)
+         await updateUserGroups(user.uid, data.value.groups)
          displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
          router.push(`/home/${props.signedinUid}/users/${user.uid}`)
       }
