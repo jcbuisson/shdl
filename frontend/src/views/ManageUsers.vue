@@ -102,13 +102,8 @@ onUnmounted(() => {
    }
 })
 
-async function addUser() {
-   router.push(`/home/${props.signedinUid}/users/create`)
-}
-
 const selectedUser = ref(null)
 const route = useRoute()
-
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
 watch(() => [route.path, userList.value], async () => {
@@ -120,6 +115,11 @@ function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
    router.push(`/home/${props.signedinUid}/users/${user.uid}`)
+}
+
+
+async function addUser() {
+   router.push(`/home/${props.signedinUid}/users/create`)
 }
 
 async function deleteUser(user) {
