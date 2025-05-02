@@ -13,7 +13,7 @@
                   ></v-text-field>
                </v-col>
                <v-col cols="12" md="3" class="d-flex align-center">
-                  <v-btn flat color="primary" @click="validateEmail">Init. mot de passe...</v-btn>
+                  <v-btn flat color="primary" @click="validateEmail">Reset mot de passe...</v-btn>
                </v-col>
                <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">

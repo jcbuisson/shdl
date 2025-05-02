@@ -49,7 +49,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
 import { findMany$ as findManyUser$, getFullname, remove as removeUser } from '/src/use/useUser'
-import { findMany$ as findManyGroup$, synchronizeWhere as synchronizeWhereGroup, getById as getGroupById } from '/src/use/useGroup'
+import { findMany$ as findManyGroup$, synchronizeWhere as synchronizeWhereGroup, get as getGroup } from '/src/use/useGroup'
 // import { findMany as findManyUserTabRelation } from '/src/use/useUserTabRelation'
 import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
@@ -83,7 +83,7 @@ onMounted(async () => {
          const groupRelationSubscription = userGroupRelationObservable.subscribe(async relationList => {
             user.groups = []
             for (const group_uid of relationList.map(relation => relation.group_uid)) {
-               const group = await getGroupById(group_uid)
+               const group = await getGroup(group_uid)
                user.groups.push(group)
             }
          })
@@ -92,7 +92,7 @@ onMounted(async () => {
    })
    subscriptions.push(userListSubscription)
 
-   // ensure that `group` objects will be in cache, to display group names in user list
+   // ensure that `group` objects will be in cache, in order to display group names in user list
    // findManyGroup$({})
    synchronizeWhereGroup({})
 })

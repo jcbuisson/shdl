@@ -99,6 +99,6 @@ export async function remove(uid) {
    }
 }
 
-export async function synchronizeWhereList() {
+export async function synchronizeAll() {
    await synchronizeModelWhereList(app, 'user_group_relation', db.values, disconnectedDate.value, db.whereList)
 }

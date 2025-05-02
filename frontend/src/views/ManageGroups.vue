@@ -36,6 +36,7 @@ import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRela
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
+import { synchronizeWhere } from '../use/useUser'
 
 const props = defineProps({
    signedinUid: {
@@ -54,9 +55,6 @@ onMounted(async () => {
       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
    })
    subscriptions.push(groupSubscription)
-
-   // enough to ensure that `group` objects are in cache
-   await findManyGroup$({})
 })
 
 onUnmounted(() => {

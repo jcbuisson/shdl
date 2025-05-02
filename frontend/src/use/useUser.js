@@ -119,7 +119,7 @@ export async function synchronizeWhere(where) {
    }
 }
 
-export async function synchronizeWhereList() {
+export async function synchronizeAll() {
    await synchronizeModelWhereList(app, 'user', db.values, disconnectedDate.value, db.whereList)
 }
 

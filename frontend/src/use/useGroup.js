@@ -38,7 +38,7 @@ app.service('group').on('delete', async group => {
 
 /////////////          CACHE METHODS          /////////////
 
-export async function getById(uid) {
+export async function get(uid) {
    return await db.values.get(uid)
 }
 
@@ -113,6 +113,6 @@ export async function synchronizeWhere(where) {
    }
 }
 
-export async function synchronizeWhereList() {
+export async function synchronizeAll() {
    await synchronizeModelWhereList(app, 'group', db.values, disconnectedDate.value, db.whereList)
 }

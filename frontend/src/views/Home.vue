@@ -43,10 +43,10 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { synchronizeWhere as synchronizeUserWhere, synchronizeWhereList as synchronizeUserWhereList, getFirst as getFirstUser, getFullname } from '/src/use/useUser'
-import { synchronizeWhereList as synchronizeGroupWhereList } from '/src/use/useGroup'
-import { getMany as getManyUserTabRelation, synchronizeWhere as synchronizeUserTabRelationWhere, synchronizeWhereList as synchronizeUserTabRelationWhereList } from '/src/use/useUserTabRelation'
-import { synchronizeWhereList as synchronizeUserGroupRelationWhereList } from '/src/use/useUserGroupRelation'
+import { synchronizeWhere as synchronizeUserWhere, synchronizeAll as synchronizeAllUser, getFirst as getFirstUser, getFullname } from '/src/use/useUser'
+import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
+import { getMany as getManyUserTabRelation, synchronizeWhere as synchronizeUserTabRelationWhere, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
+import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { tabs } from '/src/use/useTabs'
 
 import router from '/src/router'
@@ -73,10 +73,10 @@ const isAuthenticated = computed(() => !!expiresAt.value)
 app.addConnectListener(async () => {
    console.log(">>>>>>>>>>>>>>>> SYNC ALL")
    // order matters
-   await synchronizeUserWhereList()
-   await synchronizeGroupWhereList()
-   await synchronizeUserTabRelationWhereList()
-   await synchronizeUserGroupRelationWhereList()
+   await synchronizeAllUser()
+   await synchronizeAllGroup()
+   await synchronizeAllUserTabRelation()
+   await synchronizeAllUserGroupRelation()
 })
 
 let interval
