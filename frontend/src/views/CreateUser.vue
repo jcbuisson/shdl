@@ -82,8 +82,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { firstValueFrom } from 'rxjs'
 
-import { findMany as findManyUser, create as createUser } from '/src/use/useUser'
-import { findMany as findManyGroup } from '/src/use/useGroup'
+import { findMany$ as findManyUser$, create as createUser } from '/src/use/useUser'
+import { findMany$ as findManyGroup$ } from '/src/use/useGroup'
 import { updateUserTabs } from '/src/use/useUserTabRelation'
 import { updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
@@ -118,7 +118,7 @@ const groupList = ref([])
 let subscription
 
 onMounted(async () => {
-   const groupListObservable = await findManyGroup({})
+   const groupListObservable = await findManyGroup$({})
    subscription = groupListObservable.subscribe(list => {
       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
    })
@@ -132,7 +132,7 @@ async function submit() {
    try {
       extendExpiration()
       // check if email is not already used
-      const [other] = await firstValueFrom(await findManyUser({ email: data.value.email }))
+      const [other] = await firstValueFrom(await findManyUser$({ email: data.value.email }))
       if (other) {
          alert(`Il existe déjà un utilisateur avec cet email : ${data.value.email}`)
       } else {

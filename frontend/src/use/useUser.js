@@ -38,7 +38,7 @@ app.service('user').on('delete', async user => {
 })
 
 
-/////////////          CRUD METHODS WITH SYNC          /////////////
+/////////////          CACHE METHODS          /////////////
 
 export async function getMany(where) {
    const predicate = wherePredicate(where)
@@ -50,8 +50,10 @@ export async function getFirst(where) {
    return await db.values.filter(value => !value.deleted_at && predicate(value)).first()
 }
 
+/////////////          CRUD METHODS WITH SYNC          /////////////
+
 // return an Observable
-export async function findMany(where) {
+export async function findMany$(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
    // run synchronization if connected and if `where` is new
    if (isNew && isConnected.value) {

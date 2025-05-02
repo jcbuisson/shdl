@@ -31,7 +31,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { firstValueFrom } from 'rxjs'
 
-import { findMany as findManyGroup, remove as removeGroup } from '/src/use/useGroup'
+import { findMany$ as findManyGroup$, remove as removeGroup } from '/src/use/useGroup'
 import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import router from '/src/router'
 
@@ -49,14 +49,14 @@ const groupList = ref([])
 const subscriptions = []
 
 onMounted(async () => {
-   const groupObservable = await findManyGroup({})
+   const groupObservable = await findManyGroup$({})
    const groupSubscription = groupObservable.subscribe(async list => {
       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
    })
    subscriptions.push(groupSubscription)
 
    // enough to ensure that `group` objects are in cache
-   await findManyGroup({})
+   await findManyGroup$({})
 })
 
 onUnmounted(() => {

@@ -48,9 +48,9 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { findMany as findManyUser, getFullname, create as createUser, remove as removeUser } from '/src/use/useUser'
-import { findMany as findManyGroup, getFromCache as getGroupFromCache } from '/src/use/useGroup'
-import { findMany as findManyUserTabRelation } from '/src/use/useUserTabRelation'
+import { findMany$ as findManyUser$, getFullname, remove as removeUser } from '/src/use/useUser'
+import { findMany$ as findManyGroup$, synchronizeWhere as synchronizeWhereGroup, getById as getGroupById } from '/src/use/useGroup'
+// import { findMany as findManyUserTabRelation } from '/src/use/useUserTabRelation'
 import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
@@ -71,29 +71,30 @@ const userList = ref([])
 const subscriptions = []
 
 onMounted(async () => {
-   const userObservable = await findManyUser({})
-   const userSubscription = userObservable.subscribe(async list => {
+   const userListObservable = await findManyUser$({})
+   const userListSubscription = userListObservable.subscribe(async list => {
       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 
       for (const user of userList.value) {
-         // enough to ensure that all related user-tab relations are in cache
-         await findManyUserTabRelation({ user_uid: user.uid })
+         // ensure that all related user-tab relations will be in cache for the user detail view
+         // await findManyUserTabRelation({ user_uid: user.uid })
 
          const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
          const groupRelationSubscription = userGroupRelationObservable.subscribe(async relationList => {
             user.groups = []
             for (const group_uid of relationList.map(relation => relation.group_uid)) {
-               const group = await getGroupFromCache(group_uid)
+               const group = await getGroupById(group_uid)
                user.groups.push(group)
             }
          })
          subscriptions.push(groupRelationSubscription)
       }
    })
-   subscriptions.push(userSubscription)
+   subscriptions.push(userListSubscription)
 
-   // enough to ensure that `group` objects are in cache
-   await findManyGroup({})
+   // ensure that `group` objects will be in cache, to display group names in user list
+   // findManyGroup$({})
+   synchronizeWhereGroup({})
 })
 
 onUnmounted(() => {

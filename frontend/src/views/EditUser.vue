@@ -94,8 +94,8 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { findMany as findManyUser, update as updateUser } from '/src/use/useUser'
-import { findMany as findManyGroup } from '/src/use/useGroup'
+import { findMany$ as findManyUser$, update as updateUser } from '/src/use/useUser'
+import { findMany$ as findManyGroup$ } from '/src/use/useGroup'
 import { findMany as findManyUserTabRelation, updateUserTabs } from '/src/use/useUserTabRelation'
 import { findMany as findManyUserGroupRelation, updateUserGroups } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
@@ -126,7 +126,7 @@ let userGroupRelationListSubscription
 
 
 onMounted(async () => {
-   const groupObservable = await findManyGroup({})
+   const groupObservable = await findManyGroup$({})
    groupSubscription = groupObservable.subscribe(list => groupList.value = list)
 })
 
@@ -139,7 +139,7 @@ onUnmounted(() => {
 
 watch(() => props.user_uid, async (user_uid) => {
    if (userSubscription) userSubscription.unsubscribe()
-   const userObservable = await findManyUser({ uid: user_uid})
+   const userObservable = await findManyUser$({ uid: user_uid})
    userSubscription = userObservable.subscribe(([user_]) => user.value = user_)
 
    if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()

@@ -108,6 +108,9 @@ onUnmounted(() => {
 
 
 function toggleCnx() {
+
+   // PAS PLUTÔT ISAUTHENTICATED ?
+
    if (isConnected.value) {
       disconnect()
    } else {

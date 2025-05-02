@@ -36,20 +36,21 @@ app.service('group').on('delete', async group => {
    await db.values.delete(group.id)
 })
 
+/////////////          CACHE METHODS          /////////////
 
-export async function getFromCache(uid) {
+export async function getById(uid) {
    return await db.values.get(uid)
 }
-
-/////////////          CRUD METHODS WITH SYNC          /////////////
 
 export async function getMany(where) {
    const predicate = wherePredicate(where)
    return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
 }
 
+/////////////          CRUD METHODS WITH SYNC          /////////////
+
 // return an Observable
-export async function findMany(where) {
+export async function findMany$(where) {
    const isNew = await addSynchroWhere(where, db.whereList)
    // run synchronization if connected and if `where` is new
    if (isNew && isConnected.value) {
