@@ -35,12 +35,14 @@ app.service('user_group_relation').on('delete', async value => {
 })
 
 
-/////////////          CRUD METHODS WITH SYNC          /////////////
+/////////////          CACHE METHODS          /////////////
 
 export async function getMany(where) {
    const predicate = wherePredicate(where)
    return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
 }
+
+/////////////          CRUD METHODS WITH SYNC          /////////////
 
 // return an Observable
 export async function findMany(where) {

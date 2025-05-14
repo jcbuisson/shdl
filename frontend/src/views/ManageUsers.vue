@@ -49,8 +49,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
 import { findMany$ as findManyUser$, getFullname, remove as removeUser } from '/src/use/useUser'
-import { findMany$ as findManyGroup$, synchronizeWhere as synchronizeWhereGroup, get as getGroup } from '/src/use/useGroup'
-// import { findMany as findManyUserTabRelation } from '/src/use/useUserTabRelation'
+import { synchronizeWhere as synchronizeWhereGroup, get as getGroup } from '/src/use/useGroup'
 import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { extendExpiration } from "/src/use/useAuthentication"
 import router from '/src/router'
@@ -76,9 +75,6 @@ onMounted(async () => {
       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 
       for (const user of userList.value) {
-         // ensure that all related user-tab relations will be in cache for the user detail view
-         // await findManyUserTabRelation({ user_uid: user.uid })
-
          const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
          const groupRelationSubscription = userGroupRelationObservable.subscribe(async relationList => {
             user.groups = []
