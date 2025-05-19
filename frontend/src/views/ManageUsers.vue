@@ -142,14 +142,18 @@ import { addPerimeter as addUserGroupRelationPerimeter, remove as removeGroupRel
 import { selectedUser } from '/src/use/useSelectedUser'
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
+import { extendExpiration } from "/src/use/useAuthentication"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
+const props = defineProps({
+   signedinUid: {
+      type: String,
+   },
+})
 
 const filter = ref('')
-
 const userList = ref([])
-
 const perimeters = []
 
 onMounted(async () => {
@@ -179,22 +183,24 @@ onUnmounted(async () => {
 })
 
 async function addUser() {
-   router.push(`/users/create`)
+   router.push(`/home/${props.signedinUid}/users/create`)
 }
 
 const route = useRoute()
-const routeRegex = /\/users\/([a-z0-9]+)/
+const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
 watch(() => [route.path, userList.value], async () => {
    const match = route.path.match(routeRegex)
-   if (!match) return
-   const user_uid = match[1]
-   selectedUser.value = userList.value.find(user => user.uid === user_uid)
+   if (match) {
+      const user_uid = route.path.match(routeRegex)[1]
+      selectedUser.value = userList.value.find(user => user.uid === user_uid)
+   }
 }, { immediate: true })
 
 function selectUser(user) {
+   extendExpiration()
    selectedUser.value = user
-   router.push(`/users/${user.uid}`)
+   router.push(`/home/${props.signedinUid}/users/${user.uid}`)
 }
 
 async function deleteUser(user) {
@@ -207,7 +213,7 @@ async function deleteUser(user) {
          await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation.uid)))
          // remove user
          await removeUser(user.uid)
-         router.push(`/users`)
+         router.push(`/home/${props.signedinUid}/users`)
          displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
       } catch(err) {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
