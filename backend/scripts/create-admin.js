@@ -1,14 +1,21 @@
 
 import { PrismaClient } from '@prisma/client'
+import { expressX } from '@jcbuisson/express-x'
+
 import inquirer from 'inquirer'
 import bcrypt from 'bcryptjs'
 import { uid as uid16 } from 'uid'
 
+import config from '#config'
+import services from '#root/src/services/index.js'
+
 
 async function main() {
    try {
-      // create prisma client
+      const app = expressX(config)
       const prisma = new PrismaClient()
+      app.set('prisma', prisma)
+      app.configure(services)
 
       const answers = await inquirer.prompt([
          {
@@ -43,24 +50,19 @@ async function main() {
       }
       // create user
       let uid = uid16(16)
-      const user = await prisma.user.create({
-         data: {
-            uid,
-            email: answers.email,
-            firstname: answers.firstname,
-            lastname: answers.lastname,
-            password: await bcrypt.hash(answers.password, 5),
-         }
-      })
+      const now = new Date()
+      const [user, _] = await app.service('user').createWithMeta(uid, {
+         email: answers.email,
+         firstname: answers.firstname,
+         lastname: answers.lastname,
+         password: await bcrypt.hash(answers.password, 5),
+      }, now)
       // create relation with 'users' (user management) tab
       uid = uid16(16)
-      await prisma.user_tab_relation.create({
-         data: {
-            uid,
-            user_uid: user.uid,
-            tab: 'users',
-         }
-      })
+      await app.service('user_tab_relation').createWithMeta(uid, {
+         user_uid: user.uid,
+         tab: 'users',
+      }, now)
 
    } catch(err) {
       console.error(err.toString())

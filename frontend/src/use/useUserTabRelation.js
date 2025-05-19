@@ -1,62 +1,22 @@
-import Dexie from "dexie"
-import { liveQuery } from "dexie"
-import { uid as uid16 } from 'uid'
 
-import { wherePredicate, synchronize, addSynchroWhere, removeSynchroWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
-import { app, isConnected, disconnectedDate } from '/src/client-app.js'
-
-export const db = new Dexie("userTabRelationDatabaseSHDL")
-
-db.version(1).stores({
-   whereList: "sortedjson, where",
-   values: "uid, created_at, updated_at, deleted_at, user_uid, tab"
-})
-
-export const reset = async () => {
-   await db.whereList.clear()
-   await db.values.clear()
-}
-
-/////////////          PUB / SUB          /////////////
-
-app.service('user_tab_relation').on('create', async value => {
-   console.log('USER_TAB_RELATION EVENT created', value)
-   await db.values.put(value)
-})
-
-app.service('user_tab_relation').on('update', async value => {
-   console.log('USER_TAB_RELATION EVENT update', value)
-   await db.values.put(value)
-})
-
-app.service('user_tab_relation').on('delete', async value => {
-   console.log('USER_TAB_RELATION EVENT delete', value)
-   await db.values.delete(value.uid)
-})
+import useModel from '/src/use/useModel'
 
 
-/////////////          CRUD METHODS WITH SYNC          /////////////
+/////////////          CRUD/SYNC METHODS          /////////////
 
-export async function getMany(where) {
-   const predicate = wherePredicate(where)
-   return await db.values.filter(value => !value.deleted_at && predicate(value)).toArray()
-}
+const {
+   db, reset,
+   create, update, remove,
+   addPerimeter,
+   synchronizeAll,
+} = useModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
 
-// return an Observable
-export async function findMany(where) {
-   const isNew = await addSynchroWhere(where, db.whereList)
-   // run synchronization if connected and if `where` is new
-   if (isNew && isConnected.value) {
-      synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value)
-   }
-   // return observable for `where` values
-   const predicate = wherePredicate(where)
-   return liveQuery(() => db.values.filter(value => !value.deleted_ && predicate(value)).toArray())
-}
 
-export async function updateUserTabs(user_uid, newTabs) {
-   // enlarge perimeter
-   await addSynchroWhere({ user_uid }, db.whereList)
+/////////////          UTILITY          /////////////
+
+async function updateUserTabs(user_uid, newTabs) {
+   // ensure that all relations of `user_uid` are in cache
+   await addPerimeter({ user_uid })
 
    // optimistic update of cache
    const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
@@ -84,30 +44,11 @@ export async function updateUserTabs(user_uid, newTabs) {
    }
 }
 
-export async function remove(uid) {
-   // stop synchronizing on this perimeter
-   removeSynchroWhere({ uid }, db.whereList)
-   const deleted_at = new Date()
-   // optimistic update
-   await db.values.update(uid, { deleted_at })
-   // execute on server, asynchronously, if connection is active
-   if (isConnected.value) {
-      app.service('user_tab_relation').update({
-         where: { uid },
-         data: { deleted_at }
-      })
-   }
-}
+export {
+   db, reset,
+   create, update, remove,
+   addPerimeter,
+   synchronizeAll,
 
-
-export async function synchronizeWhere(where) {
-   const isNew = await addSynchroWhere(where, db.whereList)
-   // run synchronization if connected and if `where` is new
-   if (isNew && isConnected.value) {
-      await synchronize(app, 'user_tab_relation', db.values, where, disconnectedDate.value)
-   }
-}
-
-export async function synchronizeAll() {
-   await synchronizeModelWhereList(app, 'user_tab_relation', db.values, disconnectedDate.value, db.whereList)
+   updateUserTabs,
 }

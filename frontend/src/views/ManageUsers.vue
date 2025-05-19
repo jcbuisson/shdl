@@ -45,91 +45,173 @@
 
 
 <script setup>
+// import { ref, onMounted, onUnmounted, watch } from 'vue'
+// import { useRoute} from 'vue-router'
+
+// import { findMany$ as findManyUser$, getFullname, remove as removeUser } from '/src/use/useUser'
+// import { synchronizeWhere as synchronizeWhereGroup, get as getGroup } from '/src/use/useGroup'
+// import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
+// import { extendExpiration } from "/src/use/useAuthentication"
+// import router from '/src/router'
+
+// import SplitPanel from '/src/components/SplitPanel.vue'
+// // import SplitPanel from 'jcb-vertical-split-panel'
+
+
+// const props = defineProps({
+//    signedinUid: {
+//       type: String,
+//    },
+// })
+
+// const filter = ref('')
+
+// const userList = ref([])
+// const subscriptions = []
+
+// onMounted(async () => {
+//    const userListObservable = await findManyUser$({})
+//    const userListSubscription = userListObservable.subscribe(async list => {
+//       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+
+//       for (const user of userList.value) {
+//          const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
+//          const groupRelationSubscription = userGroupRelationObservable.subscribe(async relationList => {
+//             user.groups = []
+//             for (const group_uid of relationList.map(relation => relation.group_uid)) {
+//                const group = await getGroup(group_uid)
+//                user.groups.push(group)
+//             }
+//          })
+//          subscriptions.push(groupRelationSubscription)
+//       }
+//    })
+//    subscriptions.push(userListSubscription)
+
+//    // ensure that `group` objects will be in cache, in order to display group names in user list
+//    // findManyGroup$({})
+//    synchronizeWhereGroup({})
+// })
+
+// onUnmounted(() => {
+//    for (const subscription of subscriptions) {
+//       subscription.unsubscribe()
+//    }
+// })
+
+// const selectedUser = ref(null)
+// const route = useRoute()
+// const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
+
+// watch(() => [route.path, userList.value], async () => {
+//    const user_uid = route.path.match(routeRegex)[1]
+//    selectedUser.value = userList.value.find(user => user.uid === user_uid)
+// }, { immediate: true })
+
+// function selectUser(user) {
+//    extendExpiration()
+//    selectedUser.value = user
+//    router.push(`/home/${props.signedinUid}/users/${user.uid}`)
+// }
+
+
+// async function addUser() {
+//    router.push(`/home/${props.signedinUid}/users/create`)
+// }
+
+// async function deleteUser(user) {
+//    extendExpiration()
+//    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
+//       await removeUser(user.uid)
+//       router.push(`/home/${props.signedinUid}/users`)
+//    }
+// }
+
+// const avatarDialog = ref(false)
+
+// function onAvatarClick() {
+//    avatarDialog.value = true
+// }
+
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { findMany$ as findManyUser$, getFullname, remove as removeUser } from '/src/use/useUser'
-import { synchronizeWhere as synchronizeWhereGroup, get as getGroup } from '/src/use/useGroup'
-import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { extendExpiration } from "/src/use/useAuthentication"
+import { addPerimeter as addUserPerimeter, getFullname, remove as removeUser } from '/src/use/useUser'
+import { addPerimeter as addGroupPerimeter } from '/src/use/useGroup'
+import { addPerimeter as addUserGroupRelationPerimeter, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
+import { selectedUser } from '/src/use/useSelectedUser'
 import router from '/src/router'
+import { displaySnackbar } from '/src/use/useSnackbar'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
-// import SplitPanel from 'jcb-vertical-split-panel'
 
-
-const props = defineProps({
-   signedinUid: {
-      type: String,
-   },
-})
 
 const filter = ref('')
 
 const userList = ref([])
-const subscriptions = []
+
+const perimeters = []
 
 onMounted(async () => {
-   const userListObservable = await findManyUser$({})
-   const userListSubscription = userListObservable.subscribe(async list => {
+   // ensures that all groups are in cache
+   const groupListPerimeter = await addGroupPerimeter({})
+   perimeters.push(groupListPerimeter)
+
+   perimeters.push(await addUserPerimeter({}, async list => {
       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 
       for (const user of userList.value) {
-         const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid: user.uid })
-         const groupRelationSubscription = userGroupRelationObservable.subscribe(async relationList => {
+         perimeters.push(await addUserGroupRelationPerimeter({ user_uid: user.uid }, async relationList => {
             user.groups = []
             for (const group_uid of relationList.map(relation => relation.group_uid)) {
-               const group = await getGroup(group_uid)
+               const group = await groupListPerimeter.getByUid(group_uid)
                user.groups.push(group)
             }
-         })
-         subscriptions.push(groupRelationSubscription)
+         }))
       }
-   })
-   subscriptions.push(userListSubscription)
-
-   // ensure that `group` objects will be in cache, in order to display group names in user list
-   // findManyGroup$({})
-   synchronizeWhereGroup({})
+   }))
 })
 
-onUnmounted(() => {
-   for (const subscription of subscriptions) {
-      subscription.unsubscribe()
+onUnmounted(async () => {
+   for (const perimeter of perimeters) {
+      await perimeter.remove()
    }
 })
 
-const selectedUser = ref(null)
+async function addUser() {
+   router.push(`/users/create`)
+}
+
 const route = useRoute()
-const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
+const routeRegex = /\/users\/([a-z0-9]+)/
 
 watch(() => [route.path, userList.value], async () => {
-   const user_uid = route.path.match(routeRegex)[1]
+   const match = route.path.match(routeRegex)
+   if (!match) return
+   const user_uid = match[1]
    selectedUser.value = userList.value.find(user => user.uid === user_uid)
 }, { immediate: true })
 
 function selectUser(user) {
-   extendExpiration()
    selectedUser.value = user
-   router.push(`/home/${props.signedinUid}/users/${user.uid}`)
-}
-
-
-async function addUser() {
-   router.push(`/home/${props.signedinUid}/users/create`)
+   router.push(`/users/${user.uid}`)
 }
 
 async function deleteUser(user) {
-   extendExpiration()
+   const userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: user.uid })
+   perimeters.push(userGroupRelationPerimeter)
+   const userGroupRelations = await userGroupRelationPerimeter.currentValue()
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
-      await removeUser(user.uid)
-      router.push(`/home/${props.signedinUid}/users`)
+      try {
+         // remove user-group relations
+         await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation.uid)))
+         // remove user
+         await removeUser(user.uid)
+         router.push(`/users`)
+         displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
+      } catch(err) {
+         displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
+      }
    }
-}
-
-const avatarDialog = ref(false)
-
-function onAvatarClick() {
-   avatarDialog.value = true
 }
 </script>

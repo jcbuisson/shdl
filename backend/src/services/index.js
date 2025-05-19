@@ -1,5 +1,7 @@
 
 // database services
+import metadataService from './database/metadata/metadata.service.js'
+
 import userService from './database/user/user.service.js'
 import groupService from './database/group/group.service.js'
 import userTabRelationService from './database/user_tab_relation/user_tab_relation.service.js'
@@ -14,6 +16,8 @@ import fileUploadService from './custom/file-upload/file-upload.service.mjs'
 
 export default function (app) {
    // add database services
+   app.configure(metadataService)
+
    app.configure(userService)
    app.configure(groupService)
    app.configure(userTabRelationService)

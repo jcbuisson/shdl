@@ -43,9 +43,9 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { expiresAt } from '/src/use/useAppState.js'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { synchronizeWhere as synchronizeUserWhere, synchronizeAll as synchronizeAllUser, getFirst as getFirstUser, getFullname } from '/src/use/useUser'
+import { addPerimeter as addUserPerimeter, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
 import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
-import { getMany as getManyUserTabRelation, synchronizeWhere as synchronizeUserTabRelationWhere, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
+import { addPerimeter as addUserTabRelationPerimeter, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
 import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { tabs } from '/src/use/useTabs'
 
@@ -80,14 +80,16 @@ app.addConnectListener(async () => {
 })
 
 let interval
+let userPerimeter
+let userTabRelationPerimeter
 
 onMounted(async () => {
    // sign-in user
-   await synchronizeUserWhere({ uid: props.signedinUid })
-   signedinUser.value = await getFirstUser({ uid: props.signedinUid })
+   userPerimeter = await addUserPerimeter({ uid: props.signedinUid })
+   signedinUser.value = await userPerimeter.getByUid(props.signedinUid)
    // tab relations of user
-   await synchronizeUserTabRelationWhere({ user_uid: props.signedinUid })
-   const userTabRelations = await getManyUserTabRelation({ user_uid: props.signedinUid })
+   userTabRelationPerimeter = await addUserTabRelationPerimeter({ user_uid: props.signedinUid })
+   const userTabRelations = await userTabRelationPerimeter.currentValue()
    userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
 
    const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.uid))
@@ -103,6 +105,8 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+   userPerimeter.remove()
+   userTabRelationPerimeter.remove()
    clearInterval(interval)
 })
 

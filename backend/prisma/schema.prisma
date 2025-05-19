@@ -8,6 +8,17 @@ datasource db {
 }
 
 
+//////////////        META-DATA FOR ALL ELEMENTS OF ALL BUSINESS MODELS        //////////////
+
+model metadata {
+   uid                     String     @unique  // `uid` is unique across models
+   created_at              DateTime?
+   updated_at              DateTime?
+   deleted_at              DateTime?
+}
+
+//////////////        BUSINESS MODELS        //////////////
+
 enum Tab {
    users       // users management
    groups      // groups management
@@ -19,9 +30,6 @@ enum Tab {
 
 model user {
    uid                     String     @unique
-   created_at              DateTime   @default(now()) @db.Timestamptz(6)
-   updated_at              DateTime   @updatedAt @db.Timestamptz(6)
-   deleted_at              DateTime?
    email                   String?    @unique(map: "user_sub_unique")
    password                String?
    firstname               String?
@@ -34,9 +42,6 @@ model user {
 
 model user_tab_relation {
    uid                String     @unique
-   created_at         DateTime   @default(now()) @db.Timestamptz(6)
-   updated_at         DateTime   @updatedAt @db.Timestamptz(6)
-   deleted_at              DateTime?
    user_uid           String
    tab                Tab
 
@@ -57,9 +62,6 @@ model group {
 
 model user_group_relation {
    uid             String     @unique
-   created_at      DateTime   @default(now()) @db.Timestamptz(6)
-   updated_at      DateTime   @updatedAt @db.Timestamptz(6)
-   deleted_at              DateTime?
    user_uid        String
    group_uid       String
 
