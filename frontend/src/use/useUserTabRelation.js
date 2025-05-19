@@ -14,34 +14,30 @@ const {
 
 /////////////          UTILITY          /////////////
 
-async function updateUserTabs(user_uid, newTabs) {
-   // ensure that all relations of `user_uid` are in cache
-   await addPerimeter({ user_uid })
-
-   // optimistic update of cache
-   const currentRelations = await db.values.filter(value => !value.deleted_ && value.user_uid === user_uid).toArray()
-   const currentTabs = currentRelations.map(relation => relation.tab)
-   const toAdd = newTabs.filter(tab => !currentTabs.includes(tab))
-   const toRemove = currentTabs.filter(tab => !newTabs.includes(tab))
-   for (const tab of toAdd) {
-      const uid = uid16(16)
-      const now = new Date()
-      await db.values.add({ uid, user_uid, tab, created_at: now, updated_at: now })
+async function tabDifference(user_uid, newTabs) {
+   const toAddTabs = []
+   const toRemoveRelationUIDs = []
+   // collect active user-group relations with `user_uid`
+   const allUserRelations = await db.values.filter(value => value.user_uid === user_uid).toArray()
+   const currentUserRelations = []
+   for (const relation of allUserRelations) {
+      const metadata = await db.metadata.get(relation.uid)
+      if (metadata.deleted_at) continue
+      currentUserRelations.push(relation)
    }
-   for (const tab of toRemove) {
-      const uid = currentRelations.find(relation => relation.tab === tab).uid
-      await db.values.update(uid, { deleted_: true })
+   // relations to add
+   for (const tab of newTabs) {
+      if (!currentUserRelations.some(relation => relation.tab === tab)) {
+         toAddTabs.push(tab)
+      }
    }
-   
-   // execute on server, asynchronously, if connection is active
-   for (const tab of toAdd) {
-      const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
-      if (isConnected.value) app.service('user_tab_relation').create({ data: { uid: relation.uid, user_uid, tab }})
+   // relations to remove
+   for (const relation of currentUserRelations) {
+      if (!newTabs.includes(relation.tab)) {
+         toRemoveRelationUIDs.push(relation.uid)
+      }
    }
-   for (const tab of toRemove) {
-      const relation = await db.values.filter(value => value.user_uid === user_uid && value.tab === tab).first()
-      if (isConnected.value) app.service('user_tab_relation').delete({ where: { uid: relation.uid }})
-   }
+   return [toAddTabs, toRemoveRelationUIDs]
 }
 
 export {
@@ -50,5 +46,5 @@ export {
    addPerimeter,
    synchronizeAll,
 
-   updateUserTabs,
+   tabDifference,
 }

@@ -97,11 +97,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { addPerimeter as addUserPerimeter, update as updateUser } from '/src/use/useUser'
 import { addPerimeter as addGroupPerimeter } from '/src/use/useGroup'
 import { addPerimeter as addUserGroupRelationPerimeter, groupDifference, create as createUserGroupRelation, remove as removeUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { addPerimeter as addUserTabRelationPerimeter, updateUserTabs } from '/src/use/useUserTabRelation'
-// import { findMany$ as findManyUser$, update as updateUser } from '/src/use/useUser'
-// import { findMany$ as findManyGroup$ } from '/src/use/useGroup'
-// import { findMany as findManyUserTabRelation, updateUserTabs } from '/src/use/useUserTabRelation'
-// import { findMany as findManyUserGroupRelation, updateUserGroups } from '/src/use/useUserGroupRelation'
+import { addPerimeter as addUserTabRelationPerimeter, tabDifference, create as createUserTabRelation, remove as removeUserTabRelation } from '/src/use/useUserTabRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { tabs } from '/src/use/useTabs'
@@ -122,27 +118,11 @@ const emailRules = [
 ]
 
 const user = ref()
-/*
-let userSubscription
-let groupSubscription
-let userTabRelationListSubscription
-let userGroupRelationListSubscription
 
-onMounted(async () => {
-   const groupObservable = await findManyGroup$({})
-   groupSubscription = groupObservable.subscribe(list => groupList.value = list)
-})
-
-onUnmounted(() => {
-   if (userSubscription) userSubscription.unsubscribe()
-   if (groupSubscription) groupSubscription.unsubscribe()
-   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
-})
-*/
 let groupListPerimeter
 let userPerimeter
-let groupRelationListPerimeter
+let userTabRelationPerimeter
+let userGroupRelationPerimeter
 
 onMounted(async () => {
    groupListPerimeter = await addGroupPerimeter({}, (list) => groupList.value = list)
@@ -151,34 +131,23 @@ onMounted(async () => {
 onUnmounted(async () => {
    await groupListPerimeter.remove()
    userPerimeter && userPerimeter.remove()
-   groupRelationListPerimeter && groupRelationListPerimeter.remove()
+   userTabRelationPerimeter && userTabRelationPerimeter.remove()
+   userGroupRelationPerimeter && userGroupRelationPerimeter.remove()
 })
-/*
-watch(() => props.user_uid, async (user_uid) => {
-   if (userSubscription) userSubscription.unsubscribe()
-   const userObservable = await findManyUser$({ uid: user_uid})
-   userSubscription = userObservable.subscribe(([user_]) => user.value = user_)
 
-   if (userTabRelationListSubscription) userTabRelationListSubscription.unsubscribe()
-   const userTabRelationObservable = await findManyUserTabRelation({ user_uid })
-   userTabRelationListSubscription = userTabRelationObservable.subscribe(relationList => {
-      userTabs.value = relationList.map(relation => relation.tab)
-   })
-
-   if (userGroupRelationListSubscription) userGroupRelationListSubscription.unsubscribe()
-   const userGroupRelationObservable = await findManyUserGroupRelation({ user_uid })
-   userGroupRelationListSubscription = userGroupRelationObservable.subscribe(relationList => {
-      userGroups.value = relationList.map(relation => relation.group_uid)
-   })
-}, { immediate: true })
-*/
 watch(() => props.user_uid, async (user_uid) => {
    if (userPerimeter) await userPerimeter.remove()
    userPerimeter = await addUserPerimeter({ uid: user_uid }, ([user_]) => {
       user.value = user_
    })
-   if (groupRelationListPerimeter) await groupRelationListPerimeter.remove()
-   groupRelationListPerimeter = await addUserGroupRelationPerimeter({ user_uid }, (relationList) => {
+
+   if (userTabRelationPerimeter) userTabRelationPerimeter.remove()
+   userTabRelationPerimeter = await addUserTabRelationPerimeter({ user_uid }, relationList => {
+      userTabs.value = relationList.map(relation => relation.tab)
+   })
+
+   if (userGroupRelationPerimeter) await userGroupRelationPerimeter.remove()
+   userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid }, (relationList) => {
       userGroups.value = relationList.map(relation => relation.group_uid)
    })
 }, { immediate: true })
@@ -202,14 +171,18 @@ const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 const userTabs = ref([])
 
-
 const onTabChange = async (tabs) => {
    try {
-      extendExpiration()
-      await updateUserTabs(props.user_uid, tabs)
+      const [toAddTabs, toRemoveRelationUIDs] = await tabDifference(props.user_uid, tabs)
+      for (const tab of toAddTabs) {
+         await createUserTabRelation({ user_uid: props.user_uid, tab })
+      }
+      for (const relation_uid of toRemoveRelationUIDs) {
+         await removeUserTabRelation(relation_uid)
+      }
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
-      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+      displaySnackbar({ text: "Erreur lors de l'enregistrement...", color: 'error', timeout: 4000 })
    }
 }
 
@@ -221,11 +194,16 @@ const groupList = ref([])
 
 const onGroupChange = async (groupUIDs) => {
    try {
-      extendExpiration()
-      await updateUserGroups(props.user_uid, groupUIDs)
+      const [toAddGroupUIDs, toRemoveRelationUIDs] = await groupDifference(props.user_uid, groupUIDs)
+      for (const group_uid of toAddGroupUIDs) {
+         await createUserGroupRelation({ user_uid: props.user_uid, group_uid })
+      }
+      for (const relation_uid of toRemoveRelationUIDs) {
+         await removeUserGroupRelation(relation_uid)
+      }
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
-      displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+      displaySnackbar({ text: "Erreur lors de l'enregistrement...", color: 'error', timeout: 4000 })
    }
 }
 
