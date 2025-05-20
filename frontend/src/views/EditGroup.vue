@@ -18,10 +18,51 @@
 </template>
 
 <script setup>
+// import { ref, watch, onUnmounted } from 'vue'
+// import { useDebounceFn } from '@vueuse/core'
+
+// import { findMany$ as findManyGroup$, update as updateGroup } from '/src/use/useGroup'
+// import { displaySnackbar } from '/src/use/useSnackbar'
+
+
+// const props = defineProps({
+//    group_uid: {
+//       type: String,
+//    },
+// })
+
+// const group = ref()
+
+// let groupSubscription
+
+// onUnmounted(() => {
+//    if (groupSubscription) groupSubscription.unsubscribe()
+// })
+
+// watch(() => props.group_uid, async (group_uid) => {
+//    if (groupSubscription) groupSubscription.unsubscribe()
+//    const groupObservable = await findManyGroup$({ uid: group_uid})
+//    groupSubscription = groupObservable.subscribe(([group_]) => group.value = group_)
+// }, { immediate: true })
+
+
+// //////////////////////        TEXT FIELD EDITING        //////////////////////
+
+// const onFieldInput = async (field, value) => {
+//    try {
+//       await updateGroup(props.group_uid, { [field]: value })
+//       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+//    } catch(err) {
+//       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
+//    }
+// }
+// const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
+
+
 import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { findMany$ as findManyGroup$, update as updateGroup } from '/src/use/useGroup'
+import { addPerimeter as addGroupPerimeter, update as updateGroup } from '/src/use/useGroup'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 
@@ -33,16 +74,17 @@ const props = defineProps({
 
 const group = ref()
 
-let groupSubscription
+let groupPerimeter
 
 onUnmounted(() => {
-   if (groupSubscription) groupSubscription.unsubscribe()
+   groupPerimeter && groupPerimeter.remove()
 })
 
 watch(() => props.group_uid, async (group_uid) => {
-   if (groupSubscription) groupSubscription.unsubscribe()
-   const groupObservable = await findManyGroup$({ uid: group_uid})
-   groupSubscription = groupObservable.subscribe(([group_]) => group.value = group_)
+   if (groupPerimeter) await groupPerimeter.remove()
+   groupPerimeter = await addGroupPerimeter({ uid: group_uid }, ([group_]) => {
+      group.value = group_
+   })
 }, { immediate: true })
 
 
