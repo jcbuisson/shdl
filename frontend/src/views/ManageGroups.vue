@@ -28,15 +28,74 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { firstValueFrom } from 'rxjs'
+// import { ref, onMounted, onUnmounted } from 'vue'
+// import { firstValueFrom } from 'rxjs'
 
-import { findMany$ as findManyGroup$, remove as removeGroup } from '/src/use/useGroup'
-import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
+// import { findMany$ as findManyGroup$, remove as removeGroup } from '/src/use/useGroup'
+// import { findMany as findManyUserGroupRelation } from '/src/use/useUserGroupRelation'
+// import router from '/src/router'
+
+// import SplitPanel from '/src/components/SplitPanel.vue'
+
+// const props = defineProps({
+//    signedinUid: {
+//       type: String,
+//    },
+// })
+
+// const filter = ref('')
+
+// const groupList = ref([])
+// const subscriptions = []
+
+// onMounted(async () => {
+//    const groupObservable = await findManyGroup$({})
+//    const groupSubscription = groupObservable.subscribe(async list => {
+//       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
+//    })
+//    subscriptions.push(groupSubscription)
+// })
+
+// onUnmounted(() => {
+//    for (const subscription of subscriptions) {
+//       subscription.unsubscribe()
+//    }
+// })
+
+// async function addGroup() {
+//    router.push(`/home/${props.signedinUid}/groups/create`)
+// }
+
+// const selectedGroup = ref(null)
+
+// function selectGroup(group) {
+//    selectedGroup.value = group
+//    router.push(`/home/${props.signedinUid}/groups/${group.uid}`)
+// }
+
+// async function deleteGroup(group) {
+//    const observable = await findManyUserGroupRelation({ group_uid: group.uid })
+//    const userGroupRelations = await firstValueFrom(observable)
+//    let doit = true
+//    if (userGroupRelations.length > 0) {
+//       doit &= window.confirm(`Supprimer ${group.name} ? ${userGroupRelations.length > 1 ? `${userGroupRelations.length} utilisateurs appartiennent` : 'un utilisateur appartient'} encore à ce groupe`)
+//    }
+//    if (doit) {
+//       await removeGroup(group.uid)
+//       router.push(`/home/${props.signedinUid}/groups`)
+//    }
+// }
+
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute} from 'vue-router'
+
+import { addPerimeter as addGroupPerimeter, remove as removeGroup } from '/src/use/useGroup'
+import { addPerimeter as addUserGroupRelationPerimeter, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
-import { synchronizeWhere } from '../use/useUser'
+import { displaySnackbar } from '/src/use/useSnackbar'
+
 
 const props = defineProps({
    signedinUid: {
@@ -47,20 +106,19 @@ const props = defineProps({
 const filter = ref('')
 
 const groupList = ref([])
-const subscriptions = []
+
+let groupListPerimeter
+let userGroupRelationPerimeter
 
 onMounted(async () => {
-   const groupObservable = await findManyGroup$({})
-   const groupSubscription = groupObservable.subscribe(async list => {
+   groupListPerimeter = await addGroupPerimeter({}, async list => {
       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
    })
-   subscriptions.push(groupSubscription)
 })
 
-onUnmounted(() => {
-   for (const subscription of subscriptions) {
-      subscription.unsubscribe()
-   }
+onUnmounted(async () => {
+   await groupListPerimeter.remove()
+   userGroupRelationPerimeter && await userGroupRelationPerimeter.remove()
 })
 
 async function addGroup() {
@@ -75,15 +133,29 @@ function selectGroup(group) {
 }
 
 async function deleteGroup(group) {
-   const observable = await findManyUserGroupRelation({ group_uid: group.uid })
-   const userGroupRelations = await firstValueFrom(observable)
-   let doit = true
-   if (userGroupRelations.length > 0) {
-      doit &= window.confirm(`Supprimer ${group.name} ? ${userGroupRelations.length > 1 ? `${userGroupRelations.length} utilisateurs appartiennent` : 'un utilisateur appartient'} encore à ce groupe`)
-   }
-   if (doit) {
-      await removeGroup(group.uid)
-      router.push(`/home/${props.signedinUid}/groups`)
+   userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ group_uid: group.uid })
+   const userGroupRelations = await userGroupRelationPerimeter.currentValue()
+   if (window.confirm(`Supprimer le groupe ${group.name} ? (nombre d'utilisateurs membres : ${userGroupRelations.length})`)) {
+      try {
+         // remove user-group relations
+         await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation.uid)))
+         await removeGroup(group.uid)
+         router.push(`/home/${props.signedinUid}/groups`)
+         displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
+      } catch(err) {
+         displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
+      }
    }
 }
+
+const route = useRoute()
+const routeRegex = /\/groups\/([a-z0-9]+)/
+
+watch(() => [route.path, groupList.value], async () => {
+   const match = route.path.match(routeRegex)
+   if (!match) return
+   const group_uid = match[1]
+   selectedGroup.value = groupList.value.find(group => group.uid === group_uid)
+}, { immediate: true })
+
 </script>

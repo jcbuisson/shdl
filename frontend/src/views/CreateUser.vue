@@ -80,18 +80,14 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { firstValueFrom } from 'rxjs'
 
-import { findMany$ as findManyUser$, create as createUser } from '/src/use/useUser'
-import { findMany$ as findManyGroup$ } from '/src/use/useGroup'
-import { updateUserTabs } from '/src/use/useUserTabRelation'
-import { updateUserGroups } from '/src/use/useUserGroupRelation'
-import { extendExpiration } from "/src/use/useAuthentication"
+import { addPerimeter as addUserPerimeter, create as createUser } from '/src/use/useUser.js'
+import { addPerimeter as addGroupPerimeter } from '/src/use/useGroup'
+import { groupDifference, create as createUserGroupRelation, remove as removeUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { tabs } from '/src/use/useTabs'
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
-import { tabs } from '/src/use/useTabs'
-
 import 'jcb-upload'
 
 
@@ -102,37 +98,36 @@ const props = defineProps({
 })
 
 const data = ref({})
-
 const valid = ref()
 
 const emailRules = [
    (v) => !!v || "L'email est obligatoire",
-   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "L'email doit être valide"
-]
-
-const tabsRules = [
-   (v) => !!v && Object.keys(v).length > 0 || "Choisir au moins un onglet"
+   (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 
 const groupList = ref([])
-let subscription
+
+const perimeters = []
 
 onMounted(async () => {
-   const groupListObservable = await findManyGroup$({})
-   subscription = groupListObservable.subscribe(list => {
+   perimeters.push(await addGroupPerimeter({}, async list => {
       groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
-   })
+   }))
+
 })
 
-onUnmounted(() => {
-   subscription.unsubscribe()
+onUnmounted(async () => {
+   for (const perimeter of perimeters) {
+      await perimeter.remove()
+   }
 })
 
 async function submit() {
    try {
-      extendExpiration()
       // check if email is not already used
-      const [other] = await firstValueFrom(await findManyUser$({ email: data.value.email }))
+      const userPerimeter = await addUserPerimeter({ email: data.value.email })
+      perimeters.push(userPerimeter)
+      const [other] = await userPerimeter.currentValue()
       if (other) {
          alert(`Il existe déjà un utilisateur avec cet email : ${data.value.email}`)
       } else {
@@ -141,8 +136,13 @@ async function submit() {
             firstname: data.value.firstname,
             lastname: data.value.lastname,
          })
-         await updateUserTabs(user.uid, data.value.tabs)
-         await updateUserGroups(user.uid, data.value.groups)
+         const [toAddGroupUIDs, toRemoveRelationUIDs] = await groupDifference(user.uid, data.value.groups || [])
+         for (const group_uid of toAddGroupUIDs) {
+            await createUserGroupRelation({ user_uid: user.uid, group_uid })
+         }
+         for (const relationUID of toRemoveRelationUIDs) {
+            await removeUserGroupRelation(relationUID)
+         }
          displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
          router.push(`/home/${props.signedinUid}/users/${user.uid}`)
       }
@@ -150,7 +150,6 @@ async function submit() {
       displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
    }
 }
-
 </script>
 
 <style scoped>
