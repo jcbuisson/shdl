@@ -46,7 +46,7 @@
          </v-toolbar>
 
          <!-- Fills remaining vertical space -->
-         <div class="d-flex flex-column flex-grow-1">
+         <div class="d-flex flex-column flex-grow-1 overflow-auto">
             <router-view />
          </div>
       </div>
@@ -128,18 +128,6 @@ onUnmounted(() => {
    userTabRelationPerimeter.remove()
    clearInterval(interval)
 })
-
-
-function toggleCnx() {
-
-   // PAS PLUTÔT ISAUTHENTICATED ?
-
-   if (isConnected.value) {
-      disconnect()
-   } else {
-      connect()
-   }
-}
 
 async function logout() {
    await restartApp()
