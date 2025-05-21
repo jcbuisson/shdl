@@ -1,22 +1,18 @@
 <template>
-   <v-row>
-      <v-col>
-         <div class="split-container">
-            <!-- Left Panel with Slot -->
-            <div class="left-panel" :style="{ width: leftWidth + 'px' }">
-               <slot name="left-panel"></slot>
-            </div>
+   <div class="split-container">
+      <!-- Left Panel with Slot -->
+      <div class="left-panel" :style="{ width: leftWidth + 'px' }">
+         <slot name="left-panel"></slot>
+      </div>
 
-            <!-- Draggable Splitter -->
-            <div class="splitter" @mousedown="startResize"></div>
+      <!-- Draggable Splitter -->
+      <div class="splitter" @mousedown="startResize"></div>
 
-            <!-- Right Panel with Slot -->
-            <div class="right-panel" :style="{ width: `calc(100% - ${leftWidth-50}px)` }">
-               <slot name="right-panel"></slot>
-            </div>
-         </div>
-      </v-col>
-   </v-row>
+      <!-- Right Panel with Slot -->
+      <div class="right-panel" :style="{ width: `calc(100% - ${leftWidth}px)` }">
+         <slot name="right-panel"></slot>
+      </div>
+   </div>
  </template>
  
 <script setup>
@@ -50,7 +46,7 @@ function stopResize() {
    width: 100%;
    height: 100%;
    position: relative;
-   overflow: hidden;
+   /* overflow: hidden; */
 }
 
 .left-panel,
@@ -64,6 +60,10 @@ function stopResize() {
    background-color: #ccc;
    cursor: col-resize;
    height: 100%;
+}
+.splitter:hover {
+   width: 6px;
+   background-color: #999;
 }
 
 .left-panel {
