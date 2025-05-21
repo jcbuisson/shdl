@@ -11,7 +11,7 @@
             <div class="splitter" @mousedown="startResize"></div>
 
             <!-- Right Panel with Slot -->
-            <div class="right-panel" :style="{ width: `calc(100% - ${leftWidth}px)` }">
+            <div class="right-panel" :style="{ width: `calc(100% - ${leftWidth-50}px)` }">
                <slot name="right-panel"></slot>
             </div>
          </div>
@@ -48,8 +48,9 @@ function stopResize() {
 .split-container {
    display: flex;
    width: 100%;
-   height: 100%; /* Adjust height as needed */
+   height: 100%;
    position: relative;
+   overflow: hidden;
 }
 
 .left-panel,
