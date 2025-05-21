@@ -1,11 +1,6 @@
 <template>
-   <!--
-      - d-flex flex-column fill-height makes the layout a vertical stack filling the full screen.
-      - <v-toolbar> is fixed-height and does not grow.
-      - .router-container uses flex: 1 to take up the remaining space.
-      - overflow: auto ensures scrollbars appear only if needed, inside router-view.
-   -->
-   <v-app class="app-layout">
+   <v-app class="h-screen overflow-hidden">
+      <!-- makes the layout a vertical stack filling the full screen -->
       <div class="d-flex flex-column fill-height">
          <!-- Toolbar (does not grow) -->
          <v-toolbar extended>
@@ -50,8 +45,8 @@
             </template>
          </v-toolbar>
 
-         <!-- Fills remaining space -->
-         <div class="router-container">
+         <!-- Fills remaining vertical space -->
+         <div class="d-flex flex-column flex-grow-1">
             <router-view />
          </div>
       </div>
@@ -150,17 +145,3 @@ async function logout() {
    await restartApp()
 }
 </script>
-
-<style scoped>
-.app-layout {
-  height: 100vh;
-  overflow: hidden;
-}
-
-.router-container {
-  flex: 1 1 auto;
-  /* overflow: hidden; */
-  display: flex;
-  flex-direction: column;
-}
-</style>

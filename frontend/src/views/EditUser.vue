@@ -1,5 +1,5 @@
 <template>
-   <v-card>
+   <!-- <v-card> -->
       <v-form>
          <v-container>
             <v-row>
@@ -80,7 +80,7 @@
 
          </v-container>
       </v-form>
-   </v-card>
+   <!-- </v-card> -->
 
    <!-- avatar modal display-->
    <v-dialog v-model="avatarDialog" width="auto">
