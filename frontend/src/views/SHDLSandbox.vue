@@ -1,4 +1,5 @@
 <template>
+  <!-- https://github.com/surmon-china/vue-codemirror -->
    <codemirror
       v-model="code"
       placeholder="Code goes here..."

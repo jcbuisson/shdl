@@ -1,20 +1,24 @@
 <template>
    <SplitPanel>
       <template v-slot:left-panel>
-         <v-card>
+         <!-- makes the layout a vertical stack filling the full height -->
+         <v-card class="d-flex flex-column fill-height">
             <v-toolbar color="red-darken-4" density="compact">
                <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
                <v-text-field v-model="filter" single-line></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addGroup"></v-btn>
             </v-toolbar>
          
-            <v-list-item three-line v-for="(group, index) in groupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
-               <v-list-item-title>{{ group.name }}</v-list-item-title>
+            <!-- Fills remaining vertical space -->
+            <div class="d-flex flex-column flex-grow-1 overflow-auto">
+               <v-list-item three-line v-for="(group, index) in groupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
+                  <v-list-item-title>{{ group.name }}</v-list-item-title>
 
-               <template v-slot:append>
-                  <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(group)"></v-btn>
-               </template>
-            </v-list-item>
+                  <template v-slot:append>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(group)"></v-btn>
+                  </template>
+               </v-list-item>
+            </div>
          </v-card>
       </template>
 

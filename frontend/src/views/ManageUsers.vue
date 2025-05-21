@@ -1,32 +1,36 @@
 <template>
    <SplitPanel>
       <template v-slot:left-panel>
-
-         <v-card>
+         <!-- makes the layout a vertical stack filling the full height -->
+         <v-card class="d-flex flex-column fill-height">
+            <!-- Toolbar (does not grow) -->
             <v-toolbar color="red-darken-4" density="compact">
                <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
                <v-text-field v-model="filter" single-line></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
          
-            <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
-               <template v-slot:prepend>
-                  <v-avatar @click="onAvatarClick(user)">
-                     <v-img :src="user.pict"></v-img>
-                  </v-avatar>
-               </template>
-               <v-list-item-title>{{ user.lastname }}</v-list-item-title>
-               <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
-               <v-list-item-subtitle>
-                  <template v-for="group in user.groups">
-                     <v-chip size="x-small">{{ group?.name }}</v-chip>
+            <!-- Fills remaining vertical space -->
+            <div class="d-flex flex-column flex-grow-1 overflow-auto">
+               <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
+                  <template v-slot:prepend>
+                     <v-avatar @click="onAvatarClick(user)">
+                        <v-img :src="user.pict"></v-img>
+                     </v-avatar>
                   </template>
-               </v-list-item-subtitle>
+                  <v-list-item-title>{{ user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>
+                     <template v-for="group in user.groups">
+                        <v-chip size="x-small">{{ group?.name }}</v-chip>
+                     </template>
+                  </v-list-item-subtitle>
 
-               <template v-slot:append>
-                  <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
-               </template>
-            </v-list-item>
+                  <template v-slot:append>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
+                  </template>
+               </v-list-item>
+            </div>
          </v-card>
 
       </template>
