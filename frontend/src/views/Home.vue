@@ -159,7 +159,7 @@ async function logout() {
 
 .router-container {
   flex: 1 1 auto;
-  overflow: auto;
+  /* overflow: auto; */
   display: flex;
   flex-direction: column;
 }
