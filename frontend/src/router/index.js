@@ -64,6 +64,18 @@ const routes = [
             ],      
          },
          {
+            path: 'shdl',
+            props: true,
+            component: () => import('/src/views/SHDLSandbox.vue'),
+            children: [
+               {
+                  path: ':module_uid',
+                  props: true,
+                  component: () => import('/src/views/EditSHDLModule.vue'),
+               },
+            ],      
+         },
+         {
             path: 'followup',
             props: true,
             component: () => import('/src/views/ManageStudents.vue'),
@@ -72,11 +84,6 @@ const routes = [
             path: 'tests',
             props: true,
             component: () => import('/src/views/ManageTests.vue'),
-         },
-         {
-            path: 'shdl',
-            props: true,
-            component: () => import('/src/views/SHDLSandbox.vue'),
          },
          {
             path: 'craps',

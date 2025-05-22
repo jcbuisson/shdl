@@ -73,7 +73,7 @@ model user_group_relation {
 // groupe 1SN24D, 2024-12-10T14:00 à 2024-12-10T15:45
 model group_slot {
    uid                     String     @unique
-   group_uid               Int
+   group_uid               String
    label                   String
    color                   String     @default("blue")
    start                   DateTime
@@ -89,8 +89,15 @@ model shdl_test {
 
 model user_shdl_test {
    uid                     String     @unique
-   user_uid                Int
-   shdl_test_uid           Int
+   user_uid                String
+   shdl_test_uid           String
    date                    DateTime
    success                 Boolean
+}
+
+model user_shdl_module {
+   uid                     String     @unique
+   user_uid                String
+   name                    String
+   text                    String
 }
