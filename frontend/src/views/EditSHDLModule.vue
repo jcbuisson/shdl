@@ -9,7 +9,7 @@
       :tab-size="3"
       :extensions="extensions"
       @ready="handleReady"
-      @change="onChange($event)"
+      @change="onChangeDebounced($event)"
       @focus="onFocus($event)"
       @blur="onBlur($event)"
    />
@@ -20,6 +20,7 @@ import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { useDebounceFn } from '@vueuse/core'
 
 import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserShdlModule'
 
@@ -54,16 +55,6 @@ watch(() => props.module_uid, async (uid) => {
    })
 }, { immediate: true })
 
-// let userShdlModulePerimeter
-
-// onMounted(async () => {
-//    userShdlModulePerimeter = await addUserShdlModulePerimeter({ uid: props.module_uid,  }, async ([module])  => {
-//       console.log('module', module)
-//       userShdlModule.value = module
-//       code.value = module.text
-//    })
-// })
-
 onUnmounted(async () => {
    await perimeter.remove()
 })
@@ -80,9 +71,12 @@ const getCodemirrorStates = () => {
    // return ...
 }
 
-const onChange = (ev) => {
-   console.log('onChange', ev)
+const onChange = async (text) => {
+   console.log('onChange', text)
+   await updateUserShdlModule(props.module_uid, { text })
 }
+
+const onChangeDebounced = useDebounceFn(onChange, 500)
 
 const onFocus = (ev) => {
    console.log('onFocus', ev)
@@ -91,5 +85,4 @@ const onFocus = (ev) => {
 const onBlur = (ev) => {
    console.log('onBlur', ev)
 }
-
 </script>
