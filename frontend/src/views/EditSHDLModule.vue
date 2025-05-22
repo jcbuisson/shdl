@@ -1,59 +1,95 @@
 <template>
-  <!-- https://github.com/surmon-china/vue-codemirror -->
+   <!-- https://github.com/surmon-china/vue-codemirror -->
    <codemirror
       v-model="code"
       placeholder="Code goes here..."
       class="fill-height"
       :autofocus="true"
       :indent-with-tab="true"
-      :tab-size="2"
+      :tab-size="3"
       :extensions="extensions"
       @ready="handleReady"
-      @change="log('change', $event)"
-      @focus="log('focus', $event)"
-      @blur="log('blur', $event)"
+      @change="onChange($event)"
+      @focus="onFocus($event)"
+      @blur="onBlur($event)"
    />
 </template>
 
-<script>
-  import { defineComponent, ref, shallowRef } from 'vue'
-  import { Codemirror } from 'vue-codemirror'
-  import { javascript } from '@codemirror/lang-javascript'
-  import { oneDark } from '@codemirror/theme-one-dark'
+<script setup>
+import { ref, shallowRef, watch, onUnmounted } from 'vue'
+import { Codemirror } from 'vue-codemirror'
+import { javascript } from '@codemirror/lang-javascript'
+import { oneDark } from '@codemirror/theme-one-dark'
 
-  export default defineComponent({
-    components: {
-      Codemirror
-    },
-    setup() {
-      const code = ref(`console.log('Hello, world!')`)
-      // const extensions = [javascript(), oneDark]
-      const extensions = [javascript()]
+import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserShdlModule'
 
-      // Codemirror EditorView instance ref
-      const view = shallowRef()
-      const handleReady = (payload) => {
-        view.value = payload.view
-      }
+const props = defineProps({
+   signedinUid: {
+      type: String,
+   },
+   module_uid: {
+      type: String,
+   },
+})
 
-      // Status is available at all times via Codemirror EditorView
-      const getCodemirrorStates = () => {
-        const state = view.value.state
-        const ranges = state.selection.ranges
-        const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
-        const cursor = ranges[0].anchor
-        const length = state.doc.length
-        const lines = state.doc.lines
-        // more state info ...
-        // return ...
-      }
+const code = ref(`console.log('Hello, world!')`)
+const extensions = [javascript()/*, oneDark*/]
 
-      return {
-        code,
-        extensions,
-        handleReady,
-        log: console.log
-      }
-    }
-  })
+// Codemirror EditorView instance ref
+const view = shallowRef()
+const handleReady = (payload) => {
+   view.value = payload.view
+}
+
+const userShdlModule = ref()
+
+let perimeter
+
+watch(() => props.module_uid, async (uid) => {
+   if (perimeter) await perimeter.remove()
+   perimeter = await addUserShdlModulePerimeter({ uid }, ([module]) => {
+      console.log('module', module)
+      userShdlModule.value = module
+      code.value = module.text
+   })
+}, { immediate: true })
+
+// let userShdlModulePerimeter
+
+// onMounted(async () => {
+//    userShdlModulePerimeter = await addUserShdlModulePerimeter({ uid: props.module_uid,  }, async ([module])  => {
+//       console.log('module', module)
+//       userShdlModule.value = module
+//       code.value = module.text
+//    })
+// })
+
+onUnmounted(async () => {
+   await perimeter.remove()
+})
+
+// Status is available at all times via Codemirror EditorView
+const getCodemirrorStates = () => {
+   const state = view.value.state
+   const ranges = state.selection.ranges
+   const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
+   const cursor = ranges[0].anchor
+   const length = state.doc.length
+   const lines = state.doc.lines
+   // more state info ...
+   // return ...
+}
+
+const onChange = (ev) => {
+   console.log('onChange', ev)
+}
+
+const onFocus = (ev) => {
+   console.log('onFocus', ev)
+}
+
+const onBlur = (ev) => {
+   console.log('onBlur', ev)
+}
+
 </script>

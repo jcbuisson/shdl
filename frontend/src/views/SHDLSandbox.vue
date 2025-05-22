@@ -113,7 +113,7 @@ async function createModule() {
    const createdModule = await createUserShdlModule({
       user_uid: props.signedinUid,
       name: moduleName.value,
-      text: `module ${moduleName.value}()`,
+      text: `module ${moduleName.value}()\nend module`,
    })
    console.log('createdModule', createdModule)
 }
