@@ -19,6 +19,9 @@
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
+import { EditorState } from '@codemirror/state'
+import { basicSetup } from 'codemirror'
+import { history } from '@codemirror/commands'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useDebounceFn } from '@vueuse/core'
 
@@ -33,8 +36,8 @@ const props = defineProps({
    },
 })
 
-const code = ref(`console.log('Hello, world!')`)
-const extensions = [javascript()/*, oneDark*/]
+const code = ref('')
+const extensions = [javascript()/*, oneDark*/, basicSetup, history()]
 
 // Codemirror EditorView instance ref
 const view = shallowRef()
@@ -49,9 +52,21 @@ let perimeter
 watch(() => props.module_uid, async (uid) => {
    if (perimeter) await perimeter.remove()
    perimeter = await addUserShdlModulePerimeter({ uid }, ([module]) => {
+      // change editor's content
       console.log('module', module)
       userShdlModule.value = module
       code.value = module.text
+
+      // create a new state with a new history so that undo/redo works properly
+      const newState = EditorState.create({
+         doc: module.text,
+         extensions: [
+            basicSetup,
+            history(), // Re-initialize history
+            // ... other extensions you may need
+         ]
+      })
+      view.value.setState(newState)
    })
 }, { immediate: true })
 
