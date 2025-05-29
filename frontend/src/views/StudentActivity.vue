@@ -29,10 +29,36 @@ onMounted(() => {
     { date: parseDate('2023-12'), value: 40 }
   ]
 
-  const data2 = data1.map(d => ({
-    date: new Date(d.date),
-    value: d.value * 0.7 + 10 // simulate alternate series
-  }))
+//   const data2 = data1.map(d => ({
+//     date: new Date(d.date),
+//     value: d.value * 0.7 + 10 // simulate alternate series
+//   }))
+
+  const data2 = [
+    { date: parseDate('2023-01'), value: 30 },
+    { date: parseDate('2023-12'), value: 40 }
+  ]
+
+const events = [
+  {
+    name: 'Event A',
+    start: new Date('2023-01-10'),
+    end: new Date('2023-01-20'),
+    value: 30
+  },
+  {
+    name: 'Event B',
+    start: new Date('2023-02-01'),
+    end: new Date('2023-02-18'),
+    value: 50
+  },
+  {
+    name: 'Event C',
+    start: new Date('2023-03-05'),
+    end: new Date('2023-03-15'),
+    value: 45
+  }
+]
 
   const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
@@ -82,40 +108,57 @@ onMounted(() => {
   }
 
   function drawBars(xScale) {
-    const barWidth = (xScale(d3.timeMonth.offset(data1[1].date, 0)) - xScale(data1[0].date)) * 0.8
-    const fgWidth = barWidth * 0.4
-    const bgWidth = barWidth * 0.4
+   //  const barWidth = (xScale(d3.timeMonth.offset(data1[1].date, 0)) - xScale(data1[0].date)) * 0.8
+   //  const fgWidth = barWidth * 0.4
+   //  const bgWidth = barWidth * 0.4
 
-    // Background bars
-    const bgBars = bgBarsGroup.selectAll('rect')
-      .data(data2, d => d.date)
+   //  // Background bars
+   //  const bgBars = bgBarsGroup.selectAll('rect')
+   //    .data(data2, d => d.date)
 
-    bgBars.enter()
+   //  bgBars.enter()
+   //    .append('rect')
+   //    .merge(bgBars)
+   //    .attr('x', d => xScale(d.date) - bgWidth)
+   //    .attr('y', d => y(d.value))
+   //    .attr('width', bgWidth)
+   //    .attr('height', d => y(0) - y(d.value))
+   //    .attr('fill', '#ccc')
+
+   //  bgBars.exit().remove()
+
+   //  // Foreground bars
+   //  const fgBars = barsGroup.selectAll('rect')
+   //    .data(data1, d => d.date)
+
+   //  fgBars.enter()
+   //    .append('rect')
+   //    .merge(fgBars)
+   //    .attr('x', d => xScale(d.date))
+   //    .attr('y', d => y(d.value))
+   //    .attr('width', fgWidth)
+   //    .attr('height', d => y(0) - y(d.value))
+   //    .attr('fill', 'steelblue')
+
+   //  fgBars.exit().remove()
+
+   const eventRects = barsGroup.selectAll('rect')
+      .data(events, d => d.name)
+
+   eventRects.enter()
       .append('rect')
-      .merge(bgBars)
-      .attr('x', d => xScale(d.date) - bgWidth)
-      .attr('y', d => y(d.value))
-      .attr('width', bgWidth)
-      .attr('height', d => y(0) - y(d.value))
-      .attr('fill', '#ddd')
-
-    bgBars.exit().remove()
-
-    // Foreground bars
-    const fgBars = barsGroup.selectAll('rect')
-      .data(data1, d => d.date)
-
-    fgBars.enter()
-      .append('rect')
-      .merge(fgBars)
-      .attr('x', d => xScale(d.date))
-      .attr('y', d => y(d.value))
-      .attr('width', fgWidth)
+      .merge(eventRects)
+      .attr('x', d => xScale(d.start))
+      .attr('width', d => Math.max(1, xScale(d.end) - xScale(d.start)))
+      .attr('y', d => y(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
       .attr('height', d => y(0) - y(d.value))
       .attr('fill', 'steelblue')
+      // .on('mouseover', (event, d) => showTooltip(event, d))
+      // .on('mousemove', (event, d) => showTooltip(event, d))
+      // .on('mouseout', hideTooltip)
 
-    fgBars.exit().remove()
-  }
+   eventRects.exit().remove()
+}
 
   function zoomed(event) {
     const transform = event.transform
