@@ -24,6 +24,7 @@ import { basicSetup } from 'codemirror'
 import { history } from '@codemirror/commands'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useDebounceFn } from '@vueuse/core'
+import { myLangSupport } from "/src/lib/shdl"
 
 import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserShdlModule'
 
@@ -37,7 +38,7 @@ const props = defineProps({
 })
 
 const code = ref('')
-const extensions = [javascript()/*, oneDark*/, basicSetup, history()]
+const extensions = [javascript()/*, oneDark*/, basicSetup, history(), myLangSupport()]
 
 // Codemirror EditorView instance ref
 const view = shallowRef()
@@ -63,7 +64,7 @@ watch(() => props.module_uid, async (uid) => {
          extensions: [
             basicSetup,
             history(), // Re-initialize history
-            // ... other extensions you may need
+            myLangSupport(),
          ]
       })
       view.value.setState(newState)
