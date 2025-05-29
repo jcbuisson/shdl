@@ -26,7 +26,7 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { useDebounceFn } from '@vueuse/core'
 import { myLangSupport } from "/src/lib/shdl"
 
-import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserShdlModule'
+import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserDocument'
 
 const props = defineProps({
    signedinUid: {

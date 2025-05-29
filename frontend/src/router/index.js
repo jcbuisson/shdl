@@ -64,14 +64,14 @@ const routes = [
             ],      
          },
          {
-            path: 'shdl',
+            path: 'workshop',
             props: true,
-            component: () => import('/src/views/SHDLSandbox.vue'),
+            component: () => import('/src/views/Workshop.vue'),
             children: [
                {
                   path: ':module_uid',
                   props: true,
-                  component: () => import('/src/views/EditSHDLModule.vue'),
+                  component: () => import('/src/views/EditDocument.vue'),
                },
             ],      
          },
@@ -91,11 +91,6 @@ const routes = [
             path: 'tests',
             props: true,
             component: () => import('/src/views/ManageTests.vue'),
-         },
-         {
-            path: 'craps',
-            props: true,
-            component: () => import('/src/views/CRAPSSandbox.vue'),
          },
       ],
    },

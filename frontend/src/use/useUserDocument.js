@@ -9,7 +9,7 @@ const {
    create, update, remove,
    addPerimeter,
    synchronizeAll,
-} = useModel(import.meta.env.VITE_APP_USER_SHDL_MODULE_IDB, 'user_shdl_module', ['user_uid', 'text'])
+} = useModel(import.meta.env.VITE_APP_USER_DOCUMENT_IDB, 'user_document', ['user_uid', 'type', 'text'])
 
 
 export {

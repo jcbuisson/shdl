@@ -1,3 +1,0 @@
-<template>
-   CRAPS SANDBOX
-</template>

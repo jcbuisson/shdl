@@ -66,7 +66,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { addPerimeter as addUserShdlModulePerimeter, create as createUserShdlModule, remove as removeUserShdlModule } from '/src/use/useUserShdlModule'
+import { addPerimeter as addUserShdlModulePerimeter, create as createUserShdlModule, remove as removeUserShdlModule } from '/src/use/useUserDocument'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'

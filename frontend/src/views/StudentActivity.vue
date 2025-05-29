@@ -9,29 +9,29 @@ import * as d3 from 'd3'
 const chartContainer = ref(null)
 
 onMounted(() => {
-   let svg, x, y, xAxis, yAxis, bgBarsGroup, barsGroup
-
-   // Helper: parse ISO month string to Date
-   const parseDate = d3.timeParse('%Y-%m')
+   let svg, x, y, xAxis, yAxis, barsGroup
 
    const events = [
       {
          name: 'Event A',
          start: new Date('2023-01-10'),
          end: new Date('2023-01-20'),
-         value: 30
+         value: 30,
+         color: 'steelblue',
       },
       {
          name: 'Event B',
          start: new Date('2023-02-01'),
          end: new Date('2023-02-18'),
-         value: 50
+         value: 50,
+         color: 'green',
       },
       {
          name: 'Event C',
          start: new Date('2023-03-05'),
          end: new Date('2023-03-15'),
-         value: 45
+         value: 45,
+         color: 'purple',
       }
    ]
 
@@ -49,7 +49,6 @@ onMounted(() => {
          .attr('viewBox', `0 0 ${width} ${height}`)
          .attr('preserveAspectRatio', 'xMidYMid meet')
 
-      //  const allDates = data1.map(d => d.date)
       const allStart = events.map(d => d.start)
       const allEnd = events.map(d => d.end)
       const dateMin = d3.min(allStart)
@@ -85,7 +84,7 @@ onMounted(() => {
 
    function drawBars(xScale) {
       const eventRects = barsGroup.selectAll('rect')
-         .data(events, d => d.name)
+         .data(events, d => d)
 
       eventRects.enter()
          .append('rect')
@@ -94,7 +93,7 @@ onMounted(() => {
          .attr('width', d => Math.max(1, xScale(d.end) - xScale(d.start)))
          .attr('y', d => y(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
          .attr('height', d => y(0) - y(d.value))
-         .attr('fill', 'steelblue')
+         .attr('fill', d => d.color)
          // .on('mouseover', (event, d) => showTooltip(event, d))
          // .on('mousemove', (event, d) => showTooltip(event, d))
          // .on('mouseout', hideTooltip)

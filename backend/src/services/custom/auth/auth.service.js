@@ -73,8 +73,8 @@ export default function (app) {
             const user = await prisma.user.create({
                data: { uid, email: payload.email, password, firstname, lastname }
             })
-            // give user tabs 'shdl' and 'craps'
-            for (const tab of ['shdl', 'craps']) {
+            // give user tab 'workshop'
+            for (const tab of ['workshop']) {
                const uid = uid16(16)
                await prisma.user_tab_relation.create({
                   data: { uid, user_uid: user.uid, tab }

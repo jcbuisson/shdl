@@ -24,7 +24,7 @@ enum Tab {
    groups      // groups management
    test        // test management
    followup    // students followup
-   shdl        // shdl sandbox
+   workshop    // workshop for shdl, craps, text document
    craps       // craps sandbox
 }
 
@@ -95,9 +95,10 @@ model user_shdl_test {
    success                 Boolean
 }
 
-model user_shdl_module {
+model user_document {
    uid                     String     @unique
    user_uid                String
+   type                    String     // 'shdl', 'craps', 'text'
    name                    String
    text                    String
 }
