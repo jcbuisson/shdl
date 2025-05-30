@@ -11,11 +11,12 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(group, index) in moduleList":key="index" :value="group" @click="selectModule(group)" :active="selectedModule?.uid === group?.uid">
-                  <v-list-item-title>{{ group.name }}</v-list-item-title>
+               <v-list-item three-line v-for="(document, index) in documentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
+                  <v-list-item-title>{{ document.name }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteModule(group)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteDocument(document)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -28,12 +29,21 @@
    </SplitPanel>
 
    <v-dialog v-model="addModuleDialog" max-width="400">
-      <v-card title="Nouveau module SHDL">
+      <v-card title="Nouveau document">
         <v-card-text>
             <v-row dense>
                <v-col cols="12" md="12">
-                  <v-text-field label="Nom" required v-model="moduleName"
-                  ></v-text-field>
+                  <v-text-field label="Nom" required v-model="data.name"></v-text-field>
+                  <!-- <v-text-field label="Type" required v-model="data.type"></v-text-field> -->
+                  <v-select
+                     variant="underlined"
+                     v-model="data.type"
+                     :items="types"
+                     item-title="name"
+                     item-value="uid"
+                     label="Type"
+                  ></v-select>
+
                </v-col>
             </v-row>
         </v-card-text>
@@ -53,7 +63,7 @@
             color="primary"
             text="OK"
             variant="tonal"
-            @click="addModuleDialog = false; createModule()"
+            @click="addModuleDialog = false; createDocument()"
           ></v-btn>
         </v-card-actions>
       </v-card>
@@ -66,7 +76,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { addPerimeter as addUserShdlModulePerimeter, create as createUserShdlModule, remove as removeUserShdlModule } from '/src/use/useUserDocument'
+import { addPerimeter as addUserDocumentPerimeter, create as createUserDocument, remove as removeUserDocument } from '/src/use/useUserDocument'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -79,50 +89,66 @@ const props = defineProps({
    },
 })
 
+const types = [
+   {
+      name: "Module SHDL",
+      uid: 'shdl',
+   },
+   {
+      name: "Programme CRAPS",
+      uid: 'craps',
+   },
+   {
+      name: "Document texte",
+      uid: 'text',
+   },
+]
+
 const filter = ref('')
 
-const moduleList = ref([])
+const documentList = ref([])
 
-let userShdlModulePerimeter
+let userDocumentPerimeter
 
 onMounted(async () => {
-   userShdlModulePerimeter = await addUserShdlModulePerimeter({ user_uid: props.signedinUid }, async list => {
-      moduleList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
+   userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid: props.signedinUid }, async list => {
+      documentList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
    })
 })
 
 onUnmounted(async () => {
-   await userShdlModulePerimeter.remove()
+   await userDocumentPerimeter.remove()
 })
 
 const addModuleDialog = ref(false)
-const moduleName = ref('')
+const data = ref({})
 
 async function addModule() {
    addModuleDialog.value = true
 }
 
-const selectedModule = ref(null)
+const selectedDocument = ref(null)
 
-function selectModule(module) {
-   selectedModule.value = module
-   router.push(`/home/${props.signedinUid}/shdl/${module.uid}`)
+function selectDocument(module) {
+   selectedDocument.value = module
+   router.push(`/home/${props.signedinUid}/workshop/${module.uid}`)
 }
 
-async function createModule() {
-   const createdModule = await createUserShdlModule({
+async function createDocument() {
+   const createdModule = await createUserDocument({
       user_uid: props.signedinUid,
-      name: moduleName.value,
-      text: `module ${moduleName.value}()\nend module`,
+      name: data.value.name,
+      type: data.value.type,
+      text: `module ${data.value.name}()\nend module`,
    })
    console.log('createdModule', createdModule)
 }
 
-async function deleteModule(module) {
+async function deleteDocument(module) {
    if (window.confirm(`Supprimer le module ${module.name} ?`)) {
       try {
-         await removeUserShdlModule(module.uid)
-         router.push(`/home/${props.signedinUid}/shdl`)
+         await removeUserDocument(module.uid)
+         router.push(`/home/${props.signedinUid}/workshop`)
          displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
       } catch(err) {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
@@ -131,12 +157,12 @@ async function deleteModule(module) {
 }
 
 const route = useRoute()
-const routeRegex = /\/home\/([a-z0-9]+)\/shdl\/([a-z0-9]+)/
+const routeRegex = /\/home\/([a-z0-9]+)\/workshop\/([a-z0-9]+)/
 
-watch(() => [route.path, moduleList.value], async () => {
+watch(() => [route.path, documentList.value], async () => {
    const match = route.path.match(routeRegex)
    if (!match) return
    const uid = match[2]
-   selectedModule.value = moduleList.value.find(module => module.uid === uid)
+   selectedDocument.value = documentList.value.find(module => module.uid === uid)
 }, { immediate: true })
 </script>
