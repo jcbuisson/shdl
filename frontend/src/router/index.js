@@ -69,7 +69,7 @@ const routes = [
             component: () => import('/src/views/Workshop.vue'),
             children: [
                {
-                  path: ':module_uid',
+                  path: ':document_uid',
                   props: true,
                   component: () => import('/src/views/EditDocument.vue'),
                },

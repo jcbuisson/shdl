@@ -1,73 +1,74 @@
 <template>
-   <!-- https://github.com/surmon-china/vue-codemirror -->
-   <codemirror
-      v-model="code"
-      placeholder="Code goes here..."
-      class="fill-height"
-      :autofocus="true"
-      :indent-with-tab="true"
-      :tab-size="3"
-      :extensions="extensions"
-      @ready="handleReady"
-      @change="onChangeDebounced($event)"
-      @focus="onFocus($event)"
-      @blur="onBlur($event)"
-   />
+    <div class="tabs">
+      <button
+        v-for="docType in docTypes"
+        :key="docType.id"
+        @click="selectDoc(docType.id)"
+        :class="{ active: selectedDocId === docType.id }"
+      >
+        {{ docType.name }}
+      </button>
+    </div>
+
+    <div class="editor-container">
+      <codemirror
+        v-if="selectedDoc"
+        v-model="selectedDoc.content"
+        :extensions="selectedDoc.extensions"
+        placeholder="Start coding here..."
+        :style="{ height: '400px', border: '1px solid #ddd' }"
+      />
+    </div>
+
+    <div class="output">
+      <h3>Current Content ({{ selectedDoc ? selectedDoc.name : 'None' }}):</h3>
+      <pre>{{ selectedDoc ? selectedDoc.content : 'Select a document to see its content.' }}</pre>
+    </div>
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onUnmounted } from 'vue'
-import { Codemirror } from 'vue-codemirror'
-import { javascript } from '@codemirror/lang-javascript'
-import { EditorState } from '@codemirror/state'
-import { basicSetup } from 'codemirror'
-import { history } from '@codemirror/commands'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { Codemirror } from 'vue-codemirror';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { javascript } from '@codemirror/lang-javascript';
 import { useDebounceFn } from '@vueuse/core'
-import { myLangSupport } from "/src/lib/shdl"
+// import { myLangSupport } from "/src/lib/shdl"
 
-import { addPerimeter as addUserShdlModulePerimeter, update as updateUserShdlModule } from '/src/use/useUserDocument'
+import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
 
 const props = defineProps({
    signedinUid: {
       type: String,
    },
-   module_uid: {
+   document_uid: {
       type: String,
    },
 })
 
-const code = ref('')
-const extensions = [javascript()/*, oneDark*/, basicSetup, history(), myLangSupport()]
-
-// Codemirror EditorView instance ref
-const view = shallowRef()
-const handleReady = (payload) => {
-   view.value = payload.view
-}
-
-const userShdlModule = ref()
-
 let perimeter
 
-watch(() => props.module_uid, async (uid) => {
-   if (perimeter) await perimeter.remove()
-   perimeter = await addUserShdlModulePerimeter({ uid }, ([module]) => {
-      // change editor's content
-      console.log('module', module)
-      userShdlModule.value = module
-      code.value = module.text
+const uid2docDict = {}
+const selectedDoc = ref({
+   content: "Yo!"
+})
 
-      // create a new state with a new history so that undo/redo works properly
-      const newState = EditorState.create({
-         doc: module.text,
-         extensions: [
-            basicSetup,
-            history(), // Re-initialize history
-            myLangSupport(),
-         ]
-      })
-      view.value.setState(newState)
+watch(() => props.document_uid, async (uid, previous_uid) => {
+   if (perimeter) await perimeter.remove()
+   perimeter = await addUserDocumentPerimeter({ uid }, ([document]) => {
+      console.log('document', document)
+      const doc = uid2docDict[uid]
+      if (doc) {
+         selectedDoc.value = doc
+      } else {
+         console.log('create new doc')
+         const newDoc = {
+            content: document.text,
+            selection: null,
+         }
+         uid2docDict[uid] = newDoc
+         selectedDoc.value = newDoc
+      }
    })
 }, { immediate: true })
 
@@ -75,30 +76,78 @@ onUnmounted(async () => {
    await perimeter.remove()
 })
 
-// Status is available at all times via Codemirror EditorView
-const getCodemirrorStates = () => {
-   const state = view.value.state
-   const ranges = state.selection.ranges
-   const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
-   const cursor = ranges[0].anchor
-   const length = state.doc.length
-   const lines = state.doc.lines
-   // more state info ...
-   // return ...
-}
+// const selectedDocId = ref('html') // Initially selected document
 
-const onChange = async (text) => {
-   console.log('onChange', text)
-   await updateUserShdlModule(props.module_uid, { text })
-}
+// const docTypes = [
+//    {
+//       id: 'html',
+//       name: 'HTML',
+//       content: '<h1>Hello, Vue CodeMirror!</h1>\n<p>This is an HTML example.</p>',
+//       extensions: [html()],
+//    },
+//    {
+//       id: 'css',
+//       name: 'CSS',
+//       content: 'body {\n  font-family: sans-serif;\n  color: #333;\n}',
+//       extensions: [css()],
+//    },
+//    {
+//       id: 'js',
+//       name: 'JavaScript',
+//       content: 'console.log("This is a JavaScript example.");\nconst a = 10;\nconst b = 20;\nconsole.log(a + b);',
+//       extensions: [javascript()],
+//    },
+// ]
 
-const onChangeDebounced = useDebounceFn(onChange, 500)
+// const selectedDoc = computed(() => {
+//    return docTypes.find(doc => doc.id === selectedDocId.value);
+// })
 
-const onFocus = (ev) => {
-   console.log('onFocus', ev)
-}
-
-const onBlur = (ev) => {
-   console.log('onBlur', ev)
-}
+// function selectDoc(id) {
+//    selectedDocId.value = id;
+// }
 </script>
+
+<style scoped>
+.tabs {
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  cursor: pointer;
+  margin: 0 5px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.tabs button:hover {
+  background-color: #e0e0e0;
+}
+
+.tabs button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.editor-container {
+  margin-bottom: 20px;
+}
+
+.output {
+  text-align: left;
+  background-color: #f8f8f8;
+  border: 1px solid #eee;
+  padding: 15px;
+  border-radius: 5px;
+  white-space: pre-wrap; /* Ensures line breaks are respected */
+}
+
+.output h3 {
+  margin-top: 0;
+  color: #555;
+}
+</style>
