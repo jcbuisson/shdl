@@ -5,7 +5,7 @@
       :extensions="selectedDoc.extensions"
       placeholder="Start coding here..."
       class="fill-height"
-      @cchange="onChangeDebounced($event)"
+      @change="onChangeDebounced($event)"
    />
 </template>
 
