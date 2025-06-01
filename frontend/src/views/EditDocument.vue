@@ -2,7 +2,7 @@
    <codemirror
       v-if="selectedDoc"
       v-model="selectedDoc.content"
-      :eeeextensions="selectedDoc.extensions"
+      :extensions="selectedDoc.extensions"
       :autodestroy="true"
       placeholder="Start coding here..."
       class="fill-height"
