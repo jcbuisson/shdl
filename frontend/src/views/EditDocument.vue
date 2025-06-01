@@ -3,7 +3,6 @@
       v-if="selectedDoc"
       v-model="selectedDoc.content"
       :extensions="selectedDoc.extensions"
-      :autodestroy="true"
       placeholder="Start coding here..."
       class="fill-height"
       @change="onChangeDebounced($event)"
@@ -15,9 +14,6 @@
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
-import { javascript } from '@codemirror/lang-javascript'
-import { history } from '@codemirror/commands'
-// import { StreamLanguage, StringStream } from '@codemirror/language'; // Import StreamLanguage and StringStream
 
 import { myLang } from '/src/lib/mylang.js'
 import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
@@ -42,7 +38,6 @@ let perimeter
 const uid2docDict = {}
 const selectedDoc = ref({})
 
-// DOES STATE INCLUDE HISTORY?
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
    if (previous_uid) {
@@ -59,8 +54,6 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       console.log('create new doc')
       const newDoc = {
          content: '',
-         // extensions: [javascript(), history()]
-         // extensions: [javascript()],
          extensions: [myLang],
       }
       uid2docDict[uid] = newDoc
