@@ -17,8 +17,9 @@ import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
 import { javascript } from '@codemirror/lang-javascript'
 import { history } from '@codemirror/commands'
-import { myLangSupport } from "/src/lib/shdl"
+// import { StreamLanguage, StringStream } from '@codemirror/language'; // Import StreamLanguage and StringStream
 
+import { myLang } from '/src/lib/mylang.js'
 import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
 
 const props = defineProps({
@@ -59,8 +60,8 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       const newDoc = {
          content: '',
          // extensions: [javascript(), history()]
-         extensions: [javascript()],
-         // extensions: [myLangSupport()],
+         // extensions: [javascript()],
+         extensions: [myLang],
       }
       uid2docDict[uid] = newDoc
       selectedDoc.value = newDoc
