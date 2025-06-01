@@ -41,6 +41,8 @@ let perimeter
 const uid2docDict = {}
 const selectedDoc = ref({})
 
+// DOES STATE INCLUDE HISTORY?
+
 watch(() => props.document_uid, async (uid, previous_uid) => {
    if (previous_uid) {
       const previousDoc = uid2docDict[previous_uid]
@@ -56,20 +58,20 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       console.log('create new doc')
       const newDoc = {
          content: '',
-         extensions: [javascript(), history()]
-         // extensions: [javascript()],
+         // extensions: [javascript(), history()]
+         extensions: [javascript()],
          // extensions: [myLangSupport()],
       }
       uid2docDict[uid] = newDoc
       selectedDoc.value = newDoc
    }
 
+   // handle document content change
    if (perimeter) await perimeter.remove()
    perimeter = await addUserDocumentPerimeter({ uid }, ([document]) => {
       console.log('document', document)
       selectedDoc.value.content = document.text
    })
-
 }, { immediate: true })
 
 onUnmounted(async () => {
