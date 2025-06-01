@@ -2,8 +2,8 @@
    <codemirror
       v-if="selectedDoc"
       v-model="selectedDoc.content"
-      :selection="selectedDoc.selection"
-      :extensions="selectedDoc.extensions"
+      :eeeextensions="selectedDoc.extensions"
+      :autodestroy="true"
       placeholder="Start coding here..."
       class="fill-height"
       @change="onChangeDebounced($event)"
@@ -16,9 +16,8 @@ import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
 import { javascript } from '@codemirror/lang-javascript'
-import { basicSetup } from 'codemirror'
 import { history } from '@codemirror/commands'
-// import { myLangSupport } from "/src/lib/shdl"
+import { myLangSupport } from "/src/lib/shdl"
 
 import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
 
@@ -40,29 +39,37 @@ const handleEditorReady = (payload) => {
 let perimeter
 
 const uid2docDict = {}
-const selectedDoc = ref({
-   content: "Yo!"
-})
+const selectedDoc = ref({})
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
+   if (previous_uid) {
+      const previousDoc = uid2docDict[previous_uid]
+      // preserve state
+      previousDoc.state = currentEditorView.value?.state
+   }
+   const doc = uid2docDict[uid]
+   if (doc) {
+      selectedDoc.value = doc
+      // restore state
+      currentEditorView.value.setState(doc.state)
+   } else {
+      console.log('create new doc')
+      const newDoc = {
+         content: '',
+         extensions: [javascript(), history()]
+         // extensions: [javascript()],
+         // extensions: [myLangSupport()],
+      }
+      uid2docDict[uid] = newDoc
+      selectedDoc.value = newDoc
+   }
+
    if (perimeter) await perimeter.remove()
    perimeter = await addUserDocumentPerimeter({ uid }, ([document]) => {
       console.log('document', document)
-      const doc = uid2docDict[uid]
-      if (doc) {
-         selectedDoc.value = doc
-      } else {
-         console.log('create new doc')
-         const newDoc = {
-            content: document.text,
-            selection: null,
-            // extensions: [javascript()/*, oneDark*/, basicSetup, history()/*, myLangSupport()*/]
-            extensions: [javascript()],
-         }
-         uid2docDict[uid] = newDoc
-         selectedDoc.value = newDoc
-      }
+      selectedDoc.value.content = document.text
    })
+
 }, { immediate: true })
 
 onUnmounted(async () => {
