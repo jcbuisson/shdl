@@ -14,9 +14,11 @@
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
+import { uid as uid16 } from 'uid'
 
 import { myLang } from '/src/lib/mylang.js'
 import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
+import { app } from '/src/client-app.js'
 
 const props = defineProps({
    signedinUid: {
@@ -38,8 +40,11 @@ let perimeter
 const uid2docDict = {}
 const selectedDoc = ref({})
 
+let updateUid
+
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
+   updateUid = undefined
    if (previous_uid) {
       const previousDoc = uid2docDict[previous_uid]
       // preserve state
@@ -75,6 +80,29 @@ onUnmounted(async () => {
 const onChange = async (text) => {
    console.log('onChange', text)
    await updateUserDocument(props.document_uid, { text })
+
+   if (updateUid) {
+      app.service('user_document_event').update({
+         where: {
+            uid: updateUid,
+         },
+         data: {
+            end: new Date(),
+         }
+      })
+   } else {
+      const uid = uid16(16)
+      const updateEvent = await app.service('user_document_event').create({
+         data: {
+            uid,
+            document_uid: props.document_uid,
+            type: 'update',
+            start: new Date(),
+            end: new Date(),
+         }
+      })
+      updateUid = updateEvent.uid
+   }
 }
 
 const onChangeDebounced = useDebounceFn(onChange, 500)

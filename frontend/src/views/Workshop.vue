@@ -75,9 +75,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
+import { uid as uid16 } from 'uid'
 
 import { addPerimeter as addUserDocumentPerimeter, create as createUserDocument, remove as removeUserDocument } from '/src/use/useUserDocument'
 import router from '/src/router'
+import { app } from '/src/client-app.js'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
@@ -135,13 +137,22 @@ function selectDocument(module) {
 }
 
 async function createDocument() {
-   const createdModule = await createUserDocument({
+   const createdDocument = await createUserDocument({
       user_uid: props.signedinUid,
       name: data.value.name,
       type: data.value.type,
       text: `module ${data.value.name}()\nend module`,
    })
-   console.log('createdModule', createdModule)
+   console.log('createdDocument', createdDocument)
+   const uid = uid16(16)
+   app.service('user_document_event').create({
+      data: {
+         uid,
+         document_uid: createdDocument.uid,
+         type: 'create',
+         start: new Date(),
+      }
+   })
 }
 
 async function deleteDocument(module) {

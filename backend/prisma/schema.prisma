@@ -102,7 +102,7 @@ model user_document {
    name                    String
    text                    String
 
-   // user_document_events    user_document_event[]
+   user_document_events    user_document_event[]
 }
 
 model user_document_event {
@@ -112,5 +112,5 @@ model user_document_event {
    start                   DateTime
    end                     DateTime?
 
-   // user_document           user_document   @relation(fields: [document_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   user_document           user_document   @relation(fields: [document_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
 }
