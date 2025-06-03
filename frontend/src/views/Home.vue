@@ -60,12 +60,15 @@ import { useRoute} from 'vue-router'
 import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 
 import { expiresAt } from '/src/use/useAppState.js'
+import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
 import { addPerimeter as addUserPerimeter, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
 import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
+import { synchronizeAll as synchronizeAllGroupSlot } from '/src/use/useGroupSlot'
 import { addPerimeter as addUserTabRelationPerimeter, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
 import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { tabs } from '/src/use/useTabs'
+import { synchronizeAll as synchronizeAllUserDocument } from '/src/use/useUserDocument'
+import { synchronizeAll as synchronizeAllUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
 import router from '/src/router'
 
@@ -94,8 +97,11 @@ app.addConnectListener(async () => {
    // order matters
    await synchronizeAllUser()
    await synchronizeAllGroup()
+   await synchronizeAllGroupSlot()
    await synchronizeAllUserTabRelation()
    await synchronizeAllUserGroupRelation()
+   await synchronizeAllUserDocument()
+   await synchronizeAllUserDocumentEvent()
 })
 
 let interval

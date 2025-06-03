@@ -25,4 +25,8 @@ export default function(app) {
         return context.methodName.startsWith('find') ? [] : ['authenticated']
     })
 
+    app.service('user_document_event').publish(async (context) => {
+        return context.methodName.startsWith('find') ? [] : ['authenticated']
+    })
+
 }

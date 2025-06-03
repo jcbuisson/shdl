@@ -57,6 +57,7 @@ export default function(dbName, modelName, fields) {
          callback && callback(value)
       })
       return {
+         observable,
          getByUid: async (uid) => db.values.get(uid),
          currentValue: async () => {
             return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
