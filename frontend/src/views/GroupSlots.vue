@@ -106,6 +106,7 @@ let groupSlotPerimeter
 watch(() => props.group_uid, async (group_uid) => {
    if (groupSlotPerimeter) await groupSlotPerimeter.remove()
    groupSlotPerimeter = await addGroupSlotPerimeter({ group_uid }, async list => {
+      console.log('update groupSlotPerimeter')
       slotList.value = list.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0)
    })
 }, { immediate: true })
