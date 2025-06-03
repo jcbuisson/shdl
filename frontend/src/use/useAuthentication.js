@@ -4,8 +4,10 @@ import { app, isConnected } from '/src/client-app.js'
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
 import { reset as resetUseUser, put as putUser } from '/src/use/useUser'
 import { reset as resetUseGroup } from '/src/use/useGroup'
+import { reset as resetUseGroupSlot } from '/src/use/useGroupSlot'
 import { reset as resetUseUserTabRelation } from '/src/use/useUserTabRelation'
 import { reset as resetUseUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { reset as resetUseUserDocument } from '/src/use/useUserDocument'
 
 import router from '/src/router'
 
@@ -16,8 +18,10 @@ export async function clearCaches() {
    await resetUseAppState()
    await resetUseUser()
    await resetUseGroup()
+   await resetUseGroupSlot()
    await resetUseUserTabRelation()
    await resetUseUserGroupRelation()
+   await resetUseUserDocument()
 }
 
 export const restartApp = async () => {

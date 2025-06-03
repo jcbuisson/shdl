@@ -52,9 +52,6 @@ model user_tab_relation {
 // 'Enseignants', '1SN24D', '1APP24', 'Binôme X & Y'
 model group {
    uid                     String     @unique
-   created_at              DateTime   @default(now()) @db.Timestamptz(6)
-   updated_at              DateTime   @updatedAt @db.Timestamptz(6)
-   deleted_at              DateTime?
    name                    String
 
    user_group_relations    user_group_relation[]
@@ -74,8 +71,7 @@ model user_group_relation {
 model group_slot {
    uid                     String     @unique
    group_uid               String
-   label                   String
-   color                   String     @default("blue")
+   name                    String
    start                   DateTime
    end                     DateTime
 }

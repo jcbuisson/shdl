@@ -9,7 +9,7 @@
                <v-btn icon="mdi-plus" variant="text" @click="addGroup"></v-btn>
             </v-toolbar>
          
-            <!-- Fills remaining vertical space -->
+            <!-- fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                <v-list-item three-line v-for="(group, index) in groupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
                   <v-list-item-title>{{ group.name }}</v-list-item-title>

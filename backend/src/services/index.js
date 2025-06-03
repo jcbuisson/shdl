@@ -4,6 +4,7 @@ import metadataService from './database/metadata/metadata.service.js'
 
 import userService from './database/user/user.service.js'
 import groupService from './database/group/group.service.js'
+import groupSlotService from './database/group_slot/group_slot.service.js'
 import userTabRelationService from './database/user_tab_relation/user_tab_relation.service.js'
 import userGroupRelationService from './database/user_group_relation/user_group_relation.service.js'
 import userDocumentService from './database/user_document/user_document.service.js'
@@ -22,6 +23,7 @@ export default function (app) {
 
    app.configure(userService)
    app.configure(groupService)
+   app.configure(groupSlotService)
    app.configure(userTabRelationService)
    app.configure(userGroupRelationService)
    app.configure(userDocumentService)

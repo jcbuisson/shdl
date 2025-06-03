@@ -60,6 +60,13 @@ const routes = [
                   path: ':group_uid',
                   props: true,
                   component: () => import('/src/views/EditGroup.vue'),
+                  // children: [
+                  //    {
+                  //       path: 'slots',
+                  //       props: true,
+                  //       component: () => import('/src/views/GroupSlots.vue'),
+                  //    },
+                  // ],
                },
             ],      
          },
