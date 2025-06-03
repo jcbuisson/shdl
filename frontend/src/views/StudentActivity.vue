@@ -3,8 +3,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import * as d3 from 'd3'
+
+import { addPerimeter as addUserGroupRelationPerimeter } from '/src/use/useUserGroupRelation'
 
 import { app } from '/src/client-app.js'
 
@@ -21,6 +23,7 @@ const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 onMounted(async () => {
    let svg, x, y, xAxis, yAxis, barsGroup
 
+   // user_document data is not cached due to its potential large size
    const userDocumentWithEvents = await app.service('user_document').findMany({
       where: {
          user_uid: props.user_uid,
@@ -32,7 +35,24 @@ onMounted(async () => {
 
    const userDocumentEvents = userDocumentWithEvents.reduce((accu, doc) => accu.concat(doc.user_document_events), [])
 
-   const events = userDocumentEvents.map(ev => ({
+   let userGroupRelationPerimeter
+   const userGroups = ref([])
+
+   if (userGroupRelationPerimeter) await userGroupRelationPerimeter.remove()
+   userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: props.user_uid }, (relationList) => {
+      userGroups.value = relationList.map(relation => relation.group_uid)
+   })
+
+
+   const events0 = userDocumentEvents.map(ev => ({
+      name: 'xxx',
+      start: ev.start,
+      end: ev.end || ev.start,
+      value: 20,
+      color: TYPE2COLOR[ev.type],
+   }))
+
+   const events = userGroups.value.map(ev => ({
       name: 'xxx',
       start: ev.start,
       end: ev.end || ev.start,
@@ -137,6 +157,10 @@ onMounted(async () => {
 
    onBeforeUnmount(() => {
       resizeObserver.disconnect()
+   })
+
+   onUnmounted(() => {
+      userGroupRelationPerimeter && userGroupRelationPerimeter.remove()
    })
 })
 </script>
