@@ -18,6 +18,7 @@ import { uid as uid16 } from 'uid'
 
 import { myLang } from '/src/lib/mylang.js'
 import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
+import { create as createUserDocumentEvent, update as updateUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { app } from '/src/client-app.js'
 
 const props = defineProps({
@@ -82,24 +83,15 @@ const onChange = async (text) => {
    await updateUserDocument(props.document_uid, { text })
 
    if (updateUid) {
-      app.service('user_document_event').update({
-         where: {
-            uid: updateUid,
-         },
-         data: {
-            end: new Date(),
-         }
+      await updateUserDocumentEvent(updateUid, {
+         end: new Date(),
       })
    } else {
-      const uid = uid16(16)
-      const updateEvent = await app.service('user_document_event').create({
-         data: {
-            uid,
-            document_uid: props.document_uid,
-            type: 'update',
-            start: new Date(),
-            end: new Date(),
-         }
+      const updateEvent = await createUserDocumentEvent({
+         document_uid: props.document_uid,
+         type: 'update',
+         start: new Date(),
+         end: new Date(),
       })
       updateUid = updateEvent.uid
    }

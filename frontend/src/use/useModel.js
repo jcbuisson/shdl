@@ -1,4 +1,5 @@
 import Dexie from "dexie"
+import { from } from 'rxjs'
 import { liveQuery } from "dexie"
 import { uid as uid16 } from 'uid'
 
@@ -52,12 +53,12 @@ export default function(dbName, modelName, fields) {
          await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
       }
       const predicate = wherePredicate(where)
-      const observable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
-      const subscription = observable.subscribe(async value => {
+      const fakeObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
+      const subscription = fakeObservable.subscribe(async value => {
          callback && callback(value)
       })
       return {
-         observable,
+         observable: from(fakeObservable),
          getByUid: async (uid) => db.values.get(uid),
          currentValue: async () => {
             return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()

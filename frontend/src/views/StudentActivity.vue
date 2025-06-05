@@ -5,10 +5,13 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import * as d3 from 'd3'
+import { addHours, subHours } from 'date-fns'
+import { from } from 'rxjs'
+import { mergeMap, switchMap, map, tap, catchError, toArray } from 'rxjs/operators'
 
+import { addPerimeter as addUserDocumentPerimeter } from '/src/use/useUserDocument'
+import { addPerimeter as addUserDocumentEventPerimeter } from '/src/use/useUserDocumentEvent'
 import { addPerimeter as addUserGroupRelationPerimeter } from '/src/use/useUserGroupRelation'
-
-import { app } from '/src/client-app.js'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
@@ -22,48 +25,64 @@ const chartContainer = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
 let svg, x, y, xAxis, yAxis, barsGroup
+
+const perimeters = []
 let events = []
 
-onMounted(async () => {
 
-   // user_document data is not cached due to its potential large size
-   const userDocumentWithEvents = await app.service('user_document').findMany({
-      where: {
-         user_uid: props.user_uid,
-      },
-      include: {
-         user_document_events: true,
-      },
+async function getUserDocumentObservable(user_uid) {
+   const userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid })
+   perimeters.push(userDocumentPerimeter)
+   return userDocumentPerimeter.observable
+}
+
+async function getUserDocumentEventObservable(document_uid) {
+   const userDocumentEventPerimeter = await addUserDocumentEventPerimeter({ document_uid })
+   perimeters.push(userDocumentEventPerimeter)
+   return userDocumentEventPerimeter.observable
+}
+
+function joinObservable(user_uid) {
+   return from(getUserDocumentObservable(user_uid)).pipe( // Step 1: convert Promise<Observable> → Observable<Observable>
+      switchMap(userDocumentObservable => userDocumentObservable), // Step 2: flatten Observable<Observable<T>> → Observable<T>
+
+      tap(docs => console.log('[DEBUG] before mergeMap:', docs)),
+
+      mergeMap(documents => from(documents)), // flatten array of documents into single emissions
+
+      mergeMap(document =>
+         from(getUserDocumentEventObservable(document.uid)).pipe( // flatten Promise<Observable>
+            switchMap(eventObservable => eventObservable),         // flatten Observable<Observable>
+            tap(events => console.log('[DEBUG] before map:', events)),
+            map(events => ({ document, events }))
+         )
+      ),
+
+      // toArray(),
+
+      catchError(err => {
+         console.error('[ERROR in pipe]', err)
+         return of(null)
+      })
+   )
+}
+
+onMounted(async () => {
+   const userDocumentEventObservable = await joinObservable(props.user_uid)
+   userDocumentEventObservable.subscribe(eventList => {
+      console.log('eventList', eventList)
+      // events = eventList.map(ev => ({
+      //    name: 'xxx',
+      //    start: ev.start,
+      //    end: ev.end || ev.start,
+      //    value: 20,
+      //    color: TYPE2COLOR[ev.type],
+      // }))
    })
 
-   const userDocumentEvents = userDocumentWithEvents.reduce((accu, doc) => accu.concat(doc.user_document_events), [])
-
-   // let userGroupRelationPerimeter
-   // const userGroups = ref([])
-
-   // if (userGroupRelationPerimeter) await userGroupRelationPerimeter.remove()
-   // userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: props.user_uid }, (relationList) => {
-   //    userGroups.value = relationList.map(relation => relation.group_uid)
-   // })
 
 
-   events = userDocumentEvents.map(ev => ({
-      name: 'xxx',
-      start: ev.start,
-      end: ev.end || ev.start,
-      value: 20,
-      color: TYPE2COLOR[ev.type],
-   }))
-
-   // events = userGroups.value.map(ev => ({
-   //    name: 'xxx',
-   //    start: ev.start,
-   //    end: ev.end || ev.start,
-   //    value: 20,
-   //    color: TYPE2COLOR[ev.type],
-   // }))
-
-   drawChart(events)
+   // drawChart(events)
 
    const resizeObserver = new ResizeObserver(() => {
       drawChart(events)
@@ -74,10 +93,12 @@ onMounted(async () => {
    onBeforeUnmount(() => {
       resizeObserver.disconnect()
    })
+})
 
-   onUnmounted(() => {
-      // userGroupRelationPerimeter && userGroupRelationPerimeter.remove()
-   })
+onUnmounted(async () => {
+   for (const perimeter of perimeters) {
+      await perimeter.remove()
+   }
 })
 
 
@@ -107,7 +128,7 @@ function drawChart(events) {
    //    .range([height - margin.bottom, margin.top])
 
    x = d3.scaleUtc()
-      .domain([new Date(dateMin), new Date(dateMax)])
+      .domain([subHours(new Date(dateMin), 1), addHours(new Date(dateMax), 1)])
       .range([margin.left, width - margin.right])
 
    y = d3.scaleLinear()
@@ -159,7 +180,12 @@ function drawBars(xScale, events) {
       // .on('mouseover', (event, d) => showTooltip(event, d))
       // .on('mousemove', (event, d) => showTooltip(event, d))
       // .on('mouseout', hideTooltip)
+      .on('click', (event, d) => displayData(d))
 
    eventRects.exit().remove()
+}
+
+function displayData(data) {
+   console.log('data', data)
 }
 </script>
