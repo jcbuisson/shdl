@@ -6,8 +6,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import * as d3 from 'd3'
+import { timeFormatLocale } from 'd3-time-format'
 import { addHours, subHours } from 'date-fns'
-import { Observable, from, map, of } from 'rxjs'
+import { Observable, from, map, of, merge } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
 import { addPerimeter as addUserDocumentPerimeter, getObservable as getUserDocumentObservable } from '/src/use/useUserDocument'
@@ -15,6 +16,22 @@ import { addPerimeter as addUserDocumentEventPerimeter, getObservable as getUser
 import { addPerimeter as addUserGroupRelationPerimeter, getObservable as getUserGroupRelationObservable } from '/src/use/useUserGroupRelation'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
+
+const frLocale = timeFormatLocale({
+   dateTime: '%A %e %B %Y à %X',
+   date: '%d/%m/%Y',
+   time: '%H:%M:%S',
+   periods: ['AM', 'PM'],
+   days: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'],
+   shortDays: ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'],
+   months: ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+            'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+   shortMonths: ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+                  'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+})
+
+const dayFormat = frLocale.format('%a %d %b') // e.g., "mardi 04 juin"
+const hourFormat = frLocale.format('%H:%M') // e.g., "10:00"
 
 const props = defineProps({
    user_uid: {
@@ -25,7 +42,7 @@ const props = defineProps({
 const chartContainer = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
-let svg, x, y, xAxis, yAxis, barsGroup
+let svg, xScale, yScale, xAxis, yAxis, barsGroup
 
 const perimeters = []
 let events = []
@@ -43,10 +60,36 @@ let events = []
 //    return userDocumentEventPerimeter.observable
 // }
 
+// function joinObservable(user_uid) {
+//    return from(getUserDocumentObservable(user_uid)).pipe( // Step 1: convert Promise<Observable> → Observable<Observable>
+//       switchMap(userDocumentObservable => userDocumentObservable), // Step 2: flatten Observable<Observable<T>> → Observable<T>
+
+//       tap(docs => console.log('[DEBUG] before mergeMap:', docs)),
+
+//       mergeMap(documents => from(documents)), // flatten array of documents into single emissions
+
+//       mergeMap(document =>
+//          from(getUserDocumentEventObservable(document.uid)).pipe( // flatten Promise<Observable>
+//             switchMap(eventObservable => eventObservable),         // flatten Observable<Observable>
+//             tap(events => console.log('[DEBUG] before map:', events)),
+//             map(events => ({ document, events }))
+//          )
+//       ),
+
+//       // toArray(),
+
+//       catchError(err => {
+//          console.error('[ERROR in pipe]', err)
+//          return of(null)
+//       })
+//    )
+// }
+
 function studentEventsObservable(user_uid: string) {
    return getUserDocumentObservable({ user_uid }).pipe(
       tap(documents => console.log('[DEBUG] new document list:', documents)),
       switchMap(documents =>
+         // from: flatten array of documents into single emissions
          from(documents).pipe(
             mergeMap(document =>
                getUserDocumentEventObservable({ document_uid: document.uid }).pipe(
@@ -136,26 +179,25 @@ function drawChart(events) {
    //    .domain([0, d3.max([...events], d => d.value)]).nice()
    //    .range([height - margin.bottom, margin.top])
 
-   x = d3.scaleUtc()
+   xScale = d3.scaleTime()
       .domain([subHours(new Date(dateMin), 1), addHours(new Date(dateMax), 1)])
       .range([margin.left, width - margin.right])
 
-   y = d3.scaleLinear()
+   yScale = d3.scaleLinear()
       .domain([0, 100])
       .range([height - margin.bottom, margin.top])
 
    xAxis = svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      // .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(d3.timeFormat('%b')))
-      .call(d3.axisBottom(x))
+      .call(d3.axisBottom(xScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat))
 
    yAxis = svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
+      .call(d3.axisLeft(yScale))
 
    barsGroup = svg.append('g').attr('class', 'main-bars')
 
-   drawBars(x, events)
+   drawBars(xScale, events)
 
    svg.call(
       d3.zoom()
@@ -163,10 +205,12 @@ function drawChart(events) {
       .translateExtent([[margin.left, 0], [width - margin.right, height]])
       .on('zoom', (e) => {
          const transform = e.transform
-         const zx = transform.rescaleX(x)
-         // xAxis.call(d3.axisBottom(zx).ticks(d3.timeMonth.every(1)).tickFormat(d3.timeFormat('%b')))
-         xAxis.call(d3.axisBottom(zx))
-         drawBars(zx, events)
+         const zoomScale = e.transform.k
+         const newXScale = transform.rescaleX(xScale)
+         // xAxis.call(d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat))
+         // xAxis.call(d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
+         xAxis.call(zoomScale < 5 ? d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) : d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
+         drawBars(newXScale, events)
       })
    )
 }
@@ -183,8 +227,8 @@ function drawBars(xScale, events) {
          const w = Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start)))
          return w
       })
-      .attr('y', d => y(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
-      .attr('height', d => y(0) - y(d.value))
+      .attr('y', d => yScale(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
+      .attr('height', d => yScale(0) - yScale(d.value))
       .attr('fill', d => d.color)
       // .on('mouseover', (event, d) => showTooltip(event, d))
       // .on('mousemove', (event, d) => showTooltip(event, d))
