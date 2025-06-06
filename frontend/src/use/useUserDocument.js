@@ -7,7 +7,7 @@ import useModel from '/src/use/useModel'
 const {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
 } = useModel(import.meta.env.VITE_APP_USER_DOCUMENT_IDB, 'user_document', ['user_uid', 'type', 'text'])
 
@@ -15,6 +15,6 @@ const {
 export {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
 }

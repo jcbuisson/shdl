@@ -1,5 +1,5 @@
 
-import useModel from '/src/use/useModel'
+import useModel from '/src/use/useModel.ts'
 
 
 /////////////          CRUD/SYNC METHODS          /////////////

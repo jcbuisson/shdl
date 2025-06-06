@@ -2,15 +2,17 @@
   <div ref="chartContainer"></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import * as d3 from 'd3'
 import { addHours, subHours } from 'date-fns'
-import { from } from 'rxjs'
-import { mergeMap, switchMap, map, tap, catchError, toArray } from 'rxjs/operators'
+import { Observable, from, map } from 'rxjs'
+import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import Dexie from "dexie"
+import { liveQuery } from "dexie"
 
-import { addPerimeter as addUserDocumentPerimeter } from '/src/use/useUserDocument'
-import { addPerimeter as addUserDocumentEventPerimeter } from '/src/use/useUserDocumentEvent'
+import { addPerimeter as addUserDocumentPerimeter, getObservable as getUserDocumentObservable } from '/src/use/useUserDocument'
+import { addPerimeter as addUserDocumentEventPerimeter, getObservable as getUserDocumentEventObservable } from '/src/use/useUserDocumentEvent'
 import { addPerimeter as addUserGroupRelationPerimeter } from '/src/use/useUserGroupRelation'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
@@ -30,59 +32,61 @@ const perimeters = []
 let events = []
 
 
-async function getUserDocumentObservable(user_uid) {
-   const userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid })
-   perimeters.push(userDocumentPerimeter)
-   return userDocumentPerimeter.observable
-}
+// async function getUserDocumentObservable(user_uid: string) {
+//    const userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid })
+//    perimeters.push(userDocumentPerimeter)
+//    return userDocumentPerimeter.observable
+// }
 
-async function getUserDocumentEventObservable(document_uid) {
-   const userDocumentEventPerimeter = await addUserDocumentEventPerimeter({ document_uid })
-   perimeters.push(userDocumentEventPerimeter)
-   return userDocumentEventPerimeter.observable
-}
+// async function getUserDocumentEventObservable(document_uid: string) {
+//    const userDocumentEventPerimeter = await addUserDocumentEventPerimeter({ document_uid })
+//    perimeters.push(userDocumentEventPerimeter)
+//    return userDocumentEventPerimeter.observable
+// }
 
-function joinObservable(user_uid) {
-   return from(getUserDocumentObservable(user_uid)).pipe( // Step 1: convert Promise<Observable> → Observable<Observable>
-      switchMap(userDocumentObservable => userDocumentObservable), // Step 2: flatten Observable<Observable<T>> → Observable<T>
-
-      tap(docs => console.log('[DEBUG] before mergeMap:', docs)),
-
-      mergeMap(documents => from(documents)), // flatten array of documents into single emissions
-
-      mergeMap(document =>
-         from(getUserDocumentEventObservable(document.uid)).pipe( // flatten Promise<Observable>
-            switchMap(eventObservable => eventObservable),         // flatten Observable<Observable>
-            tap(events => console.log('[DEBUG] before map:', events)),
-            map(events => ({ document, events }))
+function joinObservable(user_uid: string) {
+   return getUserDocumentObservable({ user_uid }).pipe(
+      tap(documents => console.log('[DEBUG] new document list:', documents)),
+      switchMap(documents =>
+         from(documents).pipe(
+            mergeMap(document =>
+               getUserDocumentEventObservable({ document_uid: document.uid }).pipe(
+                  // tap(events => console.log('[DEBUG] before event:', events)),
+                  map(events => ({ document, events }))
+               )
+            ),
+            scan((acc, curr) => [...acc, curr], []) // acc is reset on new switchMap
          )
       ),
 
-      // toArray(),
-
       catchError(err => {
-         console.error('[ERROR in pipe]', err)
-         return of(null)
+         console.error('[ERROR in pipe]', err);
+         return of(null);
       })
-   )
+   );
 }
 
-onMounted(async () => {
-   const userDocumentEventObservable = await joinObservable(props.user_uid)
-   userDocumentEventObservable.subscribe(eventList => {
-      console.log('eventList', eventList)
-      // events = eventList.map(ev => ({
-      //    name: 'xxx',
-      //    start: ev.start,
-      //    end: ev.end || ev.start,
-      //    value: 20,
-      //    color: TYPE2COLOR[ev.type],
-      // }))
+onMounted(() => {
+   const userDocumentEventObservable = from(joinObservable(props.user_uid))
+   userDocumentEventObservable.subscribe(eventGroups => {
+      console.log('eventGroups', eventGroups)
+      events = []
+      for (const eventGroup of eventGroups) {
+         for (const ev of eventGroup.events) {
+            events.push({
+               name: 'xxx',
+               start: ev.start,
+               end: ev.end || ev.start,
+               value: 20,
+               color: TYPE2COLOR[ev.type],
+            })
+         }
+      }
+      console.log('events', events)
+      drawChart(events)
    })
 
 
-
-   // drawChart(events)
 
    const resizeObserver = new ResizeObserver(() => {
       drawChart(events)

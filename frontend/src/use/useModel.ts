@@ -53,12 +53,12 @@ export default function(dbName, modelName, fields) {
          await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
       }
       const predicate = wherePredicate(where)
-      const fakeObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
-      const subscription = fakeObservable.subscribe(async value => {
+      const ecmaObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
+      const subscription = ecmaObservable.subscribe(async value => {
          callback && callback(value)
       })
       return {
-         observable: from(fakeObservable),
+         observable: from(ecmaObservable),
          getByUid: async (uid) => db.values.get(uid),
          currentValue: async () => {
             return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
@@ -68,6 +68,11 @@ export default function(dbName, modelName, fields) {
             subscription.unsubscribe()
          },
       }
+   }
+
+   function getObservable(where) {
+      const predicate = wherePredicate(where)
+      return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
    }
 
    async function create(data) {
@@ -143,7 +148,7 @@ export default function(dbName, modelName, fields) {
    return {
       db, reset,
       create, update, remove,
-      addPerimeter,
+      addPerimeter, getObservable,
       synchronizeAll,
    }
 }

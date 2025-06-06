@@ -3,7 +3,7 @@ import { app, isConnected } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
 import { reset as resetUseUser, put as putUser } from '/src/use/useUser'
-import { reset as resetUseGroup } from '/src/use/useGroup'
+import { reset as resetUseGroup } from '/src/use/useGroup.ts'
 import { reset as resetUseGroupSlot } from '/src/use/useGroupSlot'
 import { reset as resetUseUserTabRelation } from '/src/use/useUserTabRelation'
 import { reset as resetUseUserGroupRelation } from '/src/use/useUserGroupRelation'

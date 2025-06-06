@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.9",
@@ -38,10 +39,15 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/node": "^22.15.29",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
     "sass-embedded": "^1.85.0",
+    "typescript": "^5.8.3",
     "vite": "^6.1.0",
     "vite-plugin-vuetify": "^2.1.0",
+    "vue-tsc": "^2.2.10",
     "vuetify": "^3.7.13"
   }
 }

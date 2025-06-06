@@ -1,0 +1,18 @@
+{
+   "extends": "@vue/tsconfig/tsconfig.json", // optional, use if installed
+   "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "moduleResolution": "Node",
+      "strict": true,
+      "jsx": "preserve",
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "forceConsistentCasingInFileNames": true,
+      "useDefineForClassFields": true,
+      "lib": ["ESNext", "DOM"],
+      "types": ["node"]
+   },
+   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "env.d.ts"],
+   "exclude": ["node_modules"]
+}
