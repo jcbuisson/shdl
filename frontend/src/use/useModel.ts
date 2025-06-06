@@ -54,18 +54,18 @@ export default function(dbName, modelName, fields) {
       }
       const predicate = wherePredicate(where)
       const ecmaObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
-      const subscription = ecmaObservable.subscribe(async value => {
-         callback && callback(value)
+      const subscription = callback && ecmaObservable.subscribe(async value => {
+         callback(value)
       })
       return {
-         observable: from(ecmaObservable),
+         // observable: from(ecmaObservable),
          getByUid: async (uid) => db.values.get(uid),
          currentValue: async () => {
             return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
          },
          remove: async () => {
             await removeSynchroWhere(where)
-            subscription.unsubscribe()
+            subscription && subscription.unsubscribe()
          },
       }
    }

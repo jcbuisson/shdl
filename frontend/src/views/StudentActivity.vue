@@ -1,19 +1,18 @@
 <template>
   <div ref="chartContainer"></div>
+  <div>{{  }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import * as d3 from 'd3'
 import { addHours, subHours } from 'date-fns'
-import { Observable, from, map } from 'rxjs'
+import { Observable, from, map, of } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
-import Dexie from "dexie"
-import { liveQuery } from "dexie"
 
 import { addPerimeter as addUserDocumentPerimeter, getObservable as getUserDocumentObservable } from '/src/use/useUserDocument'
 import { addPerimeter as addUserDocumentEventPerimeter, getObservable as getUserDocumentEventObservable } from '/src/use/useUserDocumentEvent'
-import { addPerimeter as addUserGroupRelationPerimeter } from '/src/use/useUserGroupRelation'
+import { addPerimeter as addUserGroupRelationPerimeter, getObservable as getUserGroupRelationObservable } from '/src/use/useUserGroupRelation'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
@@ -44,37 +43,43 @@ let events = []
 //    return userDocumentEventPerimeter.observable
 // }
 
-function joinObservable(user_uid: string) {
+function studentEventsObservable(user_uid: string) {
    return getUserDocumentObservable({ user_uid }).pipe(
       tap(documents => console.log('[DEBUG] new document list:', documents)),
       switchMap(documents =>
          from(documents).pipe(
             mergeMap(document =>
                getUserDocumentEventObservable({ document_uid: document.uid }).pipe(
-                  // tap(events => console.log('[DEBUG] before event:', events)),
                   map(events => ({ document, events }))
-               )
+               ),
             ),
             scan((acc, curr) => [...acc, curr], []) // acc is reset on new switchMap
          )
       ),
 
       catchError(err => {
-         console.error('[ERROR in pipe]', err);
-         return of(null);
+         console.error('[ERROR in pipe]', err)
+         return of(null)
       })
-   );
+   )
 }
 
+function studentGroupSlotObservable(user_uid: string) {
+   return getUserGroupRelationObservable({ user_uid }).pipe(
+      tap(userGroupRelations => console.log('[DEBUG] new user group relation list:', userGroupRelations)),
+   )
+}
+
+
 onMounted(() => {
-   const userDocumentEventObservable = from(joinObservable(props.user_uid))
+   const userDocumentEventObservable = from(studentEventsObservable(props.user_uid))
    userDocumentEventObservable.subscribe(eventGroups => {
       console.log('eventGroups', eventGroups)
       events = []
       for (const eventGroup of eventGroups) {
          for (const ev of eventGroup.events) {
             events.push({
-               name: 'xxx',
+               document,
                start: ev.start,
                end: ev.end || ev.start,
                value: 20,

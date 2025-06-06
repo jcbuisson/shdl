@@ -158,7 +158,11 @@ async function createDocument() {
 async function deleteDocument(module) {
    if (window.confirm(`Supprimer le module ${module.name} ?`)) {
       try {
+
+         // TODO: SUPPRIMER LES EVENTS
+
          await removeUserDocument(module.uid)
+         
          router.push(`/home/${props.signedinUid}/workshop`)
          displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
       } catch(err) {
