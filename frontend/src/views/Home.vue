@@ -45,6 +45,8 @@
             </template>
          </v-toolbar>
 
+         {{ suser }}
+
          <!-- Fills remaining vertical space -->
          <div class="d-flex flex-column flex-grow-1 overflow-auto">
             <router-view />
@@ -62,13 +64,17 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { addPerimeter as addUserPerimeter, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
+import { addPerimeter as addUserPerimeter, getObservable as user$, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
 import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
 import { synchronizeAll as synchronizeAllGroupSlot } from '/src/use/useGroupSlot'
-import { addPerimeter as addUserTabRelationPerimeter, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
+import { getObservable as userTabRelation$, addPerimeter as addUserTabRelationPerimeter, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
 import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { synchronizeAll as synchronizeAllUserDocument } from '/src/use/useUserDocument'
 import { synchronizeAll as synchronizeAllUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+
+import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
+import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
 
 import router from '/src/router'
 
@@ -80,10 +86,6 @@ const props = defineProps({
       type: String,
    },
 })
-
-const signedinUser = ref()
-const signedinUserFullname = computed(() => getFullname(signedinUser.value))
-const userTabs = ref()
 
 const route = useRoute()
 const routeTabIndex = ref()
@@ -105,17 +107,24 @@ app.addConnectListener(async () => {
 })
 
 let interval
-let userPerimeter
-let userTabRelationPerimeter
+const perimeters = []
+
+const userTabs = useObservable(userTabRelation$({ user_uid: props.signedinUid }).pipe(
+   map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
+))
+
+const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
+   map(userList => userList[0])
+))
+
+const signedinUserFullname = computed(() => getFullname(signedinUser.value))
+
 
 onMounted(async () => {
    // sign-in user
-   userPerimeter = await addUserPerimeter({ uid: props.signedinUid })
-   signedinUser.value = await userPerimeter.getByUid(props.signedinUid)
+   perimeters.push(await addUserPerimeter({ uid: props.signedinUid }))
    // tab relations of user
-   userTabRelationPerimeter = await addUserTabRelationPerimeter({ user_uid: props.signedinUid })
-   const userTabRelations = await userTabRelationPerimeter.currentValue()
-   userTabs.value = tabs.filter(tab => userTabRelations.find(relation => relation.tab === tab.uid))
+   perimeters.push(await addUserTabRelationPerimeter({ user_uid: props.signedinUid }))
 
    const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.uid))
    if (indexFromRoute >= 0) {
@@ -129,9 +138,10 @@ onMounted(async () => {
    }, 30000)
 })
 
-onUnmounted(() => {
-   userPerimeter.remove()
-   userTabRelationPerimeter.remove()
+onUnmounted(async () => {
+   for (const perimeter of perimeters) {
+      await perimeter.remove()
+   }
    clearInterval(interval)
 })
 

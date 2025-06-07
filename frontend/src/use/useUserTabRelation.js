@@ -7,7 +7,7 @@ import useModel from '/src/use/useModel'
 const {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
 } = useModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
 
@@ -43,7 +43,7 @@ async function tabDifference(user_uid, newTabs) {
 export {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
 
    tabDifference,

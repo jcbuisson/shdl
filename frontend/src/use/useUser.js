@@ -7,7 +7,7 @@ import useModel from '/src/use/useModel'
 const {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
 } = useModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
 
@@ -29,7 +29,7 @@ export const put = async (value) => {
 export {
    db, reset,
    create, update, remove,
-   addPerimeter,
+   addPerimeter, getObservable,
    synchronizeAll,
    
    getFullname,

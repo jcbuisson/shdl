@@ -19,7 +19,7 @@ import { useObservable } from '@vueuse/rxjs'
 
 import { getObservable as userDocument$ } from '/src/use/useUserDocument'
 import { getObservable as userDocumentEvent$ } from '/src/use/useUserDocumentEvent'
-import { getObservable as getUserGroupRelation$ } from '/src/use/useUserGroupRelation'
+import { getObservable as userGroupRelation$ } from '/src/use/useUserGroupRelation'
 import { getObservable as groupSlot$ } from '/src/use/useGroupSlot'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
@@ -71,7 +71,7 @@ function studentEvents$(user_uid: string) {
 }
 
 function studentSlot$(user_uid: string) {
-   return getUserGroupRelation$({ user_uid }).pipe(
+   return userGroupRelation$({ user_uid }).pipe(
       switchMap(relations =>
          // from: flattens array of relations into single emissions
          from(relations).pipe(
@@ -191,7 +191,7 @@ function drawChart(slots, events) {
          xAxis.call(zoomScale < 5 ?
             d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
             d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
-         drawSlots(newXScale, slots)
+         drawSlots(newXScale, slots, zoomScale)
          drawBars(newXScale, events)
       })
    )
@@ -217,7 +217,7 @@ function drawBars(xScale, events) {
    eventRects.exit().remove()
 }
 
-function drawSlots(xScale, slots) {
+function drawSlots(xScale, slots, zoomScale) {
    const slotRects = slotsGroup.selectAll('rect')
       .data(slots, d => d)
 
@@ -243,11 +243,11 @@ function drawSlots(xScale, slots) {
    slotLabels.enter()
       .append('text')
       .merge(slotLabels)
-      .attr('x', d => xScale(new Date(d.start)) + 2)  // small padding
-      .attr('y', d => yScale(d.value) + 12)           // inside the bar, near top
+      .attr('x', d => xScale(new Date(d.start)) + (zoomScale < 5 ? 2 : 10))  // padding
+      .attr('y', d => yScale(d.value) + (zoomScale < 5 ? 12 : 20))
       .text(d => d.name)
       .attr('fill', 'white')
-      .attr('font-size', '10px')
+      .attr('font-size', zoomScale < 5 ? '10px' : '16px')
 
    slotLabels.exit().remove()
 }
