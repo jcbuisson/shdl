@@ -1,7 +1,7 @@
 <template>
   <div ref="chartContainer"></div>
 
-   <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div>
+   <!-- <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div> -->
 
    <v-tooltip v-model="show" text="azer">
       <span>Programmatic tooltip</span>
@@ -49,7 +49,7 @@ const props = defineProps({
 const chartContainer = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
-let svg, xScale, yScale, xAxis, yAxis, slotsGroup, barsGroup
+let svg, xScale, yScale, xAxis, yAxis, slotsGroup, eventsGroup
 
 const perimeters = []
 
@@ -70,7 +70,7 @@ function studentEvents$(user_uid: string) {
    )
 }
 
-function studentGroupSlot$(user_uid: string) {
+function studentSlot$(user_uid: string) {
    return getUserGroupRelation$({ user_uid }).pipe(
       switchMap(relations =>
          // from: flattens array of relations into single emissions
@@ -83,7 +83,7 @@ function studentGroupSlot$(user_uid: string) {
    )
 }
 
-const slots$ = studentGroupSlot$(props.user_uid)
+const slots$ = studentSlot$(props.user_uid)
 const eventGroups$ = studentEvents$(props.user_uid)
 
 const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
@@ -91,8 +91,6 @@ const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
 const userSlotsAndEvents = computed(() => {
    if (!slotsAndEventGroups.value) return
    const [userSlots, eventGroups] = slotsAndEventGroups.value
-   console.log('userSlots', userSlots)
-   console.log('eventGroups', eventGroups)
    const events = []
    for (const eventGroup of eventGroups) {
       for (const ev of eventGroup.events) {
@@ -100,18 +98,18 @@ const userSlotsAndEvents = computed(() => {
             name: eventGroup.document.name,
             start: ev.start,
             end: ev.end || ev.start,
-            value: 20,
+            value: 7,
             color: TYPE2COLOR[ev.type],
          })
       }
    }
    const slots = []
    for (const slot of userSlots) {
-      events.push({
+      slots.push({
          name: slot.name,
          start: slot.start,
          end: slot.end,
-         value: 100,
+         value: 10,
          color: 'grey',
       })
    }
@@ -120,14 +118,14 @@ const userSlotsAndEvents = computed(() => {
 
 watch(() => userSlotsAndEvents.value, async () => {
    if (!userSlotsAndEvents.value) return
-   drawSlots(userSlotsAndEvents.value.slots)
-   drawChart(userSlotsAndEvents.value.events)
+   drawChart(userSlotsAndEvents.value.slots, userSlotsAndEvents.value.events)
 })
 
 onMounted(() => {
 
    const resizeObserver = new ResizeObserver(() => {
-      drawChart(userSlotsAndEvents.value)
+      if (!userSlotsAndEvents.value) return
+      drawChart(userSlotsAndEvents.value.slots, userSlotsAndEvents.value.events)
    })
 
    resizeObserver.observe(chartContainer.value)
@@ -143,7 +141,7 @@ onUnmounted(async () => {
    }
 })
 
-function drawChart(events, slots) {
+function drawChart(slots, events) {
    const containerWidth = chartContainer.value.clientWidth
    const width = containerWidth
    const height = 400
@@ -165,7 +163,7 @@ function drawChart(events, slots) {
       .range([margin.left, width - margin.right])
 
    yScale = d3.scaleLinear()
-      .domain([0, 100])
+      .domain([0, 10])
       .range([height - margin.bottom, margin.top])
 
    xAxis = svg.append('g')
@@ -174,12 +172,12 @@ function drawChart(events, slots) {
 
    yAxis = svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(yScale))
+      // .call(d3.axisLeft(yScale))
 
    slotsGroup = svg.append('g').attr('class', 'main-slots')
-   barsGroup = svg.append('g').attr('class', 'main-bars')
+   eventsGroup = svg.append('g').attr('class', 'main-bars')
 
-   drawSlots(xScale, slots)
+   drawSlots(xScale, slots, 1.)
    drawBars(xScale, events)
 
    svg.call(
@@ -200,7 +198,7 @@ function drawChart(events, slots) {
 }
 
 function drawBars(xScale, events) {
-   const eventRects = barsGroup.selectAll('rect')
+   const eventRects = eventsGroup.selectAll('rect')
       .data(events, d => d)
 
    eventRects.enter()
@@ -220,7 +218,38 @@ function drawBars(xScale, events) {
 }
 
 function drawSlots(xScale, slots) {
+   const slotRects = slotsGroup.selectAll('rect')
+      .data(slots, d => d)
 
+   slotRects.enter()
+      .append('rect')
+      .merge(slotRects)
+      .attr('x', d => xScale(new Date(d.start)))
+      .attr('y', d => yScale(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
+      .attr('width', d => Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start))))
+      .attr('height', d => yScale(0) - yScale(d.value))
+      .attr('fill', d => d.color)
+      // .on('mouseover', (event, d) => showTooltip(event, d))
+      // .on('mousemove', (event, d) => showTooltip(event, d))
+      // .on('mouseout', hideTooltip)
+      .on('click', (event, d) => displayData(d))
+
+   slotRects.exit().remove()
+
+   // Labels
+   const slotLabels = slotsGroup.selectAll('text')
+      .data(slots, d => d)
+
+   slotLabels.enter()
+      .append('text')
+      .merge(slotLabels)
+      .attr('x', d => xScale(new Date(d.start)) + 2)  // small padding
+      .attr('y', d => yScale(d.value) + 12)           // inside the bar, near top
+      .text(d => d.name)
+      .attr('fill', 'white')
+      .attr('font-size', '10px')
+
+   slotLabels.exit().remove()
 }
 
 function displayData(data) {
