@@ -1,6 +1,12 @@
 <template>
   <div ref="chartContainer"></div>
-  <div>{{  }}</div>
+
+   <!-- <div>slots: {{ slots }}</div>
+   <div>evts: {{ evts }}</div> -->
+
+   <v-tooltip v-model="show" text="azer">
+      <span>Programmatic tooltip</span>
+   </v-tooltip>
 </template>
 
 <script setup lang="ts">
@@ -10,10 +16,12 @@ import { timeFormatLocale } from 'd3-time-format'
 import { addHours, subHours } from 'date-fns'
 import { Observable, from, map, of, merge } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
 
-import { addPerimeter as addUserDocumentPerimeter, getObservable as getUserDocumentObservable } from '/src/use/useUserDocument'
-import { addPerimeter as addUserDocumentEventPerimeter, getObservable as getUserDocumentEventObservable } from '/src/use/useUserDocumentEvent'
-import { addPerimeter as addUserGroupRelationPerimeter, getObservable as getUserGroupRelationObservable } from '/src/use/useUserGroupRelation'
+import { getObservable as userDocument$ } from '/src/use/useUserDocument'
+import { getObservable as userDocumentEvent$ } from '/src/use/useUserDocumentEvent'
+import { getObservable as getUserGroupRelation$ } from '/src/use/useUserGroupRelation'
+import { getObservable as groupSlot$ } from '/src/use/useGroupSlot'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
@@ -48,76 +56,48 @@ const perimeters = []
 let events = []
 
 
-// async function getUserDocumentObservable(user_uid: string) {
-//    const userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid })
-//    perimeters.push(userDocumentPerimeter)
-//    return userDocumentPerimeter.observable
-// }
-
-// async function getUserDocumentEventObservable(document_uid: string) {
-//    const userDocumentEventPerimeter = await addUserDocumentEventPerimeter({ document_uid })
-//    perimeters.push(userDocumentEventPerimeter)
-//    return userDocumentEventPerimeter.observable
-// }
-
-// function joinObservable(user_uid) {
-//    return from(getUserDocumentObservable(user_uid)).pipe( // Step 1: convert Promise<Observable> → Observable<Observable>
-//       switchMap(userDocumentObservable => userDocumentObservable), // Step 2: flatten Observable<Observable<T>> → Observable<T>
-
-//       tap(docs => console.log('[DEBUG] before mergeMap:', docs)),
-
-//       mergeMap(documents => from(documents)), // flatten array of documents into single emissions
-
-//       mergeMap(document =>
-//          from(getUserDocumentEventObservable(document.uid)).pipe( // flatten Promise<Observable>
-//             switchMap(eventObservable => eventObservable),         // flatten Observable<Observable>
-//             tap(events => console.log('[DEBUG] before map:', events)),
-//             map(events => ({ document, events }))
-//          )
-//       ),
-
-//       // toArray(),
-
-//       catchError(err => {
-//          console.error('[ERROR in pipe]', err)
-//          return of(null)
-//       })
-//    )
-// }
-
-function studentEventsObservable(user_uid: string) {
-   return getUserDocumentObservable({ user_uid }).pipe(
-      tap(documents => console.log('[DEBUG] new document list:', documents)),
+function studentEvents$(user_uid: string) {
+   return userDocument$({ user_uid }).pipe(
       switchMap(documents =>
-         // from: flatten array of documents into single emissions
+         // from: flattens array of documents into single emissions
          from(documents).pipe(
             mergeMap(document =>
-               getUserDocumentEventObservable({ document_uid: document.uid }).pipe(
+               userDocumentEvent$({ document_uid: document.uid }).pipe(
                   map(events => ({ document, events }))
                ),
             ),
             scan((acc, curr) => [...acc, curr], []) // acc is reset on new switchMap
          )
       ),
-
-      catchError(err => {
-         console.error('[ERROR in pipe]', err)
-         return of(null)
-      })
    )
 }
 
-function studentGroupSlotObservable(user_uid: string) {
-   return getUserGroupRelationObservable({ user_uid }).pipe(
-      tap(userGroupRelations => console.log('[DEBUG] new user group relation list:', userGroupRelations)),
+function studentGroupSlot$(user_uid: string) {
+   return getUserGroupRelation$({ user_uid }).pipe(
+      switchMap(relations =>
+         // from: flattens array of relations into single emissions
+         from(relations).pipe(
+            // each relation is replaced by the slot list associated to relation.group_uid
+            mergeMap(relation => groupSlot$({ group_uid: relation.group_uid })),
+            scan((acc, slots) => [...acc, ...slots], []) // acc is reset on new switchMap
+         )
+      )
    )
 }
+
+const slots$ = useObservable(studentGroupSlot$(props.user_uid))
+const evts$ = useObservable(studentEvents$(props.user_uid))
 
 
 onMounted(() => {
-   const userDocumentEventObservable = from(studentEventsObservable(props.user_uid))
+   // // group slots
+   // studentGroupSlot$(props.user_uid).subscribe(slots => {
+   //    console.log('slots', slots)
+   // })
+
+   // user events
+   const userDocumentEventObservable = from(studentEvents$(props.user_uid))
    userDocumentEventObservable.subscribe(eventGroups => {
-      console.log('eventGroups', eventGroups)
       events = []
       for (const eventGroup of eventGroups) {
          for (const ev of eventGroup.events) {
@@ -153,7 +133,6 @@ onUnmounted(async () => {
    }
 })
 
-
 function drawChart(events) {
    const containerWidth = chartContainer.value.clientWidth
    const width = containerWidth
@@ -171,16 +150,8 @@ function drawChart(events) {
    const dateMin = d3.min(allStart)
    const dateMax = d3.max(allEnd)
 
-   // x = d3.scaleTime()
-   //    .domain([d3.timeMonth.offset(dateMin, -0.5), d3.timeMonth.offset(dateMax, 0.5)])
-   //    .range([margin.left, width - margin.right])
-
-   // y = d3.scaleLinear()
-   //    .domain([0, d3.max([...events], d => d.value)]).nice()
-   //    .range([height - margin.bottom, margin.top])
-
    xScale = d3.scaleTime()
-      .domain([subHours(new Date(dateMin), 1), addHours(new Date(dateMax), 1)])
+      .domain([subHours(new Date(dateMin), 24), addHours(new Date(dateMax), 24)])
       .range([margin.left, width - margin.right])
 
    yScale = d3.scaleLinear()
@@ -207,9 +178,9 @@ function drawChart(events) {
          const transform = e.transform
          const zoomScale = e.transform.k
          const newXScale = transform.rescaleX(xScale)
-         // xAxis.call(d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat))
-         // xAxis.call(d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
-         xAxis.call(zoomScale < 5 ? d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) : d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
+         xAxis.call(zoomScale < 5 ?
+            d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
+            d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
          drawBars(newXScale, events)
       })
    )
@@ -240,5 +211,8 @@ function drawBars(xScale, events) {
 
 function displayData(data) {
    console.log('data', data)
+   show.value = true
 }
+
+const show = ref(false)
 </script>
