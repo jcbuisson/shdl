@@ -1,8 +1,7 @@
 <template>
   <div ref="chartContainer"></div>
 
-   <!-- <div>slots: {{ slots }}</div>
-   <div>evts: {{ evts }}</div> -->
+   <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div>
 
    <v-tooltip v-model="show" text="azer">
       <span>Programmatic tooltip</span>
@@ -10,11 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onUnmounted, computed, watch } from 'vue'
 import * as d3 from 'd3'
 import { timeFormatLocale } from 'd3-time-format'
 import { addHours, subHours } from 'date-fns'
-import { Observable, from, map, of, merge } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
@@ -50,10 +49,9 @@ const props = defineProps({
 const chartContainer = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
-let svg, xScale, yScale, xAxis, yAxis, barsGroup
+let svg, xScale, yScale, xAxis, yAxis, slotsGroup, barsGroup
 
 const perimeters = []
-let events = []
 
 
 function studentEvents$(user_uid: string) {
@@ -85,39 +83,51 @@ function studentGroupSlot$(user_uid: string) {
    )
 }
 
-const slots$ = useObservable(studentGroupSlot$(props.user_uid))
-const evts$ = useObservable(studentEvents$(props.user_uid))
+const slots$ = studentGroupSlot$(props.user_uid)
+const eventGroups$ = studentEvents$(props.user_uid)
 
+const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
+
+const userSlotsAndEvents = computed(() => {
+   if (!slotsAndEventGroups.value) return
+   const [userSlots, eventGroups] = slotsAndEventGroups.value
+   console.log('userSlots', userSlots)
+   console.log('eventGroups', eventGroups)
+   const events = []
+   for (const eventGroup of eventGroups) {
+      for (const ev of eventGroup.events) {
+         events.push({
+            name: eventGroup.document.name,
+            start: ev.start,
+            end: ev.end || ev.start,
+            value: 20,
+            color: TYPE2COLOR[ev.type],
+         })
+      }
+   }
+   const slots = []
+   for (const slot of userSlots) {
+      events.push({
+         name: slot.name,
+         start: slot.start,
+         end: slot.end,
+         value: 100,
+         color: 'grey',
+      })
+   }
+   return {slots, events}
+})
+
+watch(() => userSlotsAndEvents.value, async () => {
+   if (!userSlotsAndEvents.value) return
+   drawSlots(userSlotsAndEvents.value.slots)
+   drawChart(userSlotsAndEvents.value.events)
+})
 
 onMounted(() => {
-   // // group slots
-   // studentGroupSlot$(props.user_uid).subscribe(slots => {
-   //    console.log('slots', slots)
-   // })
-
-   // user events
-   const userDocumentEventObservable = from(studentEvents$(props.user_uid))
-   userDocumentEventObservable.subscribe(eventGroups => {
-      events = []
-      for (const eventGroup of eventGroups) {
-         for (const ev of eventGroup.events) {
-            events.push({
-               document,
-               start: ev.start,
-               end: ev.end || ev.start,
-               value: 20,
-               color: TYPE2COLOR[ev.type],
-            })
-         }
-      }
-      console.log('events', events)
-      drawChart(events)
-   })
-
-
 
    const resizeObserver = new ResizeObserver(() => {
-      drawChart(events)
+      drawChart(userSlotsAndEvents.value)
    })
 
    resizeObserver.observe(chartContainer.value)
@@ -133,7 +143,7 @@ onUnmounted(async () => {
    }
 })
 
-function drawChart(events) {
+function drawChart(events, slots) {
    const containerWidth = chartContainer.value.clientWidth
    const width = containerWidth
    const height = 400
@@ -166,8 +176,10 @@ function drawChart(events) {
       .attr('transform', `translate(${margin.left},0)`)
       .call(d3.axisLeft(yScale))
 
+   slotsGroup = svg.append('g').attr('class', 'main-slots')
    barsGroup = svg.append('g').attr('class', 'main-bars')
 
+   drawSlots(xScale, slots)
    drawBars(xScale, events)
 
    svg.call(
@@ -176,11 +188,12 @@ function drawChart(events) {
       .translateExtent([[margin.left, 0], [width - margin.right, height]])
       .on('zoom', (e) => {
          const transform = e.transform
-         const zoomScale = e.transform.k
          const newXScale = transform.rescaleX(xScale)
+         const zoomScale = e.transform.k
          xAxis.call(zoomScale < 5 ?
             d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
             d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
+         drawSlots(newXScale, slots)
          drawBars(newXScale, events)
       })
    )
@@ -194,11 +207,8 @@ function drawBars(xScale, events) {
       .append('rect')
       .merge(eventRects)
       .attr('x', d => xScale(new Date(d.start)))
-      .attr('width', d => {
-         const w = Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start)))
-         return w
-      })
       .attr('y', d => yScale(d.value)) // or use a fixed row layout like `margin.top + i * (barHeight + spacing)`
+      .attr('width', d => Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start))))
       .attr('height', d => yScale(0) - yScale(d.value))
       .attr('fill', d => d.color)
       // .on('mouseover', (event, d) => showTooltip(event, d))
@@ -207,6 +217,10 @@ function drawBars(xScale, events) {
       .on('click', (event, d) => displayData(d))
 
    eventRects.exit().remove()
+}
+
+function drawSlots(xScale, slots) {
+
 }
 
 function displayData(data) {
