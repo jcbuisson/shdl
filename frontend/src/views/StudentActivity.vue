@@ -51,8 +51,6 @@ const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
 let svg, xScale, yScale, xAxis, yAxis, slotsGroup, eventsGroup
 
-const perimeters = []
-
 
 function studentEvents$(user_uid: string) {
    return userDocument$({ user_uid }).pipe(
@@ -116,12 +114,14 @@ const userSlotsAndEvents = computed(() => {
    return {slots, events}
 })
 
+// redraw chart whenever `userSlotsAndEvents` changes
 watch(() => userSlotsAndEvents.value, async () => {
    if (!userSlotsAndEvents.value) return
    drawChart(userSlotsAndEvents.value.slots, userSlotsAndEvents.value.events)
 })
 
-onMounted(() => {
+
+onMounted(async () => {
 
    const resizeObserver = new ResizeObserver(() => {
       if (!userSlotsAndEvents.value) return
@@ -135,11 +135,6 @@ onMounted(() => {
    })
 })
 
-onUnmounted(async () => {
-   for (const perimeter of perimeters) {
-      await perimeter.remove()
-   }
-})
 
 function drawChart(slots, events) {
    const containerWidth = chartContainer.value.clientWidth
@@ -182,7 +177,7 @@ function drawChart(slots, events) {
 
    svg.call(
       d3.zoom()
-      .scaleExtent([1, 50])
+      .scaleExtent([1, 100])
       .translateExtent([[margin.left, 0], [width - margin.right, height]])
       .on('zoom', (e) => {
          const transform = e.transform
@@ -247,7 +242,7 @@ function drawSlots(xScale, slots, zoomScale) {
       .attr('y', d => yScale(d.value) + (zoomScale < 5 ? 12 : 20))
       .text(d => d.name)
       .attr('fill', 'white')
-      .attr('font-size', zoomScale < 5 ? '10px' : '16px')
+      .attr('font-size', zoomScale < 5 ? '10px' : '13px')
 
    slotLabels.exit().remove()
 }

@@ -66,10 +66,10 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { addPerimeter as addUserPerimeter, getObservable as user$, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
+import { getObservable as user$, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
 import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
 import { synchronizeAll as synchronizeAllGroupSlot } from '/src/use/useGroupSlot'
-import { getObservable as userTabRelation$, addPerimeter as addUserTabRelationPerimeter, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
+import { getObservable as userTabRelation$, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
 import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { synchronizeAll as synchronizeAllUserDocument } from '/src/use/useUserDocument'
 import { synchronizeAll as synchronizeAllUserDocumentEvent } from '/src/use/useUserDocumentEvent'
@@ -106,7 +106,6 @@ app.addConnectListener(async () => {
 })
 
 let interval
-const perimeters = []
 
 const userTabs = useObservable(userTabRelation$({ user_uid: props.signedinUid }).pipe(
    map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
@@ -123,28 +122,17 @@ const route = useRoute()
 const routeTabUid = ref()
 
 onMounted(async () => {
-   // sign-in user
-   perimeters.push(await addUserPerimeter({ uid: props.signedinUid }))
-   // tab relations of user
-   perimeters.push(await addUserTabRelationPerimeter({ user_uid: props.signedinUid }))
-
    const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
    if (tabFromRoute) {
       routeTabUid.value = tabFromRoute.uid
    } else {
-      router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
+      // router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
+      router.push(`/home/${props.signedinUid}`)
    }
 
    interval = setInterval(() => {
       if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
    }, 30000)
-})
-
-onUnmounted(async () => {
-   for (const perimeter of perimeters) {
-      await perimeter.remove()
-   }
-   clearInterval(interval)
 })
 
 async function logout() {

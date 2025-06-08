@@ -1,4 +1,5 @@
 <template>
+   {{ width + 'x' + height }}
    <v-card>
       <v-form>
          <v-container>
@@ -104,6 +105,10 @@ import { tabs } from '/src/use/useTabs'
 
 import 'jcb-upload'
 import { app } from '/src/client-app.js'
+
+
+import { useWindowResize } from '/src/use/useWindowResize'
+const { width, height } = useWindowResize()
 
 
 const props = defineProps({

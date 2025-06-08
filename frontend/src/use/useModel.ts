@@ -71,6 +71,13 @@ export default function(dbName, modelName, fields) {
    }
 
    function getObservable(where) {
+
+      addSynchroWhere(where).then((isNew) => {
+         if (isNew && isConnected.value) {
+            synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
+         }
+      })
+
       const predicate = wherePredicate(where)
       return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
    }
