@@ -32,15 +32,17 @@
             </template>
 
             <template v-slot:extension>
-               <v-tabs slider-color="indigo" v-model="routeTabIndex">
-                  <v-tab
-                     :to="{ path: `/home/${signedinUid}/${tab.uid}` }"
-                     router
-                     v-for="tab in userTabs"
-                     :key="tab.uid"
-                  >
-                     {{ tab.name }}
-                  </v-tab>
+               <v-tabs slider-color="indigo" v-model="routeTabUid">
+                  <template v-for="tab in userTabs" :key="tab.uid">
+                     <v-tab
+                        :to="{ path: `/home/${signedinUid}/${tab.uid}` }"
+                        router
+                        :value="tab.uid"
+                        
+                     >
+                        {{ tab.name }}
+                     </v-tab>
+                  </template>
                </v-tabs>
             </template>
          </v-toolbar>
@@ -87,9 +89,6 @@ const props = defineProps({
    },
 })
 
-const route = useRoute()
-const routeTabIndex = ref()
-
 const isAuthenticated = computed(() => !!expiresAt.value)
 
 // synchronize when connection starts or restarts
@@ -120,15 +119,18 @@ const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 
+const route = useRoute()
+const routeTabUid = ref()
+
 onMounted(async () => {
    // sign-in user
    perimeters.push(await addUserPerimeter({ uid: props.signedinUid }))
    // tab relations of user
    perimeters.push(await addUserTabRelationPerimeter({ user_uid: props.signedinUid }))
 
-   const indexFromRoute = tabs.findIndex(tab => route.path.includes(tab.uid))
-   if (indexFromRoute >= 0) {
-      routeTabIndex.value = indexFromRoute
+   const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
+   if (tabFromRoute) {
+      routeTabUid.value = tabFromRoute.uid
    } else {
       router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
    }
