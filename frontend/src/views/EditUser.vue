@@ -1,5 +1,4 @@
 <template>
-   {{ width + 'x' + height }}
    <v-card>
       <v-form>
          <v-container>
@@ -92,13 +91,16 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { useObservable } from '@vueuse/rxjs'
+import { map } from 'rxjs'
 
-import { addPerimeter as addUserPerimeter, update as updateUser } from '/src/use/useUser'
-import { addPerimeter as addGroupPerimeter } from '/src/use/useGroup'
-import { addPerimeter as addUserGroupRelationPerimeter, groupDifference, create as createUserGroupRelation, remove as removeUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { addPerimeter as addUserTabRelationPerimeter, tabDifference, create as createUserTabRelation, remove as removeUserTabRelation } from '/src/use/useUserTabRelation'
+import { useUser3 } from '/src/use/useUser3'
+import { useGroup3 } from '/src/use/useGroup3'
+
+import { getObservable as userGroupRelations$, groupDifference, create as createUserGroupRelation, remove as removeUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { getObservable as userTabRelation$, tabDifference, create as createUserTabRelation, remove as removeUserTabRelation } from '/src/use/useUserTabRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { tabs } from '/src/use/useTabs'
@@ -106,9 +108,8 @@ import { tabs } from '/src/use/useTabs'
 import 'jcb-upload'
 import { app } from '/src/client-app.js'
 
-
-import { useWindowResize } from '/src/use/useWindowResize'
-const { width, height } = useWindowResize()
+const { getObservable: users$, update: updateUser } = useUser3()
+const { getObservable: groups$ } = useGroup3()
 
 
 const props = defineProps({
@@ -122,40 +123,12 @@ const emailRules = [
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 
-const user = ref()
 
-let groupListPerimeter
-let userPerimeter
-let userTabRelationPerimeter
-let userGroupRelationPerimeter
+const user = useObservable(users$({ uid: props.user_uid}).pipe(
+   map(userList => userList[0])
+))
 
-onMounted(async () => {
-   groupListPerimeter = await addGroupPerimeter({}, (list) => groupList.value = list)
-})
-
-onUnmounted(async () => {
-   await groupListPerimeter.remove()
-   userPerimeter && userPerimeter.remove()
-   userTabRelationPerimeter && userTabRelationPerimeter.remove()
-   userGroupRelationPerimeter && userGroupRelationPerimeter.remove()
-})
-
-watch(() => props.user_uid, async (user_uid) => {
-   if (userPerimeter) await userPerimeter.remove()
-   userPerimeter = await addUserPerimeter({ uid: user_uid }, ([user_]) => {
-      user.value = user_
-   })
-
-   if (userTabRelationPerimeter) userTabRelationPerimeter.remove()
-   userTabRelationPerimeter = await addUserTabRelationPerimeter({ user_uid }, relationList => {
-      userTabs.value = relationList.map(relation => relation.tab)
-   })
-
-   if (userGroupRelationPerimeter) await userGroupRelationPerimeter.remove()
-   userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid }, (relationList) => {
-      userGroups.value = relationList.map(relation => relation.group_uid)
-   })
-}, { immediate: true })
+const groupList = useObservable(groups$({}))
 
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////
@@ -174,7 +147,9 @@ const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 //////////////////////        USER-TAB RELATIONS        //////////////////////
 
-const userTabs = ref([])
+const userTabs = useObservable(userTabRelation$({ user_uid: props.user_uid }).pipe(
+   map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
+))
 
 const onTabChange = async (tabs) => {
    try {
@@ -194,8 +169,9 @@ const onTabChange = async (tabs) => {
 
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
 
-const userGroups = ref([])
-const groupList = ref([])
+const userGroups = useObservable(userGroupRelations$({ user_uid: props.user_uid }).pipe(
+   map(relationList => relationList.map(relation => relation.group_uid))
+))
 
 const onGroupChange = async (groupUIDs) => {
    try {

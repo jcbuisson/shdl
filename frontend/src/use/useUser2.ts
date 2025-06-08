@@ -8,7 +8,11 @@ import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, s
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 
-export default function(dbName, modelName, fields) {
+export function useUser2() {
+
+   const dbName = import.meta.env.VITE_APP_USER_IDB
+   const modelName = 'user'
+   const fields = ['email', 'firstname', 'lastname']
 
    const db = new Dexie(dbName)
 
@@ -155,7 +159,7 @@ export default function(dbName, modelName, fields) {
 
    // Automatically clean up when the component using this composable unmounts
    tryOnScopeDispose(() => {
-      console.log('CLEANING3')
+      console.log('CLEANING')
    })
 
    return {
