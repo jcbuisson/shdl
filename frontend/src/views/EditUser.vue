@@ -96,7 +96,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
-import { useUser3 } from '/src/use/useUser3'
+import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
@@ -108,7 +108,7 @@ import { tabs } from '/src/use/useTabs'
 import 'jcb-upload'
 import { app } from '/src/client-app.js'
 
-const { getObservable: users$, update: updateUser } = useUser3()
+const { getObservable: users$, update: updateUser } = useUser()
 const { getObservable: groups$ } = useGroup()
 const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation()
 const { getObservable: userGroupRelations$, groupDifference, create: createUserGroupRelation, remove: removeUserGroupRelation } = useUserGroupRelation()

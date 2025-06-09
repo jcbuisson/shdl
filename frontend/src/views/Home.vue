@@ -66,7 +66,7 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-import { useUser3, getFullname } from '/src/use/useUser3'
+import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
@@ -83,7 +83,7 @@ import GithubLink from '/src/components/GithubLink.vue'
 import OnlineButton from '/src/components/OnlineButton.vue'
 
 
-const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser3()
+const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser()
 const { synchronizeAll: synchronizeAllGroup } = useGroup()
 const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot()
 const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation()

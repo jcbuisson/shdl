@@ -2,7 +2,7 @@
 import useModel from '/src/use/useModel'
 
 
-export function useUser3() {
+export function useUser() {
    const model = useModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
 
    // special case of signin: create/update record of user

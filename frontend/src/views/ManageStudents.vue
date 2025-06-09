@@ -47,7 +47,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { useUser3 } from '/src/use/useUser3'
+import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { selectedUser } from '/src/use/useSelectedUser'
@@ -56,7 +56,7 @@ import { extendExpiration } from "/src/use/useAuthentication"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { addPerimeter: addUserPerimeter } = useUser3()
+const { addPerimeter: addUserPerimeter } = useUser()
 const { addPerimeter: addGroupPerimeter } = useGroup()
 const { addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
 
