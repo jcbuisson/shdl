@@ -77,12 +77,14 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 import { uid as uid16 } from 'uid'
 
-import { addPerimeter as addUserDocumentPerimeter, create as createUserDocument, remove as removeUserDocument } from '/src/use/useUserDocument'
+import { useUserDocument3 } from '/src/use/useUserDocument3'
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
+
+const { addPerimeter: addUserDocumentPerimeter, create: createUserDocument, remove: removeUserDocument } = useUserDocument3()
 
 
 const props = defineProps({

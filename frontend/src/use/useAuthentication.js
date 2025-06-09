@@ -7,7 +7,7 @@ import { useGroup3 } from '/src/use/useGroup3'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
 import { useUserGroupRelation3 } from '/src/use/useUserGroupRelation3'
-import { reset as resetUseUserDocument } from '/src/use/useUserDocument'
+import { useUserDocument3 } from '/src/use/useUserDocument3'
 
 import router from '/src/router'
 
@@ -16,6 +16,7 @@ const { reset: resetUseGroup } = useGroup3()
 const { reset: resetUseGroupSlot } = useGroupSlot3()
 const { reset: resetUseUserTabRelation } = useUserTabRelation3()
 const { reset: resetUseUserGroupRelation } = useUserGroupRelation3()
+const { reset: resetUseUserDocument } = useUserDocument3()
 
 
 export async function clearCaches() {

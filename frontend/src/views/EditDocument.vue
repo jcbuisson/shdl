@@ -14,12 +14,14 @@
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
-import { uid as uid16 } from 'uid'
 
 import { myLang } from '/src/lib/mylang.js'
-import { addPerimeter as addUserDocumentPerimeter, update as updateUserDocument } from '/src/use/useUserDocument'
-import { create as createUserDocumentEvent, update as updateUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-import { app } from '/src/client-app.js'
+import { useUserDocument3 } from '/src/use/useUserDocument3'
+import { useUserDocumentEvent3 } from '/src/use/useUserDocumentEvent3'
+
+const { addPerimeter: addUserDocumentPerimeter, update: updateUserDocument } = useUserDocument3()
+const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent3()
+
 
 const props = defineProps({
    signedinUid: {

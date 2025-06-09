@@ -70,12 +70,11 @@ import { useUser3, getFullname } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
-import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { synchronizeAll as synchronizeAllUserDocument } from '/src/use/useUserDocument'
-import { synchronizeAll as synchronizeAllUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+import { useUserGroupRelation3 } from '/src/use/useUserGroupRelation3'
+import { useUserDocument3 } from '/src/use/useUserDocument3'
+import { useUserDocumentEvent3 } from '/src/use/useUserDocumentEvent3'
 
 import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
 import router from '/src/router'
@@ -88,6 +87,9 @@ const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser3()
 const { synchronizeAll: synchronizeAllGroup } = useGroup3()
 const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot3()
 const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation3()
+const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation3()
+const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument3()
+const { synchronizeAll: synchronizeAllUserDocumentEvent } = useUserDocumentEvent3()
 
 
 const props = defineProps({
