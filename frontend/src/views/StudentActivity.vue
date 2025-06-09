@@ -19,12 +19,13 @@ import { useObservable } from '@vueuse/rxjs'
 
 import { useUserDocument3 } from '/src/use/useUserDocument3'
 import { useUserDocumentEvent3 } from '/src/use/useUserDocumentEvent3'
-import { getObservable as userGroupRelation$ } from '/src/use/useUserGroupRelation'
+import { useUserGroupRelation3 } from '/src/use/useUserGroupRelation3'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 
 const { getObservable: userDocument$ } = useUserDocument3()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent3()
 const { getObservable: groupSlot$ } = useGroupSlot3()
+const { getObservable: userGroupRelation$ } = useUserGroupRelation3()
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
