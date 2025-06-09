@@ -16,11 +16,11 @@ import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
 
 import { myLang } from '/src/lib/mylang.js'
-import { useUserDocument3 } from '/src/use/useUserDocument3'
-import { useUserDocumentEvent3 } from '/src/use/useUserDocumentEvent3'
+import { useUserDocument } from '/src/use/useUserDocument'
+import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-const { addPerimeter: addUserDocumentPerimeter, update: updateUserDocument } = useUserDocument3()
-const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent3()
+const { addPerimeter: addUserDocumentPerimeter, update: updateUserDocument } = useUserDocument()
+const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
 
 
 const props = defineProps({

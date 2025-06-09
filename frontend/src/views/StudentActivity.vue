@@ -17,15 +17,15 @@ import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
-import { useUserDocument3 } from '/src/use/useUserDocument3'
-import { useUserDocumentEvent3 } from '/src/use/useUserDocumentEvent3'
-import { useUserGroupRelation3 } from '/src/use/useUserGroupRelation3'
+import { useUserDocument } from '/src/use/useUserDocument'
+import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 
-const { getObservable: userDocument$ } = useUserDocument3()
-const { getObservable: userDocumentEvent$ } = useUserDocumentEvent3()
+const { getObservable: userDocument$ } = useUserDocument()
+const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlot$ } = useGroupSlot3()
-const { getObservable: userGroupRelation$ } = useUserGroupRelation3()
+const { getObservable: userGroupRelation$ } = useUserGroupRelation()
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
