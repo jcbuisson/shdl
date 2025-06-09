@@ -2,7 +2,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { app, isConnected } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
-import { reset as resetUseUser, put as putUser } from '/src/use/useUser'
+import { useUser3 } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
@@ -11,7 +11,7 @@ import { useUserDocument3 } from '/src/use/useUserDocument3'
 
 import router from '/src/router'
 
-// const { reset: resetUseUser } = useUser3()
+const { reset: resetUseUser, putUser } = useUser3()
 const { reset: resetUseGroup } = useGroup3()
 const { reset: resetUseGroupSlot } = useGroupSlot3()
 const { reset: resetUseUserTabRelation } = useUserTabRelation3()
