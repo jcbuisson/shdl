@@ -54,7 +54,7 @@ import { useRoute} from 'vue-router'
 
 import { useUser3, getFullname } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
-import { addPerimeter as addUserGroupRelationPerimeter, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
+import { useUserGroupRelation3 } from '/src/use/useUserGroupRelation3'
 import { selectedUser } from '/src/use/useSelectedUser'
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
@@ -62,8 +62,9 @@ import { extendExpiration } from "/src/use/useAuthentication"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { addPerimeter: addUserPerimeter } = useUser3()
+const { addPerimeter: addUserPerimeter, remove: removeUser } = useUser3()
 const { addPerimeter: addGroupPerimeter } = useGroup3()
+const { addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation3()
 
 
 const props = defineProps({

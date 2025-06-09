@@ -1,6 +1,7 @@
 
 import useModel from '/src/use/useModel'
 
+
 export function useUserTabRelation3() {
 
    const model = useModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
@@ -10,6 +11,7 @@ export function useUserTabRelation3() {
 
    async function tabDifference(user_uid, newTabs) {
       const db = model.db
+
       const toAddTabs = []
       const toRemoveRelationUIDs = []
       // collect active user-group relations with `user_uid`

@@ -155,7 +155,7 @@ export default function(dbName, modelName, fields) {
 
    // Automatically clean up when the component using this composable unmounts
    tryOnScopeDispose(() => {
-      console.log('CLEANING3')
+      console.log('CLEANING3', dbName, modelName)
    })
 
    return {
