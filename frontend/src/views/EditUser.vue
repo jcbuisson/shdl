@@ -98,7 +98,7 @@ import { map } from 'rxjs'
 
 import { useUser3 } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
-import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 
 import { extendExpiration } from '/src/use/useAuthentication'
@@ -110,7 +110,7 @@ import { app } from '/src/client-app.js'
 
 const { getObservable: users$, update: updateUser } = useUser3()
 const { getObservable: groups$ } = useGroup3()
-const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation3()
+const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation()
 const { getObservable: userGroupRelations$, groupDifference, create: createUserGroupRelation, remove: removeUserGroupRelation } = useUserGroupRelation()
 
 

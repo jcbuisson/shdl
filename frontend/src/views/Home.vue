@@ -69,7 +69,7 @@ import { restartApp, clearCaches } from "/src/use/useAuthentication"
 import { useUser3, getFullname } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
 import { useGroupSlot3 } from '/src/use/useGroupSlot3'
-import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
@@ -86,7 +86,7 @@ import OnlineButton from '/src/components/OnlineButton.vue'
 const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser3()
 const { synchronizeAll: synchronizeAllGroup } = useGroup3()
 const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot3()
-const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation3()
+const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation()
 const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation()
 const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument()
 const { synchronizeAll: synchronizeAllUserDocumentEvent } = useUserDocumentEvent()

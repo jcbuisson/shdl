@@ -2,7 +2,7 @@
 import useModel from '/src/use/useModel'
 
 
-export function useUserTabRelation3() {
+export function useUserTabRelation() {
 
    const model = useModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
 
