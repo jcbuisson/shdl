@@ -89,10 +89,10 @@ import { ref, onUnmounted, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-import { useGroupSlot3 } from '/src/use/useGroupSlot3'
+import { useGroupSlot } from '/src/use/useGroupSlot'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { addPerimeter: addGroupSlotPerimeter, create: createGroupSlot, remove: removeGroupSlot } = useGroupSlot3()
+const { addPerimeter: addGroupSlotPerimeter, create: createGroupSlot, remove: removeGroupSlot } = useGroupSlot()
 
 
 const props = defineProps({

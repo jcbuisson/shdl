@@ -22,13 +22,13 @@
 <script setup>
 import { ref } from 'vue'
 
-import { useGroup3 } from '/src/use/useGroup3'
+import { useGroup } from '/src/use/useGroup'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { create: createGroup } = useGroup3()
+const { create: createGroup } = useGroup()
 
 const props = defineProps({
    signedinUid: {

@@ -67,8 +67,8 @@ import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
 import { useUser3, getFullname } from '/src/use/useUser3'
-import { useGroup3 } from '/src/use/useGroup3'
-import { useGroupSlot3 } from '/src/use/useGroupSlot3'
+import { useGroup } from '/src/use/useGroup'
+import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
@@ -84,8 +84,8 @@ import OnlineButton from '/src/components/OnlineButton.vue'
 
 
 const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser3()
-const { synchronizeAll: synchronizeAllGroup } = useGroup3()
-const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot3()
+const { synchronizeAll: synchronizeAllGroup } = useGroup()
+const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot()
 const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation()
 const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation()
 const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument()

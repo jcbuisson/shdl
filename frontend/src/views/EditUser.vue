@@ -97,7 +97,7 @@ import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
 import { useUser3 } from '/src/use/useUser3'
-import { useGroup3 } from '/src/use/useGroup3'
+import { useGroup } from '/src/use/useGroup'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 
@@ -109,7 +109,7 @@ import 'jcb-upload'
 import { app } from '/src/client-app.js'
 
 const { getObservable: users$, update: updateUser } = useUser3()
-const { getObservable: groups$ } = useGroup3()
+const { getObservable: groups$ } = useGroup()
 const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation()
 const { getObservable: userGroupRelations$, groupDifference, create: createUserGroupRelation, remove: removeUserGroupRelation } = useUserGroupRelation()
 

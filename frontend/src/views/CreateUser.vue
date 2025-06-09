@@ -82,7 +82,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 import { addPerimeter as addUserPerimeter, create as createUser } from '/src/use/useUser.js'
-import { useGroup3 } from '/src/use/useGroup3'
+import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { tabs } from '/src/use/useTabs'
 
@@ -90,7 +90,7 @@ import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import 'jcb-upload'
 
-const { addPerimeter: addGroupPerimeter } = useGroup3()
+const { addPerimeter: addGroupPerimeter } = useGroup()
 const { create: createUserGroupRelation, remove: removeUserGroupRelation, groupDifference } = useUserGroupRelation()
 
 

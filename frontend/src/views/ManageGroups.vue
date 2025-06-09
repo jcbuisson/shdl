@@ -33,14 +33,14 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { useGroup3 } from '/src/use/useGroup3'
+import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { addPerimeter: addGroupPerimeter, remove: removeGroup } = useGroup3()
+const { addPerimeter: addGroupPerimeter, remove: removeGroup } = useGroup()
 const { addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
 
 
