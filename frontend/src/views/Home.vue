@@ -66,16 +66,13 @@ import { app, isConnected, connect, disconnect } from '/src/client-app.js'
 import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { restartApp, clearCaches } from "/src/use/useAuthentication"
-// import { getObservable as user$, synchronizeAll as synchronizeAllUser, getFullname } from '/src/use/useUser'
+import { useUser3, getFullname } from '/src/use/useUser3'
 import { synchronizeAll as synchronizeAllGroup } from '/src/use/useGroup'
-import { synchronizeAll as synchronizeAllGroupSlot } from '/src/use/useGroupSlot'
+import { useGroupSlot3 } from '/src/use/useGroupSlot3'
 import { getObservable as userTabRelation$, synchronizeAll as synchronizeAllUserTabRelation } from '/src/use/useUserTabRelation'
 import { synchronizeAll as synchronizeAllUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { synchronizeAll as synchronizeAllUserDocument } from '/src/use/useUserDocument'
 import { synchronizeAll as synchronizeAllUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-
-import { useUser3, getFullname } from '/src/use/useUser3'
-
 
 import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
@@ -88,6 +85,7 @@ import OnlineButton from '/src/components/OnlineButton.vue'
 
 
 const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser3()
+const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot3()
 
 
 const props = defineProps({

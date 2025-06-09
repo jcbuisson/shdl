@@ -23,10 +23,12 @@
 import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
-import { addPerimeter as addGroupPerimeter, update as updateGroup } from '/src/use/useGroup'
+import { useGroup3 } from '/src/use/useGroup3'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 import GroupSlots from '/src/views/GroupSlots.vue'
+
+const { addPerimeter: addGroupPerimeter, update: updateGroup } = useGroup3()
 
 
 const props = defineProps({

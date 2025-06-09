@@ -98,9 +98,9 @@ import { map } from 'rxjs'
 
 import { useUser3 } from '/src/use/useUser3'
 import { useGroup3 } from '/src/use/useGroup3'
+import { useUserTabRelation3 } from '/src/use/useUserTabRelation3'
 
 import { getObservable as userGroupRelations$, groupDifference, create as createUserGroupRelation, remove as removeUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { getObservable as userTabRelation$, tabDifference, create as createUserTabRelation, remove as removeUserTabRelation } from '/src/use/useUserTabRelation'
 import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { tabs } from '/src/use/useTabs'
@@ -110,6 +110,7 @@ import { app } from '/src/client-app.js'
 
 const { getObservable: users$, update: updateUser } = useUser3()
 const { getObservable: groups$ } = useGroup3()
+const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation3()
 
 
 const props = defineProps({

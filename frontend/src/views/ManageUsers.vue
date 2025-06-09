@@ -52,7 +52,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { addPerimeter as addUserPerimeter, getFullname, remove as removeUser } from '/src/use/useUser'
+import { useUser3, getFullname } from '/src/use/useUser3'
 import { addPerimeter as addGroupPerimeter } from '/src/use/useGroup'
 import { addPerimeter as addUserGroupRelationPerimeter, remove as removeGroupRelation } from '/src/use/useUserGroupRelation'
 import { selectedUser } from '/src/use/useSelectedUser'
@@ -61,6 +61,9 @@ import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
+
+const { addPerimeter: addUserPerimeter } = useUser3()
+
 
 const props = defineProps({
    signedinUid: {
