@@ -1,4 +1,5 @@
 <template>
+   {{ userList2 }}
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -51,6 +52,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
+import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
+import { mergeMap, switchMap, concatMap, scan, tap, catchError } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
 
 import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
@@ -62,9 +66,9 @@ import { extendExpiration } from "/src/use/useAuthentication"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { addPerimeter: addUserPerimeter, remove: removeUser } = useUser()
-const { addPerimeter: addGroupPerimeter } = useGroup()
-const { addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
+const { getObservable: users$, addPerimeter: addUserPerimeter, remove: removeUser } = useUser()
+const { getObservable: groups$, addPerimeter: addGroupPerimeter } = useGroup()
+const { getObservable: userGroupRelations$, addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
 
 
 const props = defineProps({
@@ -103,6 +107,38 @@ onUnmounted(async () => {
    }
 })
 
+const userList22 = useObservable(users$({}).pipe(
+   switchMap(userList =>
+      from(userList).pipe(
+         mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
+            tap(x1 => console.log('x1', x1)),
+            mergeMap(relationList => 
+               from(relationList).pipe(
+                  mergeMap(relation => groups$({ uid: relation.group_uid})),
+               )
+            ),
+            tap(x2 => console.log('x2', x2)),
+            scan((acc, curr) => [...acc, curr], []),
+            tap(x3 => console.log('x3', x3)),
+            map(groups => ({ user, groups }))
+         )),
+         tap(y => console.log('y', y)),
+      ),
+   )
+))
+
+const userList2 = useObservable(users$({}).pipe(
+   concatMap(userList =>
+      from(userList).pipe(
+         mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
+            map(relations => ({ user, relations }))
+         ))
+      )
+   ),
+   scan((acc, curr) => [...acc, curr], []),
+))
+
+
 async function addUser() {
    router.push(`/home/${props.signedinUid}/users/create`)
 }
@@ -117,6 +153,7 @@ watch(() => [route.path, userList.value], async () => {
       selectedUser.value = userList.value.find(user => user.uid === user_uid)
    }
 }, { immediate: true })
+
 
 function selectUser(user) {
    extendExpiration()

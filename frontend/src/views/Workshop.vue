@@ -76,6 +76,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 import { uid as uid16 } from 'uid'
+import { useObservable } from '@vueuse/rxjs'
+import { map } from 'rxjs'
 
 import { useUserDocument } from '/src/use/useUserDocument'
 import router from '/src/router'
@@ -84,7 +86,7 @@ import { app } from '/src/client-app.js'
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { addPerimeter: addUserDocumentPerimeter, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
+const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
 
 
 const props = defineProps({
@@ -110,19 +112,9 @@ const types = [
 
 const filter = ref('')
 
-const documentList = ref([])
-
-let userDocumentPerimeter
-
-onMounted(async () => {
-   userDocumentPerimeter = await addUserDocumentPerimeter({ user_uid: props.signedinUid }, async list => {
-      documentList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
-   })
-})
-
-onUnmounted(async () => {
-   await userDocumentPerimeter.remove()
-})
+const documentList = useObservable(documents$({user_uid: props.signedinUid}).pipe(
+   map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
+))
 
 const addModuleDialog = ref(false)
 const data = ref({})
@@ -145,7 +137,6 @@ async function createDocument() {
       type: data.value.type,
       text: `module ${data.value.name}()\nend module`,
    })
-   console.log('createdDocument', createdDocument)
    const uid = uid16(16)
    app.service('user_document_event').create({
       data: {

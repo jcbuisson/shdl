@@ -79,9 +79,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
+import { useObservable } from '@vueuse/rxjs'
 
-import { addPerimeter as addUserPerimeter, create as createUser } from '/src/use/useUser.js'
+import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { tabs } from '/src/use/useTabs'
@@ -90,7 +91,8 @@ import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import 'jcb-upload'
 
-const { addPerimeter: addGroupPerimeter } = useGroup()
+const { getObservable: users$, create: createUser } = useUser()
+const { getObservable: groups$ } = useGroup()
 const { create: createUserGroupRelation, remove: removeUserGroupRelation, groupDifference } = useUserGroupRelation()
 
 
@@ -108,31 +110,17 @@ const emailRules = [
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 
-const groupList = ref([])
+const groupList = useObservable(groups$({}))
 
-const perimeters = []
-
-onMounted(async () => {
-   perimeters.push(await addGroupPerimeter({}, async list => {
-      groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
-   }))
-
-})
-
-onUnmounted(async () => {
-   for (const perimeter of perimeters) {
-      await perimeter.remove()
-   }
-})
+// make sure all users are eventually synchronized, to allow email check
+const allUsers = useObservable(users$({}))
 
 async function submit() {
    try {
       // check if email is not already used
-      const userPerimeter = await addUserPerimeter({ email: data.value.email })
-      perimeters.push(userPerimeter)
-      const [other] = await userPerimeter.currentValue()
+      const other = allUsers.value.find(user => user.email === data.value.email)
       if (other) {
-         alert(`Il existe déjà un utilisateur avec cet email : ${data.value.email}`)
+         alert(`Il existe déjà un utilisateur "${getFullname(other)}" avec cet email : ${data.value.email}`)
       } else {
          const user = await createUser({
             email: data.value.email,
