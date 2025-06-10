@@ -49,7 +49,7 @@
 </template>
 
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
 import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
@@ -107,35 +107,49 @@ onUnmounted(async () => {
    }
 })
 
-const userList22 = useObservable(users$({}).pipe(
-   switchMap(userList =>
-      from(userList).pipe(
-         mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
-            tap(x1 => console.log('x1', x1)),
-            mergeMap(relationList => 
-               from(relationList).pipe(
-                  mergeMap(relation => groups$({ uid: relation.group_uid})),
-               )
-            ),
-            tap(x2 => console.log('x2', x2)),
-            scan((acc, curr) => [...acc, curr], []),
-            tap(x3 => console.log('x3', x3)),
-            map(groups => ({ user, groups }))
-         )),
-         tap(y => console.log('y', y)),
-      ),
-   )
-))
+// const userList22 = useObservable(users$({}).pipe(
+//    switchMap(userList =>
+//       from(userList).pipe(
+//          mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
+//             tap(x1 => console.log('x1', x1)),
+//             mergeMap(relationList => 
+//                from(relationList).pipe(
+//                   mergeMap(relation => groups$({ uid: relation.group_uid})),
+//                )
+//             ),
+//             tap(x2 => console.log('x2', x2)),
+//             scan((acc, curr) => [...acc, curr], []),
+//             tap(x3 => console.log('x3', x3)),
+//             map(groups => ({ user, groups }))
+//          )),
+//          tap(y => console.log('y', y)),
+//       ),
+//    )
+// ))
 
 const userList2 = useObservable(users$({}).pipe(
-   concatMap(userList =>
-      from(userList).pipe(
+   tap(x => console.log('userList changed')),
+   mergeMap(users =>
+      from(users).pipe(
          mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
             map(relations => ({ user, relations }))
          ))
       )
    ),
-   scan((acc, curr) => [...acc, curr], []),
+   // Use scan to maintain a single, non-duplicate list of users with their relations
+   scan((acc, curr) => {
+      const existingIndex = acc.findIndex(item => item.user.uid === curr.user.uid);
+      if (existingIndex > -1) {
+         // If user already exists, update it
+         const newAcc = [...acc];
+         newAcc[existingIndex] = curr;
+         return newAcc;
+      } else {
+         // If user is new, add it
+         const newAcc = [...acc, curr];
+         return newAcc;
+      }
+   }, []), // Initial empty array for the accumulator
 ))
 
 
