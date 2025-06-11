@@ -1,4 +1,7 @@
 
+import { of, combineLatest } from 'rxjs'
+
+
 export function sortedJson(obj) {
    return JSON.stringify(obj, Object.keys(obj).sort())
 }
@@ -25,5 +28,26 @@ export class Mutex {
       } else {
          this.locked = false;
       }
+   }
+}
+
+
+// export function guardCombineLatest<T>(observables: Array<any>): T {
+//    if (observables.length === 0) {
+//       // If the array is empty, immediately return an Observable that emits an empty array
+//       return of([]) as T
+//    } else {
+//       // Otherwise, proceed with combineLatest
+//       return combineLatest(observables) as T
+//    }
+// }
+
+export function guardCombineLatest(observables) {
+   if (observables.length === 0) {
+      // If the array is empty, immediately return an Observable that emits an empty array
+      return of([])
+   } else {
+      // Otherwise, proceed with combineLatest
+      return combineLatest(observables)
    }
 }

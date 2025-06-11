@@ -64,6 +64,8 @@ import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
 
+import { guardCombineLatest } from '/src/lib/utilities'
+
 import SplitPanel from '/src/components/SplitPanel.vue'
 
 const { getObservable: users$, addPerimeter: addUserPerimeter, remove: removeUser } = useUser()
@@ -107,16 +109,6 @@ onUnmounted(async () => {
    }
 })
 
-function guardCombineLatest<T>(observables: Array<any>): T {
-   if (observables.length === 0) {
-      // If the array is empty, immediately return an Observable that emits an empty array
-      return of([]) as T
-   } else {
-      // Otherwise, proceed with combineLatest
-      return combineLatest(observables) as T
-   }
-}
-
 const userList2 = useObservable(users$({}).pipe(
    mergeMap(userList => 
       guardCombineLatest(
@@ -125,7 +117,7 @@ const userList2 = useObservable(users$({}).pipe(
                mergeMap(relations =>
                   guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
                ),
-               map(relations => ({ user, relations }))
+               map(groups => ({ user, groups }))
             )
          )
       )
