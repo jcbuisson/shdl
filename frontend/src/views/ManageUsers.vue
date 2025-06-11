@@ -13,7 +13,7 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(user, index) in userList":key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
+               <v-list-item three-line v-for="(user, index) in userList" :key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(user)">
                         <v-img :src="user.pict"></v-img>
@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
-import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest, forkJoin } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
@@ -107,49 +107,29 @@ onUnmounted(async () => {
    }
 })
 
-// const userList22 = useObservable(users$({}).pipe(
-//    switchMap(userList =>
-//       from(userList).pipe(
-//          mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
-//             tap(x1 => console.log('x1', x1)),
-//             mergeMap(relationList => 
-//                from(relationList).pipe(
-//                   mergeMap(relation => groups$({ uid: relation.group_uid})),
-//                )
-//             ),
-//             tap(x2 => console.log('x2', x2)),
-//             scan((acc, curr) => [...acc, curr], []),
-//             tap(x3 => console.log('x3', x3)),
-//             map(groups => ({ user, groups }))
-//          )),
-//          tap(y => console.log('y', y)),
-//       ),
-//    )
-// ))
+function guardCombineLatest<T>(observables: Array<any>): T {
+   if (observables.length === 0) {
+      // If the array is empty, immediately return an Observable that emits an empty array
+      return of([]) as T
+   } else {
+      // Otherwise, proceed with combineLatest
+      return combineLatest(observables) as T
+   }
+}
 
 const userList2 = useObservable(users$({}).pipe(
-   tap(x => console.log('userList changed')),
-   mergeMap(users =>
-      from(users).pipe(
-         mergeMap(user => userGroupRelations$({ user_uid: user.uid }).pipe(
-            map(relations => ({ user, relations }))
-         ))
+   mergeMap(userList => 
+      guardCombineLatest(
+         userList.map(user =>
+            userGroupRelations$({ user_uid: user.uid }).pipe(
+               mergeMap(relations =>
+                  guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+               ),
+               map(relations => ({ user, relations }))
+            )
+         )
       )
    ),
-   // Use scan to maintain a single, non-duplicate list of users with their relations
-   scan((acc, curr) => {
-      const existingIndex = acc.findIndex(item => item.user.uid === curr.user.uid);
-      if (existingIndex > -1) {
-         // If user already exists, update it
-         const newAcc = [...acc];
-         newAcc[existingIndex] = curr;
-         return newAcc;
-      } else {
-         // If user is new, add it
-         const newAcc = [...acc, curr];
-         return newAcc;
-      }
-   }, []), // Initial empty array for the accumulator
 ))
 
 
