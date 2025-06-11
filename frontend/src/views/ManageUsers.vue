@@ -1,5 +1,5 @@
 <template>
-   {{ userList2 }}
+   <!-- {{ userList2 }} -->
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -50,10 +50,10 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute} from 'vue-router'
 import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
-import { mergeMap, switchMap, concatMap, scan, tap, catchError } from 'rxjs/operators'
+import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
 import { useUser, getFullname } from '/src/use/useUser'
@@ -68,9 +68,9 @@ import { guardCombineLatest } from '/src/lib/utilities'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { getObservable: users$, addPerimeter: addUserPerimeter, remove: removeUser } = useUser()
-const { getObservable: groups$, addPerimeter: addGroupPerimeter } = useGroup()
-const { getObservable: userGroupRelations$, addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
+const { getObservable: users$, remove: removeUser } = useUser()
+const { getObservable: groups$ } = useGroup()
+const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation()
 
 
 const props = defineProps({
@@ -80,41 +80,13 @@ const props = defineProps({
 })
 
 const filter = ref('')
-// const userList = ref([])
-// const perimeters = []
-
-// onMounted(async () => {
-//    // ensures that all groups are in cache
-//    const groupListPerimeter = await addGroupPerimeter({})
-//    perimeters.push(groupListPerimeter)
-
-//    perimeters.push(await addUserPerimeter({}, async list => {
-//       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
-
-//       for (const user of userList.value) {
-//          perimeters.push(await addUserGroupRelationPerimeter({ user_uid: user.uid }, async relationList => {
-//             user.groups = []
-//             for (const group_uid of relationList.map(relation => relation.group_uid)) {
-//                const group = await groupListPerimeter.getByUid(group_uid)
-//                user.groups.push(group)
-//             }
-//          }))
-//       }
-//    }))
-// })
-
-// onUnmounted(async () => {
-//    for (const perimeter of perimeters) {
-//       await perimeter.remove()
-//    }
-// })
 
 const userList2 = useObservable(users$({}).pipe(
-   mergeMap(userList => 
+   switchMap(userList => 
       guardCombineLatest(
          userList.map(user =>
             userGroupRelations$({ user_uid: user.uid }).pipe(
-               mergeMap(relations =>
+               switchMap(relations =>
                   guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
                ),
                map(groups => ({ user, groups }))
@@ -122,8 +94,12 @@ const userList2 = useObservable(users$({}).pipe(
          )
       )
    ),
+   tap(x => console.log('x', x)),
 ))
 
+// const userList2 = useObservable(users$({}).pipe(
+//    tap(x => console.log('x', x)),
+// ))
 
 async function addUser() {
    router.push(`/home/${props.signedinUid}/users/create`)
@@ -132,11 +108,13 @@ async function addUser() {
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
-watch(() => [route.path, userList2.value], async () => {
+watch(() => [route.path], async () => {
+   if (!userList2.value) return
    const match = route.path.match(routeRegex)
    if (match) {
       const user_uid = route.path.match(routeRegex)[1]
-      selectedUser.value = userList2.value.find(user => user.uid === user_uid)
+      const user = userList2.value.map(userg => userg.user).find(user => user.uid === user_uid)
+      selectUser(user)
    }
 }, { immediate: true })
 
@@ -148,10 +126,8 @@ function selectUser(user) {
 }
 
 async function deleteUser(user) {
-   // const userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: user.uid })
-   // perimeters.push(userGroupRelationPerimeter)
-   // const userGroupRelations = await userGroupRelationPerimeter.currentValue()
    const userGroupRelations = await firstValueFrom(userGroupRelations$({ user_uid: user.uid }))
+   console.log('userGroupRelations', userGroupRelations)
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
       try {
          // remove user-group relations

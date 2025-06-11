@@ -91,10 +91,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
-import { map } from 'rxjs'
+import { firstValueFrom, map } from 'rxjs'
 
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
@@ -125,12 +125,27 @@ const emailRules = [
    (v) => /^([a-z0-9_.-]+)@([\da-z.-]+)\.([a-z.]{2,6})$/.test(v) || "l'email doit être valide"
 ]
 
-
-const user = useObservable(users$({ uid: props.user_uid}).pipe(
-   map(userList => userList[0])
-))
-
 const groupList = useObservable(groups$({}))
+
+const user = ref()
+const userGroups = ref([])
+const userTabs = ref([])
+
+watch(() => props.user_uid, async (uid) => {
+   
+   const userList = await firstValueFrom(users$({ uid }))
+   if (userList.length === 0) return
+   user.value = userList[0]
+
+   userGroups.value = await firstValueFrom(userGroupRelations$({ user_uid: props.user_uid }).pipe(
+      map(relationList => relationList.map(relation => relation.group_uid))
+   ))
+
+   userTabs.value = await firstValueFrom(userTabRelation$({ user_uid: props.user_uid }).pipe(
+      map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
+   ))
+
+}, { immediate: true })
 
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////
@@ -149,10 +164,6 @@ const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
 
 //////////////////////        USER-TAB RELATIONS        //////////////////////
 
-const userTabs = useObservable(userTabRelation$({ user_uid: props.user_uid }).pipe(
-   map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
-))
-
 const onTabChange = async (tabs) => {
    try {
       const [toAddTabs, toRemoveRelationUIDs] = await tabDifference(props.user_uid, tabs)
@@ -170,10 +181,6 @@ const onTabChange = async (tabs) => {
 
 
 //////////////////////        USER-GROUP RELATIONS        //////////////////////
-
-const userGroups = useObservable(userGroupRelations$({ user_uid: props.user_uid }).pipe(
-   map(relationList => relationList.map(relation => relation.group_uid))
-))
 
 const onGroupChange = async (groupUIDs) => {
    try {

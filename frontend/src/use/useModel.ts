@@ -18,6 +18,8 @@ export default function(dbName, modelName, fields) {
       metadata: "uid, created_at, updated_at, deleted_at",
    })
 
+   // db.open().then(() => console.log('db ready', dbName, modelName))
+
    const reset = async () => {
       await db.whereList.clear()
       await db.values.clear()
