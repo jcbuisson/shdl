@@ -165,8 +165,8 @@ function drawChart(slots, events) {
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
 
-   const allStart = events.map(d => d.start)
-   const allEnd = events.map(d => d.end)
+   const allStart = [...events, ...slots].map(d => d.start)
+   const allEnd = [...events, ...slots].map(d => d.end)
    const dateMin = d3.min(allStart)
    const dateMax = d3.max(allEnd)
 
