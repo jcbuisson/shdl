@@ -131,19 +131,24 @@ const user = ref()
 const userGroups = ref([])
 const userTabs = ref([])
 
-watch(() => props.user_uid, async (uid) => {
+watch(() => props.user_uid, async (user_uid) => {
    
-   const userList = await firstValueFrom(users$({ uid }))
-   if (userList.length === 0) return
-   user.value = userList[0]
+   users$({ uid: user_uid }).subscribe(userList => {
+      if (userList.length === 0) return
+      user.value = userList[0]
+   })
 
-   userGroups.value = await firstValueFrom(userGroupRelations$({ user_uid: props.user_uid }).pipe(
+   userGroupRelations$({ user_uid }).pipe(
       map(relationList => relationList.map(relation => relation.group_uid))
-   ))
+   ).subscribe(groupList => {
+      userGroups.value = groupList
+   })
 
-   userTabs.value = await firstValueFrom(userTabRelation$({ user_uid: props.user_uid }).pipe(
+   userTabRelation$({ user_uid }).pipe(
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
-   ))
+   ).subscribe(tabList => {
+      userTabs.value = tabList
+   })
 
 }, { immediate: true })
 

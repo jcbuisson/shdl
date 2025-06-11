@@ -13,7 +13,7 @@ import { ref, onMounted, onBeforeUnmount, onUnmounted, computed, watch } from 'v
 import * as d3 from 'd3'
 import { timeFormatLocale } from 'd3-time-format'
 import { addHours, subHours } from 'date-fns'
-import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
@@ -86,10 +86,26 @@ function studentSlot$(user_uid: string) {
    )
 }
 
-const slots$ = studentSlot$(props.user_uid)
-const eventGroups$ = studentEvents$(props.user_uid)
+const slotsAndEventGroups = ref()
 
-const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
+watch(
+   () => props.user_uid,
+   async (user_uid, oldVal) => {
+      console.log('watch triggered. New:', user_uid, 'Old:', oldVal)
+      // const slots$ = studentSlot$(user_uid)
+      // const eventGroups$ = studentEvents$(user_uid)
+      // const slotsAndEventGroups$ = combineLatest(slots$, eventGroups$)
+      // slotsAndEventGroups$.subscribe(list => {
+      //    slotsAndEventGroups.value = list
+      // })
+   },
+   { immediate: true } // Optional: call once on component mount
+)
+
+// const slots$ = studentSlot$(props.user_uid)
+// const eventGroups$ = studentEvents$(props.user_uid)
+
+// const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
 
 const userSlotsAndEvents = computed(() => {
    if (!slotsAndEventGroups.value) return
