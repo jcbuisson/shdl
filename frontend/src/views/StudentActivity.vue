@@ -103,7 +103,7 @@ watch(
 
 const userSlotsAndEvents = computed(() => {
    if (!slotsAndEventGroups.value) return
-   const [userSlots, eventGroups] = slotsAndEventGroups.value
+   const [slotGroups, eventGroups] = slotsAndEventGroups.value
    const events = []
    for (const eventGroup of eventGroups) {
       for (const ev of eventGroup.events) {
@@ -117,14 +117,16 @@ const userSlotsAndEvents = computed(() => {
       }
    }
    const slots = []
-   for (const slot of userSlots) {
-      slots.push({
-         name: slot.name,
-         start: slot.start,
-         end: slot.end,
-         value: 10,
-         color: 'grey',
-      })
+   for (const slotGroup of slotGroups) {
+      for (const slot of slotGroup) {
+         slots.push({
+            name: slot.name,
+            start: slot.start,
+            end: slot.end,
+            value: 10,
+            color: 'grey',
+         })
+      }
    }
    return {slots, events}
 })
