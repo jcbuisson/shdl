@@ -150,7 +150,9 @@ watch(() => props.user_uid, async (user_uid) => {
       userTabs.value = tabList
    })
 
-}, { immediate: true })
+},
+   { immediate: true } // so that it's called on component mount
+)
 
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////

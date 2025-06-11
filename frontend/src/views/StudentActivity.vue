@@ -27,6 +27,8 @@ const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlot$ } = useGroupSlot()
 const { getObservable: userGroupRelation$ } = useUserGroupRelation()
 
+import { guardCombineLatest } from '/src/lib/utilities'
+
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 
 const frLocale = timeFormatLocale({
@@ -59,15 +61,13 @@ let svg, xScale, yScale, xAxis, yAxis, slotsGroup, eventsGroup
 
 function studentEvents$(user_uid: string) {
    return userDocument$({ user_uid }).pipe(
-      switchMap(documents =>
-         // from: flattens array of documents into single emissions
-         from(documents).pipe(
-            mergeMap(document =>
+      switchMap(documentList => 
+         guardCombineLatest(
+            documentList.map(document =>
                userDocumentEvent$({ document_uid: document.uid }).pipe(
                   map(events => ({ document, events }))
-               ),
-            ),
-            scan((acc, curr) => [...acc, curr], []) // acc is reset on new switchMap
+               )
+            )
          )
       ),
    )
@@ -99,7 +99,7 @@ watch(
          slotsAndEventGroups.value = list
       })
    },
-   { immediate: true } // Optional: call once on component mount
+   { immediate: true } // so that it's called on component mount
 )
 
 // const slots$ = studentSlot$(props.user_uid)
