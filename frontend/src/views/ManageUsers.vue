@@ -13,22 +13,22 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(user, index) in userList" :key="index" :value="user" @click="selectUser(user)" :active="selectedUser?.uid === user?.uid">
+               <v-list-item three-line v-for="(userg, index) in userList2" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
                   <template v-slot:prepend>
-                     <v-avatar @click="onAvatarClick(user)">
-                        <v-img :src="user.pict"></v-img>
+                     <v-avatar @click="onAvatarClick(userg.user)">
+                        <v-img :src="userg?.user.pict"></v-img>
                      </v-avatar>
                   </template>
-                  <v-list-item-title>{{ user.lastname }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-title>{{ userg?.user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ userg?.user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
-                     <template v-for="group in user.groups">
+                     <template v-for="group in userg.groups">
                         <v-chip size="x-small">{{ group?.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userg.user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
-import { Observable, from, map, of, merge, combineLatest, forkJoin } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
@@ -80,34 +80,34 @@ const props = defineProps({
 })
 
 const filter = ref('')
-const userList = ref([])
-const perimeters = []
+// const userList = ref([])
+// const perimeters = []
 
-onMounted(async () => {
-   // ensures that all groups are in cache
-   const groupListPerimeter = await addGroupPerimeter({})
-   perimeters.push(groupListPerimeter)
+// onMounted(async () => {
+//    // ensures that all groups are in cache
+//    const groupListPerimeter = await addGroupPerimeter({})
+//    perimeters.push(groupListPerimeter)
 
-   perimeters.push(await addUserPerimeter({}, async list => {
-      userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
+//    perimeters.push(await addUserPerimeter({}, async list => {
+//       userList.value = list.toSorted((u1, u2) => (u1.lastname > u2.lastname) ? 1 : (u1.lastname < u2.lastname) ? -1 : 0)
 
-      for (const user of userList.value) {
-         perimeters.push(await addUserGroupRelationPerimeter({ user_uid: user.uid }, async relationList => {
-            user.groups = []
-            for (const group_uid of relationList.map(relation => relation.group_uid)) {
-               const group = await groupListPerimeter.getByUid(group_uid)
-               user.groups.push(group)
-            }
-         }))
-      }
-   }))
-})
+//       for (const user of userList.value) {
+//          perimeters.push(await addUserGroupRelationPerimeter({ user_uid: user.uid }, async relationList => {
+//             user.groups = []
+//             for (const group_uid of relationList.map(relation => relation.group_uid)) {
+//                const group = await groupListPerimeter.getByUid(group_uid)
+//                user.groups.push(group)
+//             }
+//          }))
+//       }
+//    }))
+// })
 
-onUnmounted(async () => {
-   for (const perimeter of perimeters) {
-      await perimeter.remove()
-   }
-})
+// onUnmounted(async () => {
+//    for (const perimeter of perimeters) {
+//       await perimeter.remove()
+//    }
+// })
 
 const userList2 = useObservable(users$({}).pipe(
    mergeMap(userList => 
@@ -132,11 +132,11 @@ async function addUser() {
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
-watch(() => [route.path, userList.value], async () => {
+watch(() => [route.path, userList2.value], async () => {
    const match = route.path.match(routeRegex)
    if (match) {
       const user_uid = route.path.match(routeRegex)[1]
-      selectedUser.value = userList.value.find(user => user.uid === user_uid)
+      selectedUser.value = userList2.value.find(user => user.uid === user_uid)
    }
 }, { immediate: true })
 
@@ -148,9 +148,10 @@ function selectUser(user) {
 }
 
 async function deleteUser(user) {
-   const userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: user.uid })
-   perimeters.push(userGroupRelationPerimeter)
-   const userGroupRelations = await userGroupRelationPerimeter.currentValue()
+   // const userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ user_uid: user.uid })
+   // perimeters.push(userGroupRelationPerimeter)
+   // const userGroupRelations = await userGroupRelationPerimeter.currentValue()
+   const userGroupRelations = await firstValueFrom(userGroupRelations$({ user_uid: user.uid }))
    if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
       try {
          // remove user-group relations
