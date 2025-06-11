@@ -75,14 +75,13 @@ function studentEvents$(user_uid: string) {
 
 function studentSlot$(user_uid: string) {
    return userGroupRelation$({ user_uid }).pipe(
-      switchMap(relations =>
-         // from: flattens array of relations into single emissions
-         from(relations).pipe(
-            // each relation is replaced by the slot list associated to relation.group_uid
-            mergeMap(relation => groupSlot$({ group_uid: relation.group_uid })),
-            scan((acc, slots) => [...acc, ...slots], []) // acc is reset on new switchMap
+      switchMap(relationList => 
+         guardCombineLatest(
+            relationList.map(relation =>
+               groupSlot$({ group_uid: relation.group_uid })
+            )
          )
-      )
+      ),
    )
 }
 
@@ -101,11 +100,6 @@ watch(
    },
    { immediate: true } // so that it's called on component mount
 )
-
-// const slots$ = studentSlot$(props.user_uid)
-// const eventGroups$ = studentEvents$(props.user_uid)
-
-// const slotsAndEventGroups = useObservable(combineLatest(slots$, eventGroups$))
 
 const userSlotsAndEvents = computed(() => {
    if (!slotsAndEventGroups.value) return
