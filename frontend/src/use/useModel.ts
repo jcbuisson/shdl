@@ -143,10 +143,12 @@ export default function(dbName, modelName, fields) {
    }
 
    function addSynchroWhere(where) {
+      console.log('addSynchroWhere', dbName, modelName, where)
       return addSynchroDBWhere(where, db.whereList)
    }
 
    function removeSynchroWhere(where) {
+      console.log('removeSynchroWhere', dbName, modelName, where)
       return removeSynchroDBWhere(where, db.whereList)
    }
 
@@ -156,8 +158,12 @@ export default function(dbName, modelName, fields) {
 
 
    // Automatically clean up when the component using this composable unmounts
-   tryOnScopeDispose(() => {
+   tryOnScopeDispose(async () => {
       console.log('CLEANING3', dbName, modelName)
+      const whereList = await db.whereList.toArray()
+      for (const where of whereList) {
+         removeSynchroWhere(where.sortedjson)
+      }
    })
 
    return {

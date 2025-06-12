@@ -114,14 +114,12 @@ app.addConnectListener(async () => {
    await synchronizeAllUserDocumentEvent()
 })
 
-let interval
-
 const userTabs = useObservable(userTabRelation$({ user_uid: props.signedinUid }).pipe(
    map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
 ))
 
 const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
-   map(userList => userList[0])
+   map(userList => userList.length > 0 ? userList[0] : null)
 ))
 
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
@@ -129,19 +127,24 @@ const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 const route = useRoute()
 const routeTabUid = ref()
+let interval
 
 onMounted(async () => {
    const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
    if (tabFromRoute) {
       routeTabUid.value = tabFromRoute.uid
    } else {
-      // router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
-      router.push(`/home/${props.signedinUid}`)
+      router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
+      // router.push(`/home/${props.signedinUid}`)
    }
 
    interval = setInterval(() => {
       if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
    }, 30000)
+})
+
+onUnmounted(() => {
+   clearInterval(interval)
 })
 
 async function logout() {
