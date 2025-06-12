@@ -1,5 +1,5 @@
 <template>
-   <!-- {{ userList2 }} -->
+   <!-- {{ userList }} -->
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -13,7 +13,7 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userg, index) in userList2" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
+               <v-list-item three-line v-for="(userg, index) in userList" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(userg.user)">
                         <v-img :src="userg?.user.pict"></v-img>
@@ -82,10 +82,10 @@ const props = defineProps({
 const filter = ref('')
 
 // ?? marche mal si on remplace switchMap par mergeMap
-const userList2 = useObservable(users$({}).pipe(
-   switchMap(userList => 
+const userList = useObservable(users$({}).pipe(
+   switchMap(users => 
       guardCombineLatest(
-         userList.map(user =>
+         users.map(user =>
             userGroupRelations$({ user_uid: user.uid }).pipe(
                switchMap(relations =>
                   guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
@@ -95,12 +95,7 @@ const userList2 = useObservable(users$({}).pipe(
          )
       )
    ),
-   tap(x => console.log('x', x)),
 ))
-
-// const userList2 = useObservable(users$({}).pipe(
-//    tap(x => console.log('x', x)),
-// ))
 
 async function addUser() {
    router.push(`/home/${props.signedinUid}/users/create`)
@@ -109,12 +104,12 @@ async function addUser() {
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
-watch(() => [route.path], async () => {
-   if (!userList2.value) return
+watch(() => [route.path, userList.value], async () => {
+   if (!userList.value) return
    const match = route.path.match(routeRegex)
    if (match) {
       const user_uid = route.path.match(routeRegex)[1]
-      const user = userList2.value.map(userg => userg.user).find(user => user.uid === user_uid)
+      const user = userList.value.map(userg => userg.user).find(user => user.uid === user_uid)
       selectUser(user)
    }
 }, { immediate: true })

@@ -1,7 +1,7 @@
 <template>
    <div ref="chartContainer"></div>
 
-   <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div>
+   <!-- <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div> -->
 
    <v-tooltip v-model="show" text="azer">
       <span>Programmatic tooltip</span>
@@ -89,8 +89,7 @@ const slotsAndEventGroups = ref()
 
 watch(
    () => props.user_uid,
-   async (user_uid, oldVal) => {
-      console.log('watch triggered. New:', user_uid, 'Old:', oldVal)
+   async (user_uid) => {
       const slots$ = studentSlot$(user_uid)
       const eventGroups$ = studentEvents$(user_uid)
       const slotsAndEventGroups$ = combineLatest(slots$, eventGroups$)
