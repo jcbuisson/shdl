@@ -8,6 +8,7 @@ import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
+import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
 import router from '/src/router'
 
@@ -17,6 +18,7 @@ const { reset: resetUseGroupSlot } = useGroupSlot()
 const { reset: resetUseUserTabRelation } = useUserTabRelation()
 const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
 const { reset: resetUseUserDocument } = useUserDocument()
+const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent()
 
 
 export async function clearCaches() {
@@ -29,6 +31,7 @@ export async function clearCaches() {
    await resetUseUserTabRelation()
    await resetUseUserGroupRelation()
    await resetUseUserDocument()
+   await resetUseUserDocumentEvent()
 }
 
 export const restartApp = async () => {

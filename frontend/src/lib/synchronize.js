@@ -116,34 +116,21 @@ export function wherePredicate(where) {
 
 async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
-   return list.map(elt => elt.where)
+   return list.map(elt => elt.sortedjson)
 }
 
 export async function addSynchroDBWhere(where, whereDb) {
-   let modified = false
    await mutex.acquire()
+   let modified = false
+   const swhere = sortedJson(where)
    try {
-      let over = false
       const whereList = await getWhereList(whereDb)
-      // for (const w of whereList) {
-      //    // if `where` is included in `w`, do nothing and exit
-      //    if (isSubset(where, w)) { over = true; break }
-      //    // if `where` is more general than `w`, replace `w` by `where`
-      //    if (isSubset(w, where)) {
-      //       await whereDb.delete(sortedJson(w))
-      //       await whereDb.add({ sortedjson: sortedJson(where), where })
-      //       over = true
-      //       modified = true
-      //       break
-      //    }
-      // }
-      if (!over && !modified) {
-         // add `where` to the existing set
-         await whereDb.add({ sortedjson: sortedJson(where), where })
+      if (!whereList.includes(swhere)) {
+         await whereDb.add({ sortedjson: sortedJson(where) })
          modified = true
       }
    } catch(err) {
-      console.log('err addSynchroDBWhere', err)
+      console.log('err addSynchroDBWhere', where, err)
    } finally {
       mutex.release()
    }
@@ -153,12 +140,8 @@ export async function addSynchroDBWhere(where, whereDb) {
 export async function removeSynchroDBWhere(where, whereDb) {
    await mutex.acquire()
    try {
-      const sortedjson = sortedJson(where)
-      const x = await await whereDb.filter(value => {
-         console.log('sortedjson', value.sortedjson, 'sortedjson', sortedjson, 'eq', value.sortedjson === sortedjson)
-         value.sortedjson === sortedjson
-      }).delete()
-      console.log('x', x)
+      const swhere = sortedJson(where)
+      await whereDb.filter(value => (value.sortedjson === swhere)).delete()
    } catch(err) {
       console.log('err removeSynchroDBWhere', err)
    } finally {

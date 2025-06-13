@@ -13,7 +13,7 @@ export default function(dbName, modelName, fields) {
    const db = new Dexie(dbName)
 
    db.version(1).stores({
-      whereList: "sortedjson, where",
+      whereList: "sortedjson",
       values: ['uid', '__deleted__', ...fields].join(','), // ex: "uid, __deleted__, email, firstname, lastname",
       metadata: "uid, created_at, updated_at, deleted_at",
    })
@@ -162,7 +162,7 @@ export default function(dbName, modelName, fields) {
       console.log('CLEANING3', dbName, modelName)
       const whereList = await db.whereList.toArray()
       for (const where of whereList) {
-         removeSynchroWhere(where.sortedjson)
+         removeSynchroWhere(JSON.parse(where.sortedjson))
       }
    })
 
