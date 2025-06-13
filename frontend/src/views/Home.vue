@@ -74,7 +74,7 @@ import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-import { Observable, from, map, of, merge, combineLatest } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest, firstValueFrom, debounceTime } from 'rxjs'
 import { useObservable } from '@vueuse/rxjs'
 
 import router from '/src/router'
@@ -114,9 +114,15 @@ app.addConnectListener(async () => {
    await synchronizeAllUserDocumentEvent()
 })
 
-const userTabs = useObservable(userTabRelation$({ user_uid: props.signedinUid }).pipe(
+const userTabs$ = userTabRelation$({ user_uid: props.signedinUid }).pipe(
    map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
-))
+)
+const debouncedUserTabs$ = userTabs$.pipe(
+   debounceTime(300) // wait until no new value for 300ms
+)
+
+const userTabs = useObservable(userTabs$)
+// userTabs$.subscribe(x => console.log('x', x))
 
 const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
    map(userList => userList.length > 0 ? userList[0] : null)
@@ -134,7 +140,8 @@ onMounted(async () => {
    if (tabFromRoute) {
       routeTabUid.value = tabFromRoute.uid
    } else {
-      router.push(`/home/${props.signedinUid}/${userTabs.value[0].uid}`)
+      const userTabList = await firstValueFrom(debouncedUserTabs$)
+      router.push(`/home/${props.signedinUid}/${userTabList[0].uid}`)
       // router.push(`/home/${props.signedinUid}`)
    }
 

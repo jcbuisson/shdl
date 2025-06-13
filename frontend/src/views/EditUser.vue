@@ -91,10 +91,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
 import { firstValueFrom, map } from 'rxjs'
+import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
@@ -131,20 +132,29 @@ const user = ref()
 const userGroups = ref([])
 const userTabs = ref([])
 
+let usersSubscription
+let userGroupRelationSubscription
+let userTabRelationSubscription
+
 watch(() => props.user_uid, async (user_uid) => {
    
-   users$({ uid: user_uid }).subscribe(userList => {
+   // handle unsubscription carefully - otherwise, a previous subscription for another user_uid will interfere with current subscription
+   if (usersSubscription) usersSubscription.unsubscribe()
+   usersSubscription = users$({ uid: user_uid }).subscribe(userList => {
       if (userList.length === 0) return
       user.value = userList[0]
    })
 
-   userGroupRelations$({ user_uid }).pipe(
+   if (userGroupRelationSubscription) userGroupRelationSubscription.unsubscribe()
+   userGroupRelationSubscription = userGroupRelations$({ user_uid }).pipe(
       map(relationList => relationList.map(relation => relation.group_uid))
    ).subscribe(groupList => {
       userGroups.value = groupList
    })
 
-   userTabRelation$({ user_uid }).pipe(
+   if (userTabRelationSubscription) userTabRelationSubscription.unsubscribe()
+   userTabRelationSubscription = userTabRelation$({ user_uid }).pipe(
+      tap(relations => console.log('userTabRelation', user_uid, relations)),
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
    ).subscribe(tabList => {
       userTabs.value = tabList
@@ -154,6 +164,11 @@ watch(() => props.user_uid, async (user_uid) => {
    { immediate: true } // so that it's called on component mount
 )
 
+onUnmounted(() => {
+   if (usersSubscription) usersSubscription.unsubscribe()
+   if (userGroupRelationSubscription) userGroupRelationSubscription.unsubscribe()
+   if (userTabRelationSubscription) userTabRelationSubscription.unsubscribe()
+})
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////
 
