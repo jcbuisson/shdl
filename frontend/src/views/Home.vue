@@ -122,7 +122,6 @@ const debouncedUserTabs$ = userTabs$.pipe(
 )
 
 const userTabs = useObservable(userTabs$)
-// userTabs$.subscribe(x => console.log('x', x))
 
 const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
    map(userList => userList.length > 0 ? userList[0] : null)

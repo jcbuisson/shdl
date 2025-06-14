@@ -14,12 +14,13 @@
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { Codemirror } from 'vue-codemirror';
 import { useDebounceFn } from '@vueuse/core'
+import { map } from 'rxjs'
 
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-const { addPerimeter: addUserDocumentPerimeter, update: updateUserDocument } = useUserDocument()
+const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
 
 
@@ -38,13 +39,18 @@ const handleEditorReady = (payload) => {
    currentEditorView.value = payload.view
 }
 
-let perimeter
+let subscription
 
 const uid2docDict = {}
 const selectedDoc = ref({})
 
 let updateUid
 
+function userDocument$(uid) {
+   return userDocuments$({ uid }).pipe(
+      map(documents => documents.length > 0 ? documents[0] : null)
+   )
+}
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
    updateUid = undefined
@@ -69,15 +75,15 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    }
 
    // handle document content change
-   if (perimeter) await perimeter.remove()
-   perimeter = await addUserDocumentPerimeter({ uid }, ([document]) => {
+   if (subscription) subscription.unsubscribe()
+   userDocument$(uid).subscribe(document => {
       console.log('document', document)
       selectedDoc.value.content = document.text
    })
 }, { immediate: true })
 
-onUnmounted(async () => {
-   await perimeter.remove()
+onUnmounted(() => {
+   subscription.unsubscribe()
 })
 
 const onChange = async (text) => {

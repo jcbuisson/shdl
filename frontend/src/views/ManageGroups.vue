@@ -11,7 +11,7 @@
          
             <!-- fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(group, index) in groupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
+               <v-list-item three-line v-for="(group, index) in sortedGroupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
                   <v-list-item-title>{{ group.name }}</v-list-item-title>
 
                   <template v-slot:append>
@@ -30,8 +30,11 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute} from 'vue-router'
+import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
+import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
 
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
@@ -40,8 +43,8 @@ import router from '/src/router'
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { addPerimeter: addGroupPerimeter, remove: removeGroup } = useGroup()
-const { addPerimeter: addUserGroupRelationPerimeter, remove: removeGroupRelation } = useUserGroupRelation()
+const { getObservable: groups$, remove: removeGroup } = useGroup()
+const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation()
 
 
 const props = defineProps({
@@ -52,21 +55,12 @@ const props = defineProps({
 
 const filter = ref('')
 
-const groupList = ref([])
+const groupList = useObservable(groups$({}), [])
+const sortedGroupList = computed(() => groupList.value ? groupList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
-let groupListPerimeter
-let userGroupRelationPerimeter
-
-onMounted(async () => {
-   groupListPerimeter = await addGroupPerimeter({}, async list => {
-      groupList.value = list.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0)
-   })
-})
-
-onUnmounted(async () => {
-   await groupListPerimeter.remove()
-   userGroupRelationPerimeter && await userGroupRelationPerimeter.remove()
-})
+const debouncedGroupRelations$ = (group_uid) => userGroupRelations$({ group_uid }).pipe(
+   debounceTime(300) // wait until no new value for 300ms
+)
 
 async function addGroup() {
    router.push(`/home/${props.signedinUid}/groups/create`)
@@ -80,8 +74,7 @@ function selectGroup(group) {
 }
 
 async function deleteGroup(group) {
-   userGroupRelationPerimeter = await addUserGroupRelationPerimeter({ group_uid: group.uid })
-   const userGroupRelations = await userGroupRelationPerimeter.currentValue()
+   const userGroupRelations = await firstValueFrom(debouncedGroupRelations$(group.uid))
    if (window.confirm(`Supprimer le groupe ${group.name} ? (nombre d'utilisateurs membres : ${userGroupRelations.length})`)) {
       try {
          // remove user-group relations
@@ -99,6 +92,7 @@ const route = useRoute()
 const routeRegex = /\/home\/([a-z0-9]+)\/groups\/([a-z0-9]+)/
 
 watch(() => [route.path, groupList.value], async () => {
+   if (!groupList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const group_uid = match[2]

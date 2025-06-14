@@ -8,7 +8,7 @@ import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, s
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
 
-export default function(dbName, modelName, fields) {
+export default function(dbName: string, modelName: string, fields) {
 
    const db = new Dexie(dbName)
 
@@ -73,9 +73,9 @@ export default function(dbName, modelName, fields) {
       }
    }
 
-   function getObservable(where) {
+   function getObservable(where = {}) {
 
-      addSynchroWhere(where).then((isNew) => {
+      addSynchroWhere(where).then((isNew: boolean) => {
          if (isNew && isConnected.value) {
             synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
          }
@@ -103,7 +103,7 @@ export default function(dbName, modelName, fields) {
       return await db.values.get(uid)
    }
 
-   const update = async (uid, data) => {
+   const update = async (uid: string, data: object) => {
       const previousValue = { ...(await db.values.get(uid)) }
       const previousMetadata = { ...(await db.metadata.get(uid)) }
       // optimistic update of cache
@@ -125,7 +125,7 @@ export default function(dbName, modelName, fields) {
       return await db.values.get(uid)
    }
 
-   const remove = async (uid) => {
+   const remove = async (uid: string) => {
       const deleted_at = new Date()
       // optimistic delete in cache
       await db.values.update(uid, { __deleted__: true })
@@ -142,12 +142,12 @@ export default function(dbName, modelName, fields) {
       }
    }
 
-   function addSynchroWhere(where) {
+   function addSynchroWhere(where: object) {
       console.log('addSynchroWhere', dbName, modelName, where)
       return addSynchroDBWhere(where, db.whereList)
    }
 
-   function removeSynchroWhere(where) {
+   function removeSynchroWhere(where: object) {
       console.log('removeSynchroWhere', dbName, modelName, where)
       return removeSynchroDBWhere(where, db.whereList)
    }
@@ -159,7 +159,7 @@ export default function(dbName, modelName, fields) {
 
    // Automatically clean up when the component using this composable unmounts
    tryOnScopeDispose(async () => {
-      console.log('CLEANING3', dbName, modelName)
+      console.log('CLEANING', dbName, modelName)
       const whereList = await db.whereList.toArray()
       for (const where of whereList) {
          removeSynchroWhere(JSON.parse(where.sortedjson))

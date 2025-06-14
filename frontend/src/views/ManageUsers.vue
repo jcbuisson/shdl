@@ -1,5 +1,5 @@
 <template>
-   <!-- {{ userList }} -->
+   <!-- {{ userAndGroupsList }} -->
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -13,22 +13,22 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userg, index) in userList" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
+               <v-list-item three-line v-for="(userAndGroups, index) in userAndGroupsList" :key="index" :value="userAndGroups?.user" @click="selectUser(userAndGroups.user)" :active="selectedUser?.uid === userAndGroups?.user.uid">
                   <template v-slot:prepend>
-                     <v-avatar @click="onAvatarClick(userg.user)">
-                        <v-img :src="userg?.user.pict"></v-img>
+                     <v-avatar @click="onAvatarClick(userAndGroups.user)">
+                        <v-img :src="userAndGroups?.user.pict"></v-img>
                      </v-avatar>
                   </template>
-                  <v-list-item-title>{{ userg?.user.lastname }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ userg?.user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-title>{{ userAndGroups?.user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ userAndGroups?.user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
-                     <template v-for="group in userg.groups">
+                     <template v-for="group in userAndGroups.groups">
                         <v-chip size="x-small">{{ group?.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userg.user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userAndGroups.user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -82,7 +82,7 @@ const props = defineProps({
 const filter = ref('')
 
 // ?? marche mal si on remplace switchMap par mergeMap
-const userList = useObservable(users$({}).pipe(
+const userAndGroupsList = useObservable(users$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -104,15 +104,14 @@ async function addUser() {
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
-watch(() => [route.path, userList.value], async () => {
-   if (!userList.value) return
+watch(() => [route.path, userAndGroupsList.value], async () => {
+   if (!userAndGroupsList.value) return
    selectedUser.value = null
    const match = route.path.match(routeRegex)
-   if (match) {
-      const user_uid = route.path.match(routeRegex)[1]
-      const user = userList.value.map(userg => userg.user).find(user => user.uid === user_uid)
-      selectUser(user)
-   }
+   if (!match) return
+   const user_uid = route.path.match(routeRegex)[1]
+   const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
+   selectUser(user)
 }, { immediate: true })
 
 

@@ -22,13 +22,15 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
+import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
+import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
 import { useGroup } from '/src/use/useGroup'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 import GroupSlots from '/src/views/GroupSlots.vue'
 
-const { addPerimeter: addGroupPerimeter, update: updateGroup } = useGroup()
+const { getObservable: groups$, update: updateGroup } = useGroup()
 
 
 const props = defineProps({
@@ -39,16 +41,21 @@ const props = defineProps({
 
 const group = ref()
 
-let groupPerimeter
+let groupSubscription
+
+function group$(group_uid) {
+   return groups$({ uid: group_uid }).pipe(
+      map(groups => groups.length > 0 ? groups[0] : null)
+   )
+}
 
 onUnmounted(() => {
-   groupPerimeter && groupPerimeter.remove()
+   groupSubscription && groupSubscription.unsubscribe()
 })
 
 watch(() => props.group_uid, async (group_uid) => {
-   if (groupPerimeter) await groupPerimeter.remove()
-   groupPerimeter = await addGroupPerimeter({ uid: group_uid }, ([group_]) => {
-      group.value = group_
+   groupSubscription = group$(group_uid).subscribe(grp => {
+      group.value = grp
    })
 }, { immediate: true })
 

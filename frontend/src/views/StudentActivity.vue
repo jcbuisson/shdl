@@ -86,6 +86,7 @@ function studentSlot$(user_uid: string) {
 }
 
 const slotsAndEventGroups = ref()
+let subscription
 
 watch(
    () => props.user_uid,
@@ -93,7 +94,7 @@ watch(
       const slots$ = studentSlot$(user_uid)
       const eventGroups$ = studentEvents$(user_uid)
       const slotsAndEventGroups$ = combineLatest(slots$, eventGroups$)
-      slotsAndEventGroups$.subscribe(list => {
+      subscription = slotsAndEventGroups$.subscribe(list => {
          slotsAndEventGroups.value = list
       })
    },
@@ -149,6 +150,10 @@ onMounted(async () => {
    onBeforeUnmount(() => {
       resizeObserver.disconnect()
    })
+})
+
+onUnmounted(() => {
+   subscription.unsubscribe()
 })
 
 
