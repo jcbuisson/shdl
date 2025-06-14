@@ -92,7 +92,7 @@ import { fr } from 'date-fns/locale'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { addPerimeter: addGroupSlotPerimeter, create: createGroupSlot, remove: removeGroupSlot } = useGroupSlot()
+const { getObservable: groupSlots$, create: createGroupSlot, remove: removeGroupSlot } = useGroupSlot()
 
 
 const props = defineProps({
@@ -103,18 +103,18 @@ const props = defineProps({
 
 const slotList = ref([])
 
-let groupSlotPerimeter
+let subscription
 
 watch(() => props.group_uid, async (group_uid) => {
-   if (groupSlotPerimeter) await groupSlotPerimeter.remove()
-   groupSlotPerimeter = await addGroupSlotPerimeter({ group_uid }, async list => {
-      console.log('update groupSlotPerimeter')
-      slotList.value = list.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0)
+   if (subscription) subscription.unsubscribe()
+   subscription = groupSlots$({ group_uid }).subscribe(slots => {
+      slotList.value = slots.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0)
    })
 }, { immediate: true })
 
 onUnmounted(() => {
-   groupSlotPerimeter && groupSlotPerimeter.remove()
+   // groupSlotPerimeter && groupSlotPerimeter.remove()
+   if (subscription) subscription.unsubscribe()
 })
 
 const addSlotDialog = ref(false)

@@ -49,29 +49,29 @@ export default function(dbName: string, modelName: string, fields) {
 
    /////////////          CRUD METHODS WITH SYNC          /////////////
 
-   async function addPerimeter(where, callback) {
-      const isNew = await addSynchroWhere(where)
-      // run synchronization if connected and if `where` is new
-      if (isNew && isConnected.value) {
-         await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
-      }
-      const predicate = wherePredicate(where)
-      const ecmaObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
-      const subscription = callback && ecmaObservable.subscribe(async value => {
-         callback(value)
-      })
-      return {
-         // observable: from(ecmaObservable),
-         getByUid: async (uid) => db.values.get(uid),
-         currentValue: async () => {
-            return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
-         },
-         remove: async () => {
-            await removeSynchroWhere(where)
-            subscription && subscription.unsubscribe()
-         },
-      }
-   }
+   // async function addPerimeter(where, callback) {
+   //    const isNew = await addSynchroWhere(where)
+   //    // run synchronization if connected and if `where` is new
+   //    if (isNew && isConnected.value) {
+   //       await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
+   //    }
+   //    const predicate = wherePredicate(where)
+   //    const ecmaObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
+   //    const subscription = callback && ecmaObservable.subscribe(async value => {
+   //       callback(value)
+   //    })
+   //    return {
+   //       // observable: from(ecmaObservable),
+   //       getByUid: async (uid) => db.values.get(uid),
+   //       currentValue: async () => {
+   //          return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
+   //       },
+   //       remove: async () => {
+   //          await removeSynchroWhere(where)
+   //          subscription && subscription.unsubscribe()
+   //       },
+   //    }
+   // }
 
    function getObservable(where = {}) {
 
@@ -169,7 +169,8 @@ export default function(dbName: string, modelName: string, fields) {
    return {
       db, reset,
       create, update, remove,
-      addPerimeter, getObservable,
+      // addPerimeter,
+      getObservable,
       synchronizeAll,
    }
 }
