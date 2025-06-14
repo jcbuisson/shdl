@@ -47,32 +47,6 @@ export default function(dbName: string, modelName: string, fields) {
    })
 
 
-   /////////////          CRUD METHODS WITH SYNC          /////////////
-
-   // async function addPerimeter(where, callback) {
-   //    const isNew = await addSynchroWhere(where)
-   //    // run synchronization if connected and if `where` is new
-   //    if (isNew && isConnected.value) {
-   //       await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
-   //    }
-   //    const predicate = wherePredicate(where)
-   //    const ecmaObservable = liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())
-   //    const subscription = callback && ecmaObservable.subscribe(async value => {
-   //       callback(value)
-   //    })
-   //    return {
-   //       // observable: from(ecmaObservable),
-   //       getByUid: async (uid) => db.values.get(uid),
-   //       currentValue: async () => {
-   //          return await db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
-   //       },
-   //       remove: async () => {
-   //          await removeSynchroWhere(where)
-   //          subscription && subscription.unsubscribe()
-   //       },
-   //    }
-   // }
-
    function getObservable(where = {}) {
 
       addSynchroWhere(where).then((isNew: boolean) => {
@@ -85,6 +59,7 @@ export default function(dbName: string, modelName: string, fields) {
       return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
    }
 
+   
    async function create(data) {
       const uid = uid16(16)
       // optimistic update

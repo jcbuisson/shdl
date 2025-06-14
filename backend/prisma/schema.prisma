@@ -25,7 +25,6 @@ enum Tab {
    test        // test management
    followup    // students followup
    workshop    // workshop for shdl, craps, text document
-   craps       // craps sandbox
 }
 
 model user {
@@ -38,14 +37,15 @@ model user {
 
    user_tab_relations      user_tab_relation[]
    user_group_relations    user_group_relation[]
+   user_attendances        user_attendance[]
 }
 
 model user_tab_relation {
-   uid                String     @unique
-   user_uid           String
-   tab                Tab
+   uid                     String     @unique
+   user_uid                String
+   tab                     Tab
 
-   user               user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   user                    user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    @@unique([user_uid, tab])
 }
 
@@ -58,9 +58,9 @@ model group {
 }
 
 model user_group_relation {
-   uid             String     @unique
-   user_uid        String
-   group_uid       String
+   uid                     String     @unique
+   user_uid                String
+   group_uid               String
 
    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    group group @relation(fields: [group_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
@@ -74,6 +74,19 @@ model group_slot {
    name                    String
    start                   DateTime
    end                     DateTime
+
+   user_attendances        user_attendance[]
+}
+
+model user_attendance {
+   uid                     String     @unique
+   user_uid                String
+   group_slot_uid          String
+   excused                 Boolean
+
+   user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   group_slot group_slot @relation(fields: [group_slot_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   @@unique([user_uid, group_slot_uid])
 }
 
 model shdl_test {
