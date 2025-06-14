@@ -76,14 +76,14 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
 
    // handle document content change
    if (subscription) subscription.unsubscribe()
-   userDocument$(uid).subscribe(document => {
+   subscription = userDocument$(uid).subscribe(document => {
       console.log('document', document)
       selectedDoc.value.content = document.text
    })
 }, { immediate: true })
 
 onUnmounted(() => {
-   subscription.unsubscribe()
+   subscription && subscription.unsubscribe()
 })
 
 const onChange = async (text) => {
