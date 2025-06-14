@@ -28,7 +28,7 @@ import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useGroup } from '/src/use/useGroup'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-import GroupSlots from '/src/views/GroupSlots.vue'
+import GroupSlots from '/src/views/groups/GroupSlots.vue'
 
 const { getObservable: groups$, update: updateGroup } = useGroup()
 

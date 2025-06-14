@@ -49,17 +49,17 @@ const routes = [
          {
             path: 'groups',
             props: true,
-            component: () => import('/src/views/ManageGroups.vue'),
+            component: () => import('/src/views/groups/ManageGroups.vue'),
             children: [
                {
                   path: 'create',
                   props: true,
-                  component: () => import('/src/views/CreateGroup.vue'),
+                  component: () => import('/src/views/groups/CreateGroup.vue'),
                },
                {
                   path: ':group_uid',
                   props: true,
-                  component: () => import('/src/views/EditGroup.vue'),
+                  component: () => import('/src/views/groups/EditGroup.vue'),
                },
             ],      
          },

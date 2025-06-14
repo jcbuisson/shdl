@@ -1,5 +1,9 @@
 <template>
-   STUDENT ATTENDANCE
+   <h1>Présence</h1>
+
+   <template v-for="group in userGroups" :key="group.uid">
+      <StudentGroupAttendance :user_uid="user_uid" :group="group" />
+   </template>
 </template>
 
 <script setup lang="ts">
@@ -8,23 +12,46 @@ import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useGroupSlot } from '/src/use/useGroupSlot'
 
-const { getObservable: groupSlot$ } = useGroupSlot()
-const { getObservable: userGroupRelation$ } = useUserGroupRelation()
+const { getObservable: groups$ } = useGroup()
+const { getObservable: userGroupRelations$ } = useUserGroupRelation()
+
+import { guardCombineLatest } from '/src/lib/utilities'
+
+import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
 
-function studentSlot$(user_uid: string) {
-   return userGroupRelation$({ user_uid }).pipe(
-      switchMap(relationList => 
-         guardCombineLatest(
-            relationList.map(relation =>
-               groupSlot$({ group_uid: relation.group_uid })
-            )
-         )
+const props = defineProps({
+   user_uid: {
+      type: String,
+   },
+})
+
+function userGroups$(user_uid: string) {
+   return userGroupRelations$({ user_uid }).pipe(
+      switchMap(relations =>
+         guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
       ),
    )
 }
 
+const userGroups = ref([])
+let subcription
+
+watch(
+   () => props.user_uid,
+   async (user_uid) => {
+      const groups$ = userGroups$(user_uid)
+      subscription = groups$.subscribe(list => {
+         userGroups.value = list
+      })
+   },
+   { immediate: true } // so that it's called on component mount
+)
+
+onUnmounted(() => {
+   subcription && subcription.unsubscribe()
+})
 </script>
