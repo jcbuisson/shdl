@@ -1,0 +1,3 @@
+<template>
+   STUDENT ATTENDANCE
+</template>

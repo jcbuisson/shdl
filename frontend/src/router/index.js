@@ -60,13 +60,6 @@ const routes = [
                   path: ':group_uid',
                   props: true,
                   component: () => import('/src/views/EditGroup.vue'),
-                  // children: [
-                  //    {
-                  //       path: 'slots',
-                  //       props: true,
-                  //       component: () => import('/src/views/GroupSlots.vue'),
-                  //    },
-                  // ],
                },
             ],      
          },
@@ -90,7 +83,7 @@ const routes = [
                {
                   path: ':user_uid',
                   props: true,
-                  component: () => import('/src/views/StudentActivity.vue'),
+                  component: () => import('/src/views/StudentFollowup.vue'),
                },
             ],      
          },
