@@ -1,3 +1,0 @@
-<template>
-   STUDENT ATTENDANCE
-</template>

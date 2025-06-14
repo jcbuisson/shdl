@@ -78,12 +78,12 @@ const routes = [
          {
             path: 'followup',
             props: true,
-            component: () => import('/src/views/ManageStudents.vue'),
+            component: () => import('/src/views/followup/ManageStudents.vue'),
             children: [
                {
                   path: ':user_uid',
                   props: true,
-                  component: () => import('/src/views/StudentFollowup.vue'),
+                  component: () => import('/src/views/followup/StudentFollowup.vue'),
                },
             ],      
          },

@@ -4,8 +4,8 @@
 </template>
 
 <script setup>
-import StudentActivity from '/src/views/StudentActivity.vue'
-import StudentAttendance from '/src/views/StudentAttendance.vue'
+import StudentActivity from '/src/views/followup/StudentActivity.vue'
+import StudentAttendance from '/src/views/followup/StudentAttendance.vue'
 
 
 const props = defineProps({
