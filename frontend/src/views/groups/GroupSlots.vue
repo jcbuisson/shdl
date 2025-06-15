@@ -30,8 +30,8 @@
       </div>
    </v-card>
 
-   <v-dialog v-model="addSlotDialog" max-width="400">
-      <v-card title="Nouveau slot">
+   <v-dialog v-model="addOrEditSlotDialog" max-width="400">
+      <v-card :title="edit ? 'Éditer créneau' : 'Nouveau créneau'">
          <v-card-text>
             <v-row dense>
                <v-col cols="12" md="12">
@@ -68,8 +68,9 @@
 
          <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn text="Annuler" variant="plain" @click="addSlotDialog = false"></v-btn>
-            <v-btn color="primary" text="OK" variant="tonal" @click="addSlotDialog = false; createSlot()"></v-btn>
+            <v-btn text="Annuler" variant="plain" @click="addOrEditSlotDialog = false"></v-btn>
+            <v-btn v-if="edit" color="primary" text="Modifier" variant="tonal" @click="addOrEditSlotDialog = false; updateSlot()"></v-btn>
+            <v-btn v-else color="primary" text="Créer" variant="tonal" @click="addOrEditSlotDialog = false; createSlot()"></v-btn>
          </v-card-actions>
       </v-card>
    </v-dialog>
@@ -84,7 +85,7 @@ import { fr } from 'date-fns/locale'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: groupSlots$, create: createGroupSlot, remove: removeGroupSlot } = useGroupSlot()
+const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot()
 
 
 const props = defineProps({
@@ -105,19 +106,32 @@ watch(() => props.group_uid, async (group_uid) => {
 }, { immediate: true })
 
 onUnmounted(() => {
-   // groupSlotPerimeter && groupSlotPerimeter.remove()
    if (subscription) subscription.unsubscribe()
 })
 
-const addSlotDialog = ref(false)
+const addOrEditSlotDialog = ref(false)
+const edit = ref(false)
 const data = ref({})
 
 async function addSlot() {
-   addSlotDialog.value = true
+   data.value = {}
+   edit.value = false
+   addOrEditSlotDialog.value = true
 }
 
-async function editSlot() {
-   // addSlotDialog.value = true
+async function editSlot(slot) {
+   console.log('slot', slot)
+   data.value = {
+      uid: slot.uid,
+      group_uid: slot.group_uid,
+      name: slot.name,
+      startdate: slot.start.substring(0, 10),
+      starttime: slot.start.substring(11, 16),
+      enddate: slot.end.substring(0, 10),
+      endtime: slot.end.substring(11, 16),
+   }
+   edit.value = true
+   addOrEditSlotDialog.value = true
 }
 
 const createSlot = async () => {
@@ -128,6 +142,16 @@ const createSlot = async () => {
       end: new Date(data.value.enddate + 'T' + data.value.endtime),
    })
    console.log('createdGroupSlot', createdGroupSlot)
+}
+
+const updateSlot = async () => {
+   console.log('update', data.value)
+   await updateGroupSlot(data.value.uid, {
+      group_uid: data.value.group_uid,
+      name: data.value.name,
+      start: new Date(data.value.startdate + 'T' + data.value.starttime),
+      end: new Date(data.value.enddate + 'T' + data.value.endtime),
+   })
 }
 
 const deleteSlot = async (slot) => {
