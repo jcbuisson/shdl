@@ -44,8 +44,6 @@ const props = defineProps({
    },
 })
 
-// const groupSlotList = useObservable(groupSlots$({ group_uid: props.group.uid }))
-// const userExcuseList = useObservable(userSlotExcuses$({ user_uid: props.user_uid}))
 const groupSlotList = ref([])
 const userExcuseList = ref([])
 const subscriptions = [] 
@@ -56,7 +54,7 @@ watch(
       console.log('watch', user_uid, group)
       const slots$ = groupSlots$({ group_uid: props.group.uid })
       subscriptions.push(slots$.subscribe(list => {
-         groupSlotList.value = list
+         groupSlotList.value = list.toSorted((s1, s2) => (s1.start > s2.start) ? 1 : (s1.start < s2.start) ? -1 : 0)
       }))
       const excuses$ = userSlotExcuses$({ user_uid: props.user_uid})
       subscriptions.push(excuses$.subscribe(list => {

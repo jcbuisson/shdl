@@ -7,14 +7,6 @@
    
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <!-- <v-list-item three-line v-for="(slot, index) in slotList":key="index" :value="slot" @click="selectSlot(slot)" :active="selectedSlot?.uid === slot?.uid">
-            <v-list-item-title>{{ slot.name }}</v-list-item-title>
-
-            <template v-slot:append>
-               <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteSlot(slot)"></v-btn>
-            </template>
-         </v-list-item> -->
-
          <v-table>
             <thead>
                <tr>

@@ -38,7 +38,6 @@
                         :to="{ path: `/home/${signedinUid}/${tab.uid}` }"
                         router
                         :value="tab.uid"
-                        
                      >
                         {{ tab.name }}
                      </v-tab>

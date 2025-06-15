@@ -78,7 +78,6 @@ const props = defineProps({
 
 const filter = ref('')
 
-// ?? marche mal si on remplace switchMap par mergeMap
 const userAndGroupsList = useObservable(users$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
