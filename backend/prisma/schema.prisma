@@ -37,7 +37,7 @@ model user {
 
    user_tab_relations      user_tab_relation[]
    user_group_relations    user_group_relation[]
-   user_attendances        user_attendance[]
+   user_slot_excuses       user_slot_excuse[]
 }
 
 model user_tab_relation {
@@ -75,14 +75,13 @@ model group_slot {
    start                   DateTime
    end                     DateTime
 
-   user_attendances        user_attendance[]
+   user_slot_excuses       user_slot_excuse[]
 }
 
-model user_attendance {
+model user_slot_excuse {
    uid                     String     @unique
    user_uid                String
    group_slot_uid          String
-   excused                 Boolean
 
    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    group_slot group_slot @relation(fields: [group_slot_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)

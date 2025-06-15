@@ -1,6 +1,4 @@
 <template>
-   <h1>Présence</h1>
-
    <template v-for="group in userGroups" :key="group.uid">
       <StudentGroupAttendance :user_uid="user_uid" :group="group" />
    </template>
@@ -38,7 +36,7 @@ function userGroups$(user_uid: string) {
 }
 
 const userGroups = ref([])
-let subcription
+let subscription
 
 watch(
    () => props.user_uid,
@@ -52,6 +50,6 @@ watch(
 )
 
 onUnmounted(() => {
-   subcription && subcription.unsubscribe()
+   subscription && subscription.unsubscribe()
 })
 </script>
