@@ -11,7 +11,7 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userg, index) in userList" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
+               <v-list-item three-line v-for="(userg, index) in userAndGroupsList" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(userg.user)">
                         <v-img :src="userg?.user.pict"></v-img>
@@ -79,7 +79,7 @@ const props = defineProps({
 const filter = ref('')
 
 // ?? marche mal si on remplace switchMap par mergeMap
-const userList = useObservable(users$({}).pipe(
+const userAndGroupsList = useObservable(users$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -97,12 +97,12 @@ const userList = useObservable(users$({}).pipe(
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/followup\/([a-z0-9]+)/
 
-watch(() => [route.path, userList.value], async () => {
+watch(() => [route.path, userAndGroupsList.value], async () => {
    const match = route.path.match(routeRegex)
-   if (match) {
-      const user_uid = route.path.match(routeRegex)[1]
-      selectedUser.value = userList.value.find(user => user.uid === user_uid)
-   }
+   if (!match) return
+   const user_uid = route.path.match(routeRegex)[1]
+   const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
+   selectUser(user)
 }, { immediate: true })
 
 function selectUser(user) {
