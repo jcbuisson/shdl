@@ -95,6 +95,11 @@ const routes = [
                         props: true,
                         component: () => import('/src/views/followup/StudentAttendance.vue'),
                      },
+                     {
+                        path: 'workshop',
+                        props: true,
+                        component: () => import('/src/views/followup/StudentWorkshop.vue'),
+                     },
                   ],      
                },
             ],      
