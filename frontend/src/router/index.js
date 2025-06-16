@@ -111,6 +111,13 @@ const routes = [
                         path: 'workshop',
                         props: true,
                         component: () => import('/src/views/followup/StudentWorkshop.vue'),
+                        children: [
+                           {
+                              path: ':document_uid',
+                              props: true,
+                              component: () => import('/src/views/followup/StudentDocument.vue'),
+                           },
+                        ],
                      },
                   ],      
                },
