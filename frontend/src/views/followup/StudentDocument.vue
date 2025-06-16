@@ -17,9 +17,8 @@ import { map } from 'rxjs'
 
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
-import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
+const { getObservable: userDocuments$ } = useUserDocument()
 
 
 const props = defineProps({

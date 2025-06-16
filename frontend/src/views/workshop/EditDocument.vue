@@ -43,6 +43,7 @@ let subscription
 
 const uid2docDict = {}
 const selectedDoc = ref({})
+const selectedDocument = ref()
 
 let updateUid
 
@@ -79,6 +80,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    subscription = userDocument$(uid).subscribe(document => {
       console.log('document', document)
       selectedDoc.value.content = document.text
+      selectedDocument.value = document
    })
 }, { immediate: true })
 
@@ -87,8 +89,11 @@ onUnmounted(() => {
 })
 
 const onChange = async (text) => {
-   console.log('onChange', text)
-   await updateUserDocument(props.document_uid, { text })
+   // console.log('onChange', text)
+   await updateUserDocument(props.document_uid, {
+      text,
+      update_count: selectedDocument.value.update_count + 1,
+   })
 
    if (updateUid) {
       await updateUserDocumentEvent(updateUid, {

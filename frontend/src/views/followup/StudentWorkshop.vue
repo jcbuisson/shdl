@@ -15,7 +15,7 @@
                   <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteDocument(document)"></v-btn>
+                     <v-badge :color="document.update_count > 50 ? 'grey' : 'red'" inline :content="document.update_count"></v-badge>
                   </template>
                </v-list-item>
             </div>
