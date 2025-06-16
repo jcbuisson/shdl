@@ -32,17 +32,17 @@ const routes = [
          {
             path: 'users',
             props: true,
-            component: () => import('/src/views/ManageUsers.vue'),
+            component: () => import('/src/views/users/ManageUsers.vue'),
             children: [
                {
                   path: 'create',
                   props: true,
-                  component: () => import('/src/views/CreateUser.vue'),
+                  component: () => import('/src/views/users/CreateUser.vue'),
                },
                {
                   path: ':user_uid',
                   props: true,
-                  component: () => import('/src/views/EditUser.vue'),
+                  component: () => import('/src/views/users/EditUser.vue'),
                },
             ],      
          },
@@ -66,12 +66,24 @@ const routes = [
          {
             path: 'workshop',
             props: true,
-            component: () => import('/src/views/Workshop.vue'),
+            component: () => import('/src/views/workshop/Workshop.vue'),
             children: [
                {
                   path: ':document_uid',
                   props: true,
-                  component: () => import('/src/views/EditDocument.vue'),
+                  component: () => import('/src/views/workshop/ManageDocument.vue'),
+                  children: [
+                     {
+                        path: 'edit',
+                        props: true,
+                        component: () => import('/src/views/workshop/EditDocument.vue'),
+                     },
+                     {
+                        path: 'simulate',
+                        props: true,
+                        component: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                     },
+                  ],      
                },
             ],      
          },
