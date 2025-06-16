@@ -78,6 +78,14 @@
                </v-col>
             </v-row>
 
+            <v-row>
+               <v-textarea
+                  label="Notes"
+                  :modelValue="user?.notes"
+                  @input="(e) => onFieldInputDebounced('notes', e.target.value)"
+               ></v-textarea>
+            </v-row>
+
          </v-container>
       </v-form>
    </v-card>
