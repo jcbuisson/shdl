@@ -84,6 +84,18 @@ const routes = [
                   path: ':user_uid',
                   props: true,
                   component: () => import('/src/views/followup/StudentFollowup.vue'),
+                  children: [
+                     {
+                        path: 'activity',
+                        props: true,
+                        component: () => import('/src/views/followup/StudentActivity.vue'),
+                     },
+                     {
+                        path: 'attendance',
+                        props: true,
+                        component: () => import('/src/views/followup/StudentAttendance.vue'),
+                     },
+                  ],      
                },
             ],      
          },

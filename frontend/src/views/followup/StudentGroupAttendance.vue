@@ -1,6 +1,6 @@
 <template>
    <template v-if="groupSlotList.length > 0">
-      <h2>{{ group.name }}</h2>
+      <h3>{{ group.name }}</h3>
       <v-table density="compact">
          <thead>
             <tr>

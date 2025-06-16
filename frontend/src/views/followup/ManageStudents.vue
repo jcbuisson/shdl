@@ -101,12 +101,14 @@ watch(() => [route.path, userAndGroupsList.value], async () => {
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]
    const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
-   selectUser(user)
+   if (selectedUser.value.uid !== user.uid) {
+      selectUser(user)
+   }
 }, { immediate: true })
 
 function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
-   router.push(`/home/${props.signedinUid}/followup/${user.uid}`)
+   router.push(`/home/${props.signedinUid}/followup/${user.uid}/activity`)
 }
 </script>
