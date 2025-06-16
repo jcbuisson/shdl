@@ -125,10 +125,10 @@ async function editSlot(slot) {
       uid: slot.uid,
       group_uid: slot.group_uid,
       name: slot.name,
-      startdate: slot.start.substring(0, 10),
-      starttime: slot.start.substring(11, 16),
-      enddate: slot.end.substring(0, 10),
-      endtime: slot.end.substring(11, 16),
+      startdate: slot.start.substring(0, 10),// + 'Z',
+      starttime: slot.start.substring(11, 16),// + 'Z',
+      enddate: slot.end.substring(0, 10),// + 'Z',
+      endtime: slot.end.substring(11, 16),// + 'Z',
    }
    edit.value = true
    addOrEditSlotDialog.value = true

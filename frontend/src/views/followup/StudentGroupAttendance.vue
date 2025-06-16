@@ -1,7 +1,7 @@
 <template>
    <template v-if="groupSlotList.length > 0">
       <h2>{{ group.name }}</h2>
-      <v-table>
+      <v-table density="compact">
          <thead>
             <tr>
                <th class="text-left">Nom</th>
@@ -15,7 +15,7 @@
                <td>{{ slot.name }}</td>
                <td>{{ format(slot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
                <td>{{ format(slot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
-               <td><v-checkbox :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
+               <td><v-checkbox density="compact" hide-details :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
             </tr>
          </tbody>
       </v-table>
