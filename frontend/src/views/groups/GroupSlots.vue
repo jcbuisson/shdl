@@ -30,7 +30,7 @@
       </div>
    </v-card>
 
-   <v-dialog v-model="addOrEditSlotDialog" max-width="400">
+   <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
       <v-card :title="edit ? 'Éditer créneau' : 'Nouveau créneau'">
          <v-card-text>
             <v-row dense>
@@ -125,10 +125,10 @@ async function editSlot(slot) {
       uid: slot.uid,
       group_uid: slot.group_uid,
       name: slot.name,
-      startdate: slot.start.substring(0, 10),// + 'Z',
-      starttime: slot.start.substring(11, 16),// + 'Z',
-      enddate: slot.end.substring(0, 10),// + 'Z',
-      endtime: slot.end.substring(11, 16),// + 'Z',
+      startdate: slot.start.substring(0, 10),
+      starttime: new Date(slot.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+      enddate: slot.end.substring(0, 10),
+      endtime: new Date(slot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
    }
    edit.value = true
    addOrEditSlotDialog.value = true
