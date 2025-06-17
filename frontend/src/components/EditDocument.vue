@@ -1,16 +1,25 @@
 <template>
-   <div style="background-color: #67AD5B; color: white; height: 48px; padding: 10px;" class="d-flex align-center">
-      <h5>Module OK, 23 équipotentielles</h5>
-   </div>
-   <codemirror
-      v-if="selectedDoc"
-      v-model="selectedDoc.content"
-      :extensions="selectedDoc.extensions"
-      placeholder="Start coding here..."
-      class="fill-height"
-      @change="onChangeDebounced($event)"
-      @ready="handleEditorReady"
-   />
+   <!-- makes the layout a vertical stack filling the full height -->
+   <v-card class="d-flex flex-column fill-height">
+
+      <!-- Toolbar (does not grow) -->
+      <div style="background-color: #67AD5B; color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+         <h5>Module OK, 23 équipotentielles</h5>
+      </div>
+
+      <!-- Fills remaining vertical space -->
+      <div class="d-flex flex-column flex-grow-1 overflow-auto">
+         <codemirror
+            v-if="selectedDoc"
+            v-model="selectedDoc.content"
+            :extensions="selectedDoc.extensions"
+            placeholder="Start coding here..."
+            class="fill-height"
+            @change="onChangeDebounced($event)"
+            @ready="handleEditorReady"
+         />
+      </div>
+   </v-card>
 </template>
 
 <script setup>
