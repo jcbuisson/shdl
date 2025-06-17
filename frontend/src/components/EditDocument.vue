@@ -1,4 +1,7 @@
 <template>
+   <div style="background-color: #67AD5B; color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+      <h5>Module OK, 23 équipotentielles</h5>
+   </div>
    <codemirror
       v-if="selectedDoc"
       v-model="selectedDoc.content"

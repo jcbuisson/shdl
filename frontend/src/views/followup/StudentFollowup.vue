@@ -1,17 +1,25 @@
 <template>
-   <v-tabs slider-color="indigo" v-model="tab">
-      <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
-         Activité
-      </v-tab>
-      <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/attendance` }" router value='attendance'>
-         Présence
-      </v-tab>
-      <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/workshop` }" router value='workshop'>
-         Travaux
-      </v-tab>
-   </v-tabs>
+   <!-- makes the layout a vertical stack filling the full height -->
+   <v-card class="d-flex flex-column fill-height">
 
-   <router-view></router-view>
+      <!-- Toolbar (does not grow) -->
+      <v-tabs slider-color="indigo" v-model="tab">
+         <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
+            Activité
+         </v-tab>
+         <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/attendance` }" router value='attendance'>
+            Présence
+         </v-tab>
+         <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/workshop` }" router value='workshop'>
+            Travaux
+         </v-tab>
+      </v-tabs>
+
+      <!-- Fills remaining vertical space -->
+      <div class="d-flex flex-column flex-grow-1 overflow-auto">
+         <router-view></router-view>
+      </div>
+   </v-card>
 
 </template>
 
