@@ -12,7 +12,8 @@
 
 <script setup>
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
-import { Codemirror } from 'vue-codemirror';
+import { Codemirror } from 'vue-codemirror'
+import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
@@ -25,11 +26,12 @@ const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = use
 
 
 const props = defineProps({
-   signedinUid: {
-      type: String,
-   },
    document_uid: {
       type: String,
+   },
+   editable: {
+      type: Boolean,
+      default: true
    },
 })
 
@@ -69,7 +71,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       console.log('create new doc')
       const newDoc = {
          content: '',
-         extensions: [myLang],
+         extensions: [myLang, EditorView.editable.of(props.editable)],
       }
       uid2docDict[uid] = newDoc
       selectedDoc.value = newDoc

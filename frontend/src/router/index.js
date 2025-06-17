@@ -76,12 +76,12 @@ const routes = [
                      {
                         path: 'edit',
                         props: true,
-                        component: () => import('/src/views/workshop/EditDocument.vue'),
+                        component: () => import('/src/components/EditDocument.vue'),
                      },
                      {
                         path: 'simulate',
                         props: true,
-                        component: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                        component: () => import('/src/components/SHDLSimulator.vue'),
                      },
                   ],      
                },
@@ -116,6 +116,21 @@ const routes = [
                               path: ':document_uid',
                               props: true,
                               component: () => import('/src/views/followup/StudentDocument.vue'),
+                              children: [
+                                 {
+                                    path: 'edit',
+                                    props: route => ({
+                                       document_uid: route.params.document_uid,
+                                       editable: false,
+                                    }),
+                                    component: () => import('/src/components/EditDocument.vue'),
+                                 },
+                                 {
+                                    path: 'simulate',
+                                    props: true,
+                                    component: () => import('/src/components/SHDLSimulator.vue'),
+                                 },
+                              ],      
                            },
                         ],
                      },

@@ -15,7 +15,7 @@
                   <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-badge :color="document.update_count > 50 ? 'grey' : 'red'" inline :content="document.update_count"></v-badge>
+                     <v-badge :color="document.update_count > 15 ? 'grey' : 'red'" inline :content="document.update_count"></v-badge>
                   </template>
                </v-list-item>
             </div>
@@ -71,7 +71,7 @@ const selectedDocument = ref(null)
 
 function selectDocument(document) {
    selectedDocument.value = document
-   router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/${document.uid}`)
+   router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/${document.uid}/edit`)
 }
 
 // const route = useRoute()
