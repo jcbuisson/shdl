@@ -1,6 +1,6 @@
 <template>
    <!-- makes the layout a vertical stack filling the full height -->
-   <v-card class="d-flex flex-column fill-height">
+   <div class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
       <v-tabs slider-color="indigo" v-model="tab">
@@ -16,7 +16,7 @@
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
          <router-view></router-view>
       </div>
-   </v-card>
+   </div>
 </template>
 
 <script setup>

@@ -2,7 +2,7 @@
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
-         <v-card class="d-flex flex-column fill-height">
+         <div class="d-flex flex-column fill-height">
             <v-toolbar color="red-darken-4" density="compact">
                <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
                <v-text-field v-model="filter" single-line></v-text-field>
@@ -20,7 +20,7 @@
                   </template>
                </v-list-item>
             </div>
-         </v-card>
+         </div>
       </template>
 
       <template v-slot:right-panel>

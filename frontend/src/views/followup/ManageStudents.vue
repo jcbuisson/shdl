@@ -101,7 +101,7 @@ watch(() => [route.path, userAndGroupsList.value], async () => {
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]
    const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
-   if (selectedUser.value.uid !== user.uid) {
+   if (selectedUser.value?.uid !== user.uid) {
       selectUser(user)
    }
 }, { immediate: true })

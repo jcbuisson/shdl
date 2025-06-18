@@ -77,6 +77,7 @@ const routes = [
                         path: 'edit',
                         props: true,
                         component: () => import('/src/components/EditDocument.vue'),
+                        // component: () => import('/src/components/Dummy.vue'),
                      },
                      {
                         path: 'simulate',
@@ -133,6 +134,11 @@ const routes = [
                               ],      
                            },
                         ],
+                     },
+                     {
+                        path: 'grade',
+                        props: true,
+                        component: () => import('/src/views/followup/StudentGrade.vue'),
                      },
                   ],      
                },
