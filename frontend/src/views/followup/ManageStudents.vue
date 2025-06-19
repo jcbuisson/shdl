@@ -97,6 +97,7 @@ const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/followup\/([a-z0-9]+)/
 
 watch(() => [route.path, userAndGroupsList.value], async () => {
+   if (!userAndGroupsList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]

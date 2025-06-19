@@ -1,23 +1,27 @@
 <template>
    NOTE
+   <div>{{ groupSlotList }}</div>
+   <div>{{ userEventList }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
 import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
-import { useGroupSlot } from '/src/use/useGroupSlot'
+import { useGroup } from '/src/use/useGroup'
+import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+import { useGroupSlot } from '/src/use/useGroupSlot'
 
-// const { getObservable: groupSlots$ } = useGroupSlot()
+const { getObservable: groups$ } = useGroup()
+const { getObservable: userGroupRelations$ } = useUserGroupRelation()
 const { getObservable: userSlotExcuses$, create: createUserSlotExcuse, remove: removeUserSlotExcuse } = useUserSlotExcuse()
 const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
+const { getObservable: groupSlots$ } = useGroupSlot()
 
 import { guardCombineLatest } from '/src/lib/utilities'
 
@@ -28,23 +32,26 @@ const props = defineProps({
    },
 })
 
-// const groupSlotList = ref([])
 const userExcuseList = ref([])
 const userEventList = ref([])
+const groupSlotList = ref([])
 const subscriptions = [] 
 
+
 watch(
-   () => [props.user_uid, props.group],
-   async ([user_uid, group]) => {
-      // console.log('watch', user_uid, group)
-      // const slots$ = groupSlots$({ group_uid: group.uid })
-      // subscriptions.push(slots$.subscribe(list => {
-      //    groupSlotList.value = list.toSorted((s1, s2) => (s1.start > s2.start) ? 1 : (s1.start < s2.start) ? -1 : 0)
-      // }))
-      const excuses$ = userSlotExcuses$({ user_uid})
-      subscriptions.push(excuses$.subscribe(list => {
-         userExcuseList.value = list
+   () => props.user_uid,
+   async (user_uid) => {
+
+      const slots$ = userGroupSlots$(user_uid)
+      subscriptions.push(slots$.subscribe(slots => {
+         groupSlotList.value = slots
       }))
+
+      const excuses$ = userSlotExcuses$({ user_uid})
+      subscriptions.push(excuses$.subscribe(excuses => {
+         userExcuseList.value = excuses
+      }))
+
       const events$ = studentEvents$(user_uid)
       subscriptions.push(events$.subscribe(listOfList => {
          userEventList.value = listOfList.reduce((acc, events) => [...events, ...acc], [])
@@ -53,11 +60,28 @@ watch(
    { immediate: true } // so that it's called on component mount
 )
 
+
 onUnmounted(() => {
    for (const subscription of subscriptions) {
       subscription.unsubscribe()
    }
 })
+
+function userGroups$(user_uid: string) {
+   return userGroupRelations$({ user_uid }).pipe(
+      switchMap(relations =>
+         guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+      ),
+   )
+}
+
+function userGroupSlots$(user_uid: string) {
+   return userGroupRelations$({ user_uid }).pipe(
+      switchMap(relations =>
+         guardCombineLatest(relations.map(relation => groupSlots$({ group_uid: relation.group_uid })))
+      ),
+   )
+}
 
 function isExcused(slot) {
    if (!userExcuseList.value) return false
