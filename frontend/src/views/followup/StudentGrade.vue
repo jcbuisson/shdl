@@ -1,16 +1,12 @@
 <template>
-   <!-- <div>{{ groupSlotList }}</div>
-   <div>{{ userEventList }}</div> -->
-   <div>Présence : {{ activeCount }} séance / {{ groupSlotList.length }} séances</div>
+   <div>{{ grade }}</div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted, computed } from 'vue'
 
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
-import { userSlots$, userEvents$ } from '/src/lib/businessObservables'
-
-const { getObservable: userSlotExcuses$ } = useUserSlotExcuse()
+import { userGrade$ } from '/src/lib/businessObservables'
 
 
 const props = defineProps({
@@ -19,30 +15,17 @@ const props = defineProps({
    },
 })
 
-const userExcuseList = ref([])
-const userEventList = ref([])
-const groupSlotList = ref([])
+const grade = ref()
+
 const subscriptions = [] 
 
 
 watch(
    () => props.user_uid,
    async (user_uid) => {
-      const now = new Date()
-
-      const slots$ = userSlots$(user_uid)
-      subscriptions.push(slots$.subscribe(slots => {
-         groupSlotList.value = slots.filter(slot => new Date(slot.start) <= now)
-      }))
-
-      const excuses$ = userSlotExcuses$({ user_uid})
-      subscriptions.push(excuses$.subscribe(excuses => {
-         userExcuseList.value = excuses
-      }))
-
-      const events$ = userEvents$(user_uid)
-      subscriptions.push(events$.subscribe(events => {
-         userEventList.value = events
+      const grade$ = userGrade$(user_uid)
+      subscriptions.push(grade$.subscribe(g => {
+         grade.value = g
       }))
    },
    { immediate: true } // so that it's called on component mount
@@ -53,22 +36,5 @@ onUnmounted(() => {
    for (const subscription of subscriptions) {
       subscription.unsubscribe()
    }
-})
-
-const activeCount = computed(() => {
-   if (!groupSlotList.value) return 0
-   if (!userEventList.value) return 0
-   return groupSlotList.value.reduce((accu, slot) => {
-      const slotStart = new Date(slot.start)
-      const slotEnd = new Date(slot.end)
-      if (userEventList.value.some(event => {
-         const eventStart = new Date(event.start)
-         return (eventStart >= slotStart && eventStart <= slotEnd)
-      })) {
-         return accu+1
-      } else {
-         return accu
-      }
-   }, 0)
 })
 </script>
