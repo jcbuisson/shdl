@@ -27,22 +27,16 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
-import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
-import { useUserDocument } from '/src/use/useUserDocument'
-import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
 const { getObservable: groupSlots$ } = useGroupSlot()
 const { getObservable: userSlotExcuses$, create: createUserSlotExcuse, remove: removeUserSlotExcuse } = useUserSlotExcuse()
-const { getObservable: userDocument$ } = useUserDocument()
-const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 
-import { guardCombineLatest } from '/src/lib/utilities'
+import { userEvents$ } from '/src/lib/businessObservables'
 
 
 const props = defineProps({
@@ -71,9 +65,9 @@ watch(
       subscriptions.push(excuses$.subscribe(list => {
          userExcuseList.value = list
       }))
-      const events$ = studentEvents$(user_uid)
-      subscriptions.push(events$.subscribe(listOfList => {
-         userEventList.value = listOfList.reduce((acc, events) => [...events, ...acc], [])
+      const events$ = userEvents$(user_uid)
+      subscriptions.push(events$.subscribe(events => {
+         userEventList.value = events
       }))
    },
    { immediate: true } // so that it's called on component mount
@@ -101,19 +95,6 @@ async function onExcuseClick(slot) {
          group_slot_uid: slot.uid,
       })
    }
-}
-
-// emit a list of lists of events, one list per document
-function studentEvents$(user_uid: string) {
-   return userDocument$({ user_uid }).pipe(
-      switchMap(documentList => 
-         guardCombineLatest(
-            documentList.map(document =>
-               userDocumentEvent$({ document_uid: document.uid })
-            )
-         )
-      ),
-   )
 }
 
 // return 'mdi-check' (active), 'mdi-close' (inactive), undefined (slot is in future)

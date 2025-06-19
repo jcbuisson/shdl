@@ -1,29 +1,16 @@
 <template>
-   NOTE
-   <div>{{ groupSlotList }}</div>
-   <div>{{ userEventList }}</div>
+   <!-- <div>{{ groupSlotList }}</div>
+   <div>{{ userEventList }}</div> -->
+   <div>Présence : {{ activeCount }} séance / {{ groupSlotList.length }} séances</div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
-import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { ref, watch, onUnmounted, computed } from 'vue'
 
-import { useGroup } from '/src/use/useGroup'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
-import { useUserDocument } from '/src/use/useUserDocument'
-import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-import { useGroupSlot } from '/src/use/useGroupSlot'
+import { userSlots$, userEvents$ } from '/src/lib/businessObservables'
 
-const { getObservable: groups$ } = useGroup()
-const { getObservable: userGroupRelations$ } = useUserGroupRelation()
-const { getObservable: userSlotExcuses$, create: createUserSlotExcuse, remove: removeUserSlotExcuse } = useUserSlotExcuse()
-const { getObservable: userDocument$ } = useUserDocument()
-const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
-const { getObservable: groupSlots$ } = useGroupSlot()
-
-import { guardCombineLatest } from '/src/lib/utilities'
+const { getObservable: userSlotExcuses$ } = useUserSlotExcuse()
 
 
 const props = defineProps({
@@ -41,10 +28,11 @@ const subscriptions = []
 watch(
    () => props.user_uid,
    async (user_uid) => {
+      const now = new Date()
 
-      const slots$ = userGroupSlots$(user_uid)
+      const slots$ = userSlots$(user_uid)
       subscriptions.push(slots$.subscribe(slots => {
-         groupSlotList.value = slots
+         groupSlotList.value = slots.filter(slot => new Date(slot.start) <= now)
       }))
 
       const excuses$ = userSlotExcuses$({ user_uid})
@@ -52,9 +40,9 @@ watch(
          userExcuseList.value = excuses
       }))
 
-      const events$ = studentEvents$(user_uid)
-      subscriptions.push(events$.subscribe(listOfList => {
-         userEventList.value = listOfList.reduce((acc, events) => [...events, ...acc], [])
+      const events$ = userEvents$(user_uid)
+      subscriptions.push(events$.subscribe(events => {
+         userEventList.value = events
       }))
    },
    { immediate: true } // so that it's called on component mount
@@ -67,40 +55,10 @@ onUnmounted(() => {
    }
 })
 
-function userGroups$(user_uid: string) {
-   return userGroupRelations$({ user_uid }).pipe(
-      switchMap(relations =>
-         guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
-      ),
-   )
-}
-
-function userGroupSlots$(user_uid: string) {
-   return userGroupRelations$({ user_uid }).pipe(
-      switchMap(relations =>
-         guardCombineLatest(relations.map(relation => groupSlots$({ group_uid: relation.group_uid })))
-      ),
-   )
-}
-
 function isExcused(slot) {
    if (!userExcuseList.value) return false
    const uidList = userExcuseList.value.map(excuse => excuse.group_slot_uid)
    return uidList.includes(slot.uid)
-}
-
-
-// emit a list of lists of events, one list per document
-function studentEvents$(user_uid: string) {
-   return userDocument$({ user_uid }).pipe(
-      switchMap(documentList => 
-         guardCombineLatest(
-            documentList.map(document =>
-               userDocumentEvent$({ document_uid: document.uid })
-            )
-         )
-      ),
-   )
 }
 
 // return 'mdi-check' (active), 'mdi-close' (inactive), undefined (slot is in future)
@@ -116,4 +74,21 @@ function activityStatus(slot) {
    })) return 'mdi-check'
    return 'mdi-close'
 }
+
+const activeCount = computed(() => {
+   if (!groupSlotList.value) return 0
+   if (!userEventList.value) return 0
+   return groupSlotList.value.reduce((accu, slot) => {
+      const slotStart = new Date(slot.start)
+      const slotEnd = new Date(slot.end)
+      if (userEventList.value.some(event => {
+         const eventStart = new Date(event.start)
+         return (eventStart >= slotStart && eventStart <= slotEnd)
+      })) {
+         return accu+1
+      } else {
+         return accu
+      }
+   }, 0)
+})
 </script>
