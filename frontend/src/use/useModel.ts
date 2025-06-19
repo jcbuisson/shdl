@@ -46,19 +46,6 @@ export default function(dbName: string, modelName: string, fields) {
       await db.metadata.put(meta)
    })
 
-
-   function getObservable(where = {}) {
-
-      addSynchroWhere(where).then((isNew: boolean) => {
-         if (isNew && isConnected.value) {
-            synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
-         }
-      })
-
-      const predicate = wherePredicate(where)
-      return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
-   }
-
    
    async function create(data) {
       const uid = uid16(16)
@@ -117,6 +104,17 @@ export default function(dbName: string, modelName: string, fields) {
       }
    }
 
+
+   function getObservable(where = {}) {
+      addSynchroWhere(where).then((isNew: boolean) => {
+         if (isNew && isConnected.value) {
+            synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
+         }
+      })
+      const predicate = wherePredicate(where)
+      return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
+   }
+
    function addSynchroWhere(where: object) {
       console.log('addSynchroWhere', dbName, modelName, where)
       return addSynchroDBWhere(where, db.whereList)
@@ -131,7 +129,6 @@ export default function(dbName: string, modelName: string, fields) {
       await synchronizeModelWhereList(app, modelName, db.values, db.metadata, disconnectedDate.value, db.whereList)
    }
 
-
    // Automatically clean up when the component using this composable unmounts
    tryOnScopeDispose(async () => {
       console.log('CLEANING', dbName, modelName)
@@ -144,7 +141,6 @@ export default function(dbName: string, modelName: string, fields) {
    return {
       db, reset,
       create, update, remove,
-      // addPerimeter,
       getObservable,
       synchronizeAll,
    }

@@ -55,26 +55,6 @@ onUnmounted(() => {
    }
 })
 
-function isExcused(slot) {
-   if (!userExcuseList.value) return false
-   const uidList = userExcuseList.value.map(excuse => excuse.group_slot_uid)
-   return uidList.includes(slot.uid)
-}
-
-// return 'mdi-check' (active), 'mdi-close' (inactive), undefined (slot is in future)
-function activityStatus(slot) {
-   if (!userEventList.value) return undefined
-   const now = new Date()
-   const slotStart = new Date(slot.start)
-   const slotEnd = new Date(slot.end)
-   if (slotStart > now) return undefined
-   if (userEventList.value.some(event => {
-      const eventStart = new Date(event.start)
-      return (eventStart >= slotStart && eventStart <= slotEnd)
-   })) return 'mdi-check'
-   return 'mdi-close'
-}
-
 const activeCount = computed(() => {
    if (!groupSlotList.value) return 0
    if (!userEventList.value) return 0
