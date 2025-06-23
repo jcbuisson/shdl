@@ -1,4 +1,7 @@
 <template>
+   <div>{{ userAndGroupsList }}</div>
+   <div>{{ gradeList }}</div>
+   <div>{{ x }}</div>
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -26,6 +29,7 @@
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
+                     <v-chip size="x-small">{{ 10 }}</v-chip>
                      <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userg.user)"></v-btn>
                   </template>
                </v-list-item>
@@ -61,6 +65,7 @@ import { selectedUser } from '/src/use/useSelectedUser'
 import router from '/src/router'
 import { extendExpiration } from "/src/use/useAuthentication"
 
+import { userGroups$, userGrade$ } from '/src/lib/businessObservables'
 import { guardCombineLatest } from '/src/lib/utilities'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -78,7 +83,7 @@ const props = defineProps({
 
 const filter = ref('')
 
-const userAndGroupsList = useObservable(users$({}).pipe(
+const userAndGroups$ = users$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -91,7 +96,23 @@ const userAndGroupsList = useObservable(users$({}).pipe(
          )
       )
    ),
+)
+const userAndGroupsList = useObservable(userAndGroups$)
+
+
+const grade$ = users$({}).pipe(
+   switchMap(users => 
+      guardCombineLatest(
+         users.map(user => userGrade$(user.uid)
+      )
+   ),
 ))
+const gradeList = useObservable(grade$)
+
+
+const userAndGroupsAndGrades$ = combineLatest(userAndGroups$, grade$)
+const x = useObservable(userAndGroupsAndGrades$)
+
 
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/followup\/([a-z0-9]+)/
@@ -106,6 +127,7 @@ watch(() => [route.path, userAndGroupsList.value], async () => {
       selectUser(user)
    }
 }, { immediate: true })
+
 
 function selectUser(user) {
    extendExpiration()

@@ -1,13 +1,17 @@
 import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
+// import { useUser } from '/src/use/useUser'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useGroup } from '/src/use/useGroup'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
+// const { getObservable: users$ } = useUser()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
+const { getObservable: groups$ } = useGroup()
 const { getObservable: userSlotExcuses$ } = useUserSlotExcuse()
 const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
@@ -16,12 +20,20 @@ const { getObservable: groupSlots$ } = useGroupSlot()
 import { guardCombineLatest } from '/src/lib/utilities'
 
 
+export function userGroups$(user_uid: string) {
+   return userGroupRelations$({ user_uid }).pipe(
+      switchMap(relations =>
+         guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+      ),
+   )
+}
+
 export function userSlots$(user_uid: string) {
    return userGroupRelations$({ user_uid }).pipe(
       switchMap(relations =>
          guardCombineLatest(relations.map(relation => groupSlots$({ group_uid: relation.group_uid })))
       ),
-      map(listOfSlotList => listOfSlotList.reduce((accu, list) => [...accu, ...list]), []),
+      map(listOfSlotList => listOfSlotList.reduce((accu, slotList) => [...accu, ...slotList], [])),
    )
 }
 
@@ -34,7 +46,7 @@ export function userEvents$(user_uid: string) {
             )
          )
       ),
-      map(listOfList => listOfList.reduce((accu, list) => [...accu, ...list]), []),
+      map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
    )
 }
 
@@ -45,7 +57,6 @@ export function userGrade$(user_uid: string) {
       userEvents$(user_uid),
       userSlotExcuses$({ user_uid }),
    ]).pipe(
-      tap(x => console.log('grade', x)),
       map(([slots, events, excuses]) => {
          const now = new Date()
          const excuseSlotUids = excuses.map(excuse => excuse.group_slot_uid)

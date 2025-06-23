@@ -31,17 +31,6 @@ export class Mutex {
    }
 }
 
-
-// export function guardCombineLatest<T>(observables: Array<any>): T {
-//    if (observables.length === 0) {
-//       // If the array is empty, immediately return an Observable that emits an empty array
-//       return of([]) as T
-//    } else {
-//       // Otherwise, proceed with combineLatest
-//       return combineLatest(observables) as T
-//    }
-// }
-
 export function guardCombineLatest(observables) {
    if (observables.length === 0) {
       // If the array is empty, immediately return an Observable that emits an empty array

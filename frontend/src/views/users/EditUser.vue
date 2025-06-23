@@ -156,8 +156,8 @@ watch(() => props.user_uid, async (user_uid) => {
    if (userGroupRelationSubscription) userGroupRelationSubscription.unsubscribe()
    userGroupRelationSubscription = userGroupRelations$({ user_uid }).pipe(
       map(relationList => relationList.map(relation => relation.group_uid))
-   ).subscribe(groupList => {
-      userGroups.value = groupList
+   ).subscribe(groupUIDs => {
+      userGroups.value = groupUIDs
    })
 
    if (userTabRelationSubscription) userTabRelationSubscription.unsubscribe()
