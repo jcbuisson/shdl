@@ -16,7 +16,7 @@ import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 const { getObservable: groups$ } = useGroup()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
 
-import { guardCombineLatest } from '/src/lib/utilities'
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 

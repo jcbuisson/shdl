@@ -1,7 +1,5 @@
 <template>
-   <div>{{ userAndGroupsList }}</div>
-   <div>{{ gradeList }}</div>
-   <div>{{ x }}</div>
+   <!-- <div>{{ userAndGroupsAndGradeList }}</div> -->
    <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -14,23 +12,23 @@
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userg, index) in userAndGroupsList" :key="index" :value="userg?.user" @click="selectUser(userg.user)" :active="selectedUser?.uid === userg?.user.uid">
+               <v-list-item three-line v-for="(ugg, index) in userAndGroupsAndGradeList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
                   <template v-slot:prepend>
-                     <v-avatar @click="onAvatarClick(userg.user)">
-                        <v-img :src="userg?.user.pict"></v-img>
+                     <v-avatar @click="onAvatarClick(ugg.user)">
+                        <v-img :src="ugg?.user.pict"></v-img>
                      </v-avatar>
                   </template>
-                  <v-list-item-title>{{ userg?.user.lastname }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ userg?.user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-title>{{ ugg?.user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ ugg?.user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
-                     <template v-for="group in userg.groups">
+                     <template v-for="group in ugg.groups">
                         <v-chip size="x-small">{{ group?.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-chip size="x-small">{{ 10 }}</v-chip>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userg.user)"></v-btn>
+                     <v-chip v-if="ugg?.grade >= 0" size="x-small" variant="flat" :color="ugg?.grade < 10 ? 'red' : 'grey'">{{ ugg?.grade }}</v-chip>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(ugg.user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -66,7 +64,7 @@ import router from '/src/router'
 import { extendExpiration } from "/src/use/useAuthentication"
 
 import { userGroups$, userGrade$ } from '/src/lib/businessObservables'
-import { guardCombineLatest } from '/src/lib/utilities'
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
@@ -97,8 +95,6 @@ const userAndGroups$ = users$({}).pipe(
       )
    ),
 )
-const userAndGroupsList = useObservable(userAndGroups$)
-
 
 const grade$ = users$({}).pipe(
    switchMap(users => 
@@ -107,22 +103,25 @@ const grade$ = users$({}).pipe(
       )
    ),
 ))
-const gradeList = useObservable(grade$)
 
-
-const userAndGroupsAndGrades$ = combineLatest(userAndGroups$, grade$)
-const x = useObservable(userAndGroupsAndGrades$)
+const userAndGroupsAndGrades$ = combineLatest(userAndGroups$, grade$).pipe(
+   map(([userAndGroupsAndGradeList, gradeList]) => userAndGroupsAndGradeList.map((userAndGroups, index) => {
+      const grade = gradeList[index]
+      return ({ ...userAndGroups, grade })
+   }))
+)
+const userAndGroupsAndGradeList = useObservable(userAndGroupsAndGrades$)
 
 
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/followup\/([a-z0-9]+)/
 
-watch(() => [route.path, userAndGroupsList.value], async () => {
-   if (!userAndGroupsList.value) return
+watch(() => [route.path, userAndGroupsAndGradeList.value], async () => {
+   if (!userAndGroupsAndGradeList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]
-   const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
+   const user = userAndGroupsAndGradeList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
    if (selectedUser.value?.uid !== user.uid) {
       selectUser(user)
    }

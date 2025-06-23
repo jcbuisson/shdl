@@ -27,7 +27,7 @@ const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlot$ } = useGroupSlot()
 const { getObservable: userGroupRelation$ } = useUserGroupRelation()
 
-import { guardCombineLatest } from '/src/lib/utilities'
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 

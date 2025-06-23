@@ -64,7 +64,7 @@ import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
 
-import { guardCombineLatest } from '/src/lib/utilities'
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 

@@ -17,8 +17,16 @@ const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlots$ } = useGroupSlot()
 
-import { guardCombineLatest } from '/src/lib/utilities'
 
+export function guardCombineLatest(observables) {
+   if (observables.length === 0) {
+      // If the array is empty, immediately return an Observable that emits an empty array
+      return of([])
+   } else {
+      // Otherwise, proceed with combineLatest
+      return combineLatest(observables)
+   }
+}
 
 export function userGroups$(user_uid: string) {
    return userGroupRelations$({ user_uid }).pipe(
@@ -50,7 +58,7 @@ export function userEvents$(user_uid: string) {
    )
 }
 
-// emit value in 0..20 or undefined
+// emit value in 0..20 or -1
 export function userGrade$(user_uid: string) {
    return guardCombineLatest([
       userSlots$(user_uid),
@@ -62,7 +70,7 @@ export function userGrade$(user_uid: string) {
          const excuseSlotUids = excuses.map(excuse => excuse.group_slot_uid)
          const pastUnexcusedSlots = slots.filter(slot => new Date(slot.start) <= now && !excuseSlotUids.includes(slot.uid))
          if (pastUnexcusedSlots.length === 0) {
-            return
+            return -1
          }
          const activeCount = pastUnexcusedSlots.reduce((accu, slot) => {
             const slotStart = new Date(slot.start)
