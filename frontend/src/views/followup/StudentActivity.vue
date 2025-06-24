@@ -22,6 +22,8 @@ import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
+import { setActivityGraphZoom, activityGraphZoom } from "/src/use/useAppState"
+
 const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlot$ } = useGroupSlot()
@@ -57,6 +59,7 @@ const chartContainer = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
 let svg, xScale, yScale, xAxis, yAxis, slotsGroup, eventsGroup
+let zoomScale = 1.
 
 
 function studentEvents$(user_uid: string) {
@@ -204,6 +207,7 @@ function drawChart(slots, events) {
          const transform = e.transform
          const newXScale = transform.rescaleX(xScale)
          const zoomScale = e.transform.k
+         setActivityGraphZoom(zoomScale)
          xAxis.call(zoomScale < 5 ?
             d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
             d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))

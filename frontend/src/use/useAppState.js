@@ -67,3 +67,14 @@ export async function setWorkshopSplitWidth(value) {
 const kvWorkshopSplitWidth = useObservable(liveQuery(() => db.keyval.get('workshop-split-width')))
 export const workshopSplitWidth = computed(() => kvWorkshopSplitWidth?.value?.value)
 
+
+
+/////////////////       activity zoom and position       /////////////////
+
+export async function setActivityGraphZoom(value) {
+   db.keyval.put({ key: 'activity-graph-zoom', value })
+}
+
+const kvActivityGraphZoom = useObservable(liveQuery(() => db.keyval.get('activity-graph-zoom')))
+export const activityGraphZoom = computed(() => kvActivityGraphZoom?.value?.value)
+
