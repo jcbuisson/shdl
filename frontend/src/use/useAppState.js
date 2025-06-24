@@ -49,6 +49,14 @@ const kvStudentManagerSplitWidth = useObservable(liveQuery(() => db.keyval.get('
 export const studentManagerSplitWidth = computed(() => kvStudentManagerSplitWidth?.value?.value)
 
 
+export async function setStudentManagerWorkshopSplitWidth(value) {
+   db.keyval.put({ key: 'student-manager-workshop-split-width', value })
+}
+
+const kvStudentManagerWorkshopSplitWidth = useObservable(liveQuery(() => db.keyval.get('student-manager-workshop-split-width')))
+export const studentManagerWorkshopSplitWidth = computed(() => kvStudentManagerWorkshopSplitWidth?.value?.value)
+
+
 
 /////////////////       workshop split width       /////////////////
 
