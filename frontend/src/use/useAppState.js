@@ -69,12 +69,20 @@ export const workshopSplitWidth = computed(() => kvWorkshopSplitWidth?.value?.va
 
 
 
-/////////////////       activity zoom and position       /////////////////
+/////////////////       activity graph date min & max       /////////////////
 
-export async function setActivityGraphZoom(value) {
-   db.keyval.put({ key: 'activity-graph-zoom', value })
+export async function setActivityGraphDateMin(value) {
+   db.keyval.put({ key: 'activity-graph-date-min', value })
 }
 
-const kvActivityGraphZoom = useObservable(liveQuery(() => db.keyval.get('activity-graph-zoom')))
-export const activityGraphZoom = computed(() => kvActivityGraphZoom?.value?.value)
+const kvActivityGraphDateMin = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-min')))
+export const activityGraphDateMin = computed(() => kvActivityGraphDateMin?.value?.value)
+
+
+export async function setActivityGraphDateMax(value) {
+   db.keyval.put({ key: 'activity-graph-date-max', value })
+}
+
+const kvActivityGraphDateMax = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-max')))
+export const activityGraphDateMax = computed(() => kvActivityGraphDateMax?.value?.value)
 
