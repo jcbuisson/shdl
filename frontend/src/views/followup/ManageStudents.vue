@@ -1,6 +1,6 @@
 <template>
    <!-- <div>{{ userAndGroupsAndGradeList }}</div> -->
-   <SplitPanel>
+   <SplitPanel :leftWidth="studentManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
@@ -59,11 +59,14 @@ import { useObservable } from '@vueuse/rxjs'
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { selectedUser } from '/src/use/useSelectedUser'
-import router from '/src/router'
-import { extendExpiration } from "/src/use/useAuthentication"
 
-import { userGroups$, userGrade$ } from '/src/lib/businessObservables'
+import { selectedUser } from '/src/use/useSelectedUser'
+import { extendExpiration } from "/src/use/useAuthentication"
+import { setStudentManagerSplitWidth, studentManagerSplitWidth } from "/src/use/useAppState"
+
+import router from '/src/router'
+
+import { userGrade$ } from '/src/lib/businessObservables'
 import { guardCombineLatest } from '/src/lib/businessObservables'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -132,5 +135,9 @@ function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
    router.push(`/home/${props.signedinUid}/followup/${user.uid}/activity`)
+}
+
+function onResize(width) {
+   setStudentManagerSplitWidth(width)
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
-   <!-- {{ userAndGroupsList }} -->
-   <SplitPanel>
+   <!-- {{ userManagerSplitWidth }} -->
+   <SplitPanel :leftWidth="userManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
@@ -59,12 +59,14 @@ import { useObservable } from '@vueuse/rxjs'
 import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+
 import { selectedUser } from '/src/use/useSelectedUser'
-import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
+import { setUserManagerSplitWidth, userManagerSplitWidth } from "/src/use/useAppState"
 
 import { guardCombineLatest } from '/src/lib/businessObservables'
+import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
@@ -136,5 +138,9 @@ async function deleteUser(user) {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
       }
    }
+}
+
+function onResize(width) {
+   setUserManagerSplitWidth(width)
 }
 </script>

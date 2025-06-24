@@ -26,3 +26,36 @@ export const expiresAt = computed(() => {
    if (!expiresAtRecord.value) return null
    return expiresAtRecord.value.date
 })
+
+
+/////////////////       user-manager split width       /////////////////
+
+export async function setUserManagerSplitWidth(value) {
+   db.keyval.put({ key: 'user-manager-split-width', value })
+}
+
+const kvUserManagerSplitWidth = useObservable(liveQuery(() => db.keyval.get('user-manager-split-width')))
+export const userManagerSplitWidth = computed(() => kvUserManagerSplitWidth?.value?.value)
+
+
+
+/////////////////       student-manager split width       /////////////////
+
+export async function setStudentManagerSplitWidth(value) {
+   db.keyval.put({ key: 'student-manager-split-width', value })
+}
+
+const kvStudentManagerSplitWidth = useObservable(liveQuery(() => db.keyval.get('student-manager-split-width')))
+export const studentManagerSplitWidth = computed(() => kvStudentManagerSplitWidth?.value?.value)
+
+
+
+/////////////////       workshop split width       /////////////////
+
+export async function setWorkshopSplitWidth(value) {
+   db.keyval.put({ key: 'workshop-split-width', value })
+}
+
+const kvWorkshopSplitWidth = useObservable(liveQuery(() => db.keyval.get('workshop-split-width')))
+export const workshopSplitWidth = computed(() => kvWorkshopSplitWidth?.value?.value)
+

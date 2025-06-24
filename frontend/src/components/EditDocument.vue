@@ -32,6 +32,7 @@ import { map } from 'rxjs'
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+import { peg$parse as parse } from '/src/lib/parser.js'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
@@ -95,6 +96,13 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       console.log('document', document)
       selectedDoc.value.content = document.text
       selectedDocument.value = document
+
+      try {
+         const x = parse(document.text)
+         console.log('x', x)
+      } catch(err) {
+         console.log('err', err)
+      }
    })
 }, { immediate: true })
 
@@ -104,6 +112,14 @@ onUnmounted(() => {
 
 const onChange = async (text) => {
    // console.log('onChange', text)
+
+   try {
+      const x = parse(text)
+      console.log('x', x)
+   } catch(err) {
+      console.log('err', err)
+   }
+
    await updateUserDocument(props.document_uid, {
       text,
       update_count: selectedDocument.value.update_count + 1,

@@ -1,5 +1,5 @@
 <template>
-   <SplitPanel>
+   <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <div class="d-flex flex-column fill-height">
@@ -80,8 +80,11 @@ import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
 import { useUserDocument } from '/src/use/useUserDocument'
+
 import router from '/src/router'
 import { app } from '/src/client-app.js'
+import { setWorkshopSplitWidth, workshopSplitWidth } from "/src/use/useAppState"
+
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
@@ -173,4 +176,8 @@ watch(() => [route.path, documentList.value], async () => {
    const uid = match[2]
    selectedDocument.value = documentList.value.find(module => module.uid === uid)
 }, { immediate: true })
+
+function onResize(width) {
+   setWorkshopSplitWidth(width)
+}
 </script>

@@ -1,0 +1,36 @@
+
+Line
+  = _ cmd:Command _ signal:Signal _ value: BitField _ ('//' [^\n]*)?
+  { return { cmd: cmd, signal: signal, value: value }; }
+  / _ '//' [^\n]*
+  { return { cmd: 'comment'} }
+   
+Command
+  = cmd:('set' / 'check')
+  { return cmd; }
+
+Signal
+  = name:SignalName _ '[' _ i:NaturalInteger _ ']'
+     { return {"type": "vector", "name": name, "start": i, "stop": i}; }
+  / name:SignalName _ '[' _ i:NaturalInteger _ DotDot _ j:NaturalInteger _ ']'
+     { return {"type": "vector", "name": name, "start": i, "stop": j}; }
+  / name:SignalName
+     { return {"type": "scalar", "name": name}; }
+
+SignalName
+  = char0:[a-zA-Z_] chars:[a-zA-Z0-9_]*
+     { return (char0 + chars.join("")); }
+
+DotDot
+  = '..'
+  / ':'
+
+BitField
+  = value:([01-]+)
+    { return value.join('') }
+
+NaturalInteger
+  = _ [0-9]+ { return parseInt(text(), 10); }
+
+_
+  = [ \t\n\r]*

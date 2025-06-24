@@ -18,7 +18,16 @@
 <script setup>
 import { ref } from 'vue'
 
-const leftWidth = ref(300) // Initial width of the left panel
+const props = defineProps({
+   leftWidth: {
+      type: Number,
+      default: 300,
+   },
+})
+
+const emit = defineEmits(['resize'])
+
+const leftWidth = ref(props.leftWidth) // Initial width of the left panel
 const isResizing = ref(false)
 
 function startResize(e) {
@@ -35,6 +44,7 @@ function resize(e) {
 
 function stopResize() {
    isResizing.value = false
+   emit('resize', leftWidth.value)
    window.removeEventListener('mousemove', resize)
    window.removeEventListener('mouseup', stopResize)
 }

@@ -1,0 +1,213 @@
+
+
+start
+  = Module
+
+/*
+Modules
+  = _ head:Module _ tail:Modules
+     { return [head].concat(tail); }
+  / module:Module { return [module]; }
+*/
+
+Module
+  = _ "module" _ name:ModuleName _ "(" _ params:ParamList _ ")" _ instances:InstanceList _ "end" _ "module" _
+  { return {"name": name, "params": params, "instances":instances}; }
+
+
+Signal
+  = name:SignalName _ '[' _ i:NaturalInteger _ ']'
+     { return {"type": "vector", "name": name, "start": i, "stop": i, "location": location()}; }
+  / name:SignalName _ '[' _ i:NaturalInteger _ DotDot _ j:NaturalInteger _ ']'
+     { return {"type": "vector", "name": name, "start": i, "stop": j, "location": location()}; }
+  / name:SignalName _ '[' _ i:NaturalInteger _ DotDot _ j:NaturalInteger _ ']'
+     { return {"type": "vector", "name": name, "start": i, "stop": j, "location": location()}; }
+  / name:SignalName
+     { return {"type": "scalar", "name": name, "location": location()}; }
+
+SignalCompound
+  = head:Signal tail:(_ "&" _ Signal)*
+    { return {'type': 'signalcompound', 'signals': [head].concat(tail.map(function(block) { return block[3]; })), "location": location()} }
+
+SignalOrLiteralCompound
+  = head:(Signal / LiteralValue) tail:(_ "&" _ (Signal / LiteralValue))*
+    { return {'type': 'signalorliteralcompound', 'signalorliterals': [head].concat(tail.map(function(block) { return block[3]; })), "location": location()} }
+
+
+DotDot
+  = '..'
+  / ':'
+
+Arg
+  = SignalOrLiteralCompound
+
+Param
+  = Signal
+
+ModuleName "module name"
+  = chars:[a-zA-Z0-9_]+
+     { return chars.join(""); }
+
+SignalName "signal name"
+  = char0:[a-zA-Z_] chars:[a-zA-Z0-9_]*
+     { return (char0 + chars.join("")); }
+
+StateName "state name"
+  = chars:[a-zA-Z0-9_]+
+     { return {'name': chars.join(""), 'location': location()}; }
+
+ParamList
+  = head:Param _ separ _ tail:ParamList
+     { return [head].concat(tail); }
+  / param:Param { return [param]; }
+
+ArgList
+  = head:Arg _ separ _ tail:ArgList
+     { return [head].concat(tail); }
+  / arg:Arg { return [arg]; }
+
+InstanceList
+  = head:Instance _ tail:InstanceList
+     { return [head].concat(tail); }
+  / inst:Instance
+     { return [inst]; }
+
+Instance
+  = ModuleInstance
+  / TriState
+  / Assignment
+  / MemoryPoint
+  / Fsm
+  / Map
+
+
+SumOfTermsCompound
+  = head:SumOfTerms tail:(_ "&" _ SumOfTerms)*
+    { return {'type': 'sumoftermscompound', 'sumofterms': [head].concat(tail.map(function(block) { return block[3]; })), "location": location()} }
+
+SumOfTerms
+  = head:Term tail:(_ "+" _ Term)*
+    { return {'type': 'sumofterms', 'terms': [head].concat(tail.map(function(block) { return block[3]; })), "location": location()} }
+
+Term
+  = head:Factor tail:(_ "*" _ Factor)*
+    { return {'type': 'term', 'factors': [head].concat(tail.map(function(block) { return block[3]; })), "location": location()} }
+
+Factor
+  = '(' _ sumofterms:SumOfTerms _ ')'
+    { return {'type':'sumofterms', 'sumofterms': sumofterms, "location": location()}; }
+  / '0'
+    { return {'type':'bitfield', 'value': "0", "location": location()}; }
+  / '1'
+    { return {'type':'bitfield', 'value': "1", "location": location()}; }
+  / bitField:BitField
+    { return {'type':'bitfield', 'value': bitField.value, "location": location()}; }
+  / signal:Signal
+    { return {'type':'maxterm', 'signal':signal, 'inverted': false, "location": location()}; }
+  / '/' _ signal:Signal
+    { return {'type':'maxterm', 'signal':signal, 'inverted': true, "location": location()}; }
+
+
+
+Assignment
+  = leftCompound:SignalCompound _ '=' _ rightCompound:SumOfTermsCompound
+     { return {'type': 'assignment', 'leftCompound': leftCompound, 'rightCompound': rightCompound}; }
+
+TriState
+  = leftCompound:SignalCompound _ '=' _ rightCompound:SumOfTermsCompound _ 'output' _ 'enabled' _ 'when' _ oe:SumOfTerms
+     { return {'type': 'tri_state', 'leftCompound': leftCompound, 'rightCompound': rightCompound, oe: oe }; }
+
+MemoryPoint
+  = q:SignalCompound _ ':=' _ d:SumOfTermsCompound _ 'on' _ clk:SumOfTerms _ ','? _ setReset:('reset'/'set') _ 'when' _ rst:SumOfTerms _ ','? _ 'enabled' _ 'when' _ en:SumOfTerms _ ';'?
+     { return {'type': 'memory_point', 'q': q, 'd': d, clk: clk, setReset: setReset, rst: rst, en: en }; }
+  / q:SignalCompound _ ':=' _ d:SumOfTermsCompound _ 'on' _ clk:SumOfTerms _ ','? _ setReset:('reset'/'set') _ 'when' _ rst:SumOfTerms _ ';'?
+     { return {'type': 'memory_point', 'q': q, 'd': d, clk: clk, setReset: setReset, rst: rst, en: null }; }
+
+ModuleInstance
+  = name:ModuleName _ '(' _ args:ArgList _ ')'
+     { return {'type': 'module_instance', 'name': name, 'arguments': args, location: location()}; }
+  / '$' name:ModuleName _ '(' _ args:ArgList _ ')'
+     { return {'type': 'predefined_module_instance', 'name': name, 'arguments': args, location: location()}; }
+
+Map
+  = 'map' _ input:SignalCompound _ '->' _ output:SignalCompound _ values:(MapValue*) _ 'end' _ 'map'
+     { return { 'type': 'array', 'input': input, 'output': output, 'values': values }; }
+
+MapValue
+  = input:BitField _ '->' _ output:BitField _
+     { return { 'input': input, 'output': output }; }
+     
+
+Fsm
+  = FsmKeyword _ header:FsmHeader _ rules:FsmRules _ 'end' _ FsmKeyword
+     { return {'type': 'fsm', 'header': header, 'rules': rules}; }
+
+FsmKeyword
+  = 'fsm' / 'statemachine'
+  
+FsmHeader
+  = 'asynchronous'
+     { return {'type': 'asynchronous'}; }
+  / init:StateName _ 'when' _ rst:SumOfTerms _ ','? _ 'synchronous' _ 'on' _ clk:SumOfTerms
+     { return {'type': 'synchronous', 'rst': rst, 'clk': clk, 'init': init}; }
+  / 'synchronous' _ 'on' _ clk:SumOfTerms _ ','? _ init:StateName _ 'when' _ rst:SumOfTerms
+     { return {'type': 'synchronous', 'rst': rst, 'clk': clk, 'init': init}; }
+
+FsmRule
+  = leftStates:FsmRuleLeft _ '->' _ rightState:StateName _ 'when' _ condition:SumOfTerms _ (';'/',')?
+     { return {'type':'fsm_rule', 'left_states': leftStates, 'right_state': rightState, 'condition': condition}; }
+  / leftStates:FsmRuleLeft _ '->' _ rightState:StateName
+     { return {'type':'fsm_rule', 'left_states': leftStates, 'right_state': rightState }; }
+
+FsmRuleLeft
+  = StateNameList
+  / '*'
+
+FsmRules
+  = head:FsmRule _ tail:FsmRules { return [head].concat(tail); }
+  / rule:FsmRule { return [rule]; }
+
+StateNameList
+  = head:StateName _ ',' _ tail:StateNameList { return [head].concat(tail); }
+  / state:StateName { return [state]; }
+
+
+
+BitField
+  = '"' value:([0-1]+) '"'
+    { return { type: 'bitfield', value: value.join('') } }
+
+LiteralValue
+  = bitfield:BitField
+    { return { type: 'literal', value: bitfield.value } }
+  / '0'
+    { return { type: 'literal', value: "0" } }
+  / '1'
+    { return { type: 'literal', value: "1" } }
+
+NaturalInteger
+  = [0-9]+
+    { return parseInt(text(), 10) }
+
+
+separ
+  = ',' { return [] }
+  / ':' { return [] }
+
+_ "whitespace"
+  = ( whiteSpace / lineTerminator / lineComment )*
+     { return []; }
+
+whiteSpace 
+  = [\t\v\f \u00A0\uFEFF] 
+
+lineTerminator 
+  = [\n\r] 
+
+lineComment 
+  = "//" (!lineTerminator anyCharacter)* 
+  / "#" (!lineTerminator anyCharacter)* 
+
+anyCharacter 
+  = . 
+
