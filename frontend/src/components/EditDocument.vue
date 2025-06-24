@@ -3,8 +3,8 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <div style="background-color: #67AD5B; color: white; height: 48px; padding: 10px;" class="d-flex align-center">
-         <h5>Module OK, 23 équipotentielles</h5>
+      <div :style="{ backgroundColor: message.err ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+         <h5>{{ message.text }}</h5>
       </div>
 
       <!-- Fills remaining vertical space -->
@@ -54,6 +54,8 @@ const handleEditorReady = (payload) => {
    currentEditorView.value = payload.view
 }
 
+const message = ref({})
+
 let subscription
 
 const uid2docDict = {}
@@ -97,11 +99,17 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       selectedDoc.value.content = document.text
       selectedDocument.value = document
 
-      try {
-         const x = parse(document.text)
-         console.log('x', x)
-      } catch(err) {
-         console.log('err', err)
+      if (document.type === 'shdl') {
+         try {
+            const x = parse(document.text)
+            console.log('x', x)
+            message.value.err = null
+            message.value.text = "OK"
+         } catch(err) {
+            console.log('err', err)
+            message.value.err = err
+            message.value.text = err.message
+         }
       }
    })
 }, { immediate: true })
@@ -113,11 +121,17 @@ onUnmounted(() => {
 const onChange = async (text) => {
    // console.log('onChange', text)
 
-   try {
-      const x = parse(text)
-      console.log('x', x)
-   } catch(err) {
-      console.log('err', err)
+   if (selectedDocument.value.type === 'shdl') {
+      try {
+         const x = parse(text)
+         console.log('x', x)
+         message.value.err = null
+         message.value.text = "OK"
+      } catch(err) {
+         console.log('err', err)
+         message.value.err = err
+         message.value.text = err.message
+      }
    }
 
    await updateUserDocument(props.document_uid, {
