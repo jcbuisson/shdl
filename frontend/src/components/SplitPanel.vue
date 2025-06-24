@@ -1,5 +1,5 @@
 <template>
-   <div class="split-container">
+   <div class="split-container" ref="parentElt">
       <!-- Left Panel with Slot -->
       <div class="left-panel" :style="{ width: leftWidth + 'px' }">
          <slot name="left-panel"></slot>
@@ -29,6 +29,7 @@ const emit = defineEmits(['resize'])
 
 const leftWidth = ref(props.leftWidth) // Initial width of the left panel
 const isResizing = ref(false)
+const parentElt = ref(null)
 
 function startResize(e) {
    isResizing.value = true
@@ -38,7 +39,8 @@ function startResize(e) {
 
 function resize(e) {
    if (isResizing.value) {
-      leftWidth.value = e.clientX
+      const parentBox = parentElt.value.getBoundingClientRect()
+      leftWidth.value = e.clientX - parentBox.x
    }
 }
 
