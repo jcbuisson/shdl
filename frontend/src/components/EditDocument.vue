@@ -105,23 +105,14 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       selectedDocument.value = document
 
       if (document.type === 'shdl') {
-         // try {
-         //    const x = await pegParseDeep(document.text)
-         //    console.log('x', x)
-         //    message.value.err = null
-         //    message.value.text = "Module OK"
-         // } catch(err) {
-         //    console.log('err', err)
-         //    message.value.err = err
-         //    message.value.text = `ligne ${err.location.start.line}, colonne ${err.location.start.column} : ${err.message}`
-         // }
-      }
-   })
 
-   if (subscription2) subscription2.unsubscribe()
-   subscription2 = shdlDocumentParsing$(uid).subscribe(async module => {
-      x.value = module
-      console.log('module', module)
+         if (subscription2) subscription2.unsubscribe()
+         subscription2 = shdlDocumentParsing$(document.name).subscribe(async module => {
+            // x.value = module
+            console.log('module', module)
+         })
+
+      }
    })
 
 }, { immediate: true })
@@ -134,16 +125,13 @@ const onChange = async (text) => {
    // console.log('onChange', text)
 
    if (selectedDocument.value.type === 'shdl') {
-      // try {
-      //    const x = await pegParseDeep(selectedDocument.value)
-      //    console.log('x', x)
-      //    message.value.err = null
-      //    message.value.text = "Module OK"
-      // } catch(err) {
-      //    console.log('err', err)
-      //    message.value.err = err
-      //       message.value.text = `ligne ${err.location.start}:${err.location.end}: err.message`
-      // }
+
+         if (subscription2) subscription2.unsubscribe()
+         subscription2 = shdlDocumentParsing$(selectedDocument.value.name).subscribe(async module => {
+            // x.value = module
+            console.log('module', module)
+         })
+
    }
 
    await updateUserDocument(props.document_uid, {

@@ -93,8 +93,8 @@ export function userGrade$(user_uid: string) {
 
 // this observer finally emits the syntactic structure of a root shdl document `document_uid` and all its submodule documents,
 // as they become available
-export function shdlDocumentParsing$(document_uid) {
-   return userDocument$({ uid: document_uid }).pipe(
+export function shdlDocumentParsing0$(name) {
+   return userDocument$({ name }).pipe(
       map(documents => {
          const document = documents[0]
          try {
@@ -102,10 +102,52 @@ export function shdlDocumentParsing$(document_uid) {
             const submoduleNames = structure.instances.reduce((accu, instance) =>
                instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
             console.log('submoduleNames', submoduleNames)
-            return structure
+            // switchMap(submoduleNames => 
+            //    guardCombineLatest(
+            //       submoduleNames.map(submoduleName =>
+            //          userDocumentEvent$({ document_uid: document.uid })
+            //       )
+            //    )
+            // ),
+            const substructures = []
+            return [ structure, ...substructures]
          } catch(err) {
             return err
          }
       })
    )
 }
+
+export function shdlDocumentParsing$(name) {
+   console.log('running', name)
+   return userDocument$({ name }).pipe(
+      map(documents => {
+         const document = documents[0]
+         return shdlPegParse(document.text)
+      }),
+      map(structure => {
+         const submoduleNames = structure.instances.reduce((accu, instance) =>
+            instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
+         console.log('submoduleNames', submoduleNames)
+         return { name, structure, submoduleNames }
+      }),
+      map(({ name, structure, submoduleNames }) => {
+         return ({ name, structure, submoduleNames })
+      }),
+      switchMap(({ structure, submoduleNames }) => {
+         console.log('name2', name)
+         return guardCombineLatest(
+            submoduleNames.map(name2 =>
+               shdlDocumentParsing$(name2)
+            )
+         )
+      })
+   )
+}
+
+         // switchMap(x.submoduleNames => 
+         //    guardCombineLatest(
+         //       submoduleNames.map(name =>
+         //          shdlDocumentParsing$({ name })
+         //       )
+         //    )

@@ -12,6 +12,7 @@ en créant un observable qui renverra la structure syntaxique au fur et à mesur
 Tant que des sous-modules seront en attente d'être émis, l'observable racine émettra une erreur "sous-module X indisponible"
 mais il finira par émettre la structure complète lorsque toutes les sous-parties auront été émises.
 
+Attention à ne pas utiliser de promesses dans le code des observables
 
 
 # SHDL - Simple Hardware Description Language
