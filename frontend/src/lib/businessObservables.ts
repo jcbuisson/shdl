@@ -144,10 +144,3 @@ export function shdlDocumentParsing$(name) {
       })
    )
 }
-
-         // switchMap(x.submoduleNames => 
-         //    guardCombineLatest(
-         //       submoduleNames.map(name =>
-         //          shdlDocumentParsing$({ name })
-         //       )
-         //    )
