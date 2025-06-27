@@ -98,10 +98,13 @@ export function shdlDocumentParsing$(document_uid) {
       map(documents => {
          const document = documents[0]
          try {
-            const module = shdlPegParse(document.text)
-            return module
+            const structure = shdlPegParse(document.text)
+            const submoduleNames = structure.instances.reduce((accu, instance) =>
+               instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
+            console.log('submoduleNames', submoduleNames)
+            return structure
          } catch(err) {
-            return ({ err })
+            return err
          }
       })
    )

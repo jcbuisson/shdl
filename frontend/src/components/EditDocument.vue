@@ -1,5 +1,5 @@
 <template>
-   <div>{{ x }}</div>
+   <div>{{  x  }}</div>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height">
 
@@ -59,6 +59,7 @@ const handleEditorReady = (payload) => {
 const message = ref({})
 
 let subscription
+let subscription2
 
 const uid2docDict = {}
 const selectedDoc = ref({})
@@ -72,7 +73,7 @@ function userDocument$(uid) {
    )
 }
 
-const x = useObservable(shdlDocumentParsing$(props.document_uid))
+const x = ref()
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
    updateUid = undefined
@@ -116,6 +117,13 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
          // }
       }
    })
+
+   if (subscription2) subscription2.unsubscribe()
+   subscription2 = shdlDocumentParsing$(uid).subscribe(async module => {
+      x.value = module
+      console.log('module', module)
+   })
+
 }, { immediate: true })
 
 onUnmounted(() => {
