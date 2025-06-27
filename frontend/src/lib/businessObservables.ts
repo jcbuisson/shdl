@@ -9,6 +9,8 @@ import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
+import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
+
 // const { getObservable: users$ } = useUser()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
 const { getObservable: groups$ } = useGroup()
@@ -85,6 +87,22 @@ export function userGrade$(user_uid: string) {
             }
          }, 0)
          return Math.floor(activeCount * 20 / pastUnexcusedSlots.length)
+      })
+   )
+}
+
+// this observer finally emits the syntactic structure of a root shdl document `document_uid` and all its submodule documents,
+// as they become available
+export function shdlDocumentParsing$(document_uid) {
+   return userDocument$({ uid: document_uid }).pipe(
+      map(documents => {
+         const document = documents[0]
+         try {
+            const module = shdlPegParse(document.text)
+            return module
+         } catch(err) {
+            return ({ err })
+         }
       })
    )
 }

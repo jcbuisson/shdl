@@ -7,7 +7,7 @@
 
             <!-- Toolbar (does not grow) -->
             <v-toolbar color="red-darken-4" ddensity="compact">
-               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line></v-text-field>
+               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
 
@@ -15,6 +15,7 @@
             <div class="px-2">
                <v-select
                   variant="underlined"
+                  clearable
                   v-model="userGroups"
                   @update:modelValue="onGroupChange"
                   :items="groupList"
@@ -123,7 +124,7 @@ function onGroupChange(uid) {
 
 const filteredUserAndGroupList = computed(() => {
    if (!userAndGroupsList.value) return []
-   const nameFilter_ = nameFilter.value.toLowerCase()
+   const nameFilter_ = (nameFilter.value || '').toLowerCase()
    return userAndGroupsList.value.filter(ug => {
       if (nameFilter_.length === 0) return true
       if (ug.user.firstname.toLowerCase().indexOf(nameFilter_) > -1) return true

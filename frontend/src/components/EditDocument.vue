@@ -1,4 +1,5 @@
 <template>
+   <div>{{ x }}</div>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height">
 
@@ -32,7 +33,8 @@ import { map } from 'rxjs'
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-import { peg$parse as parse } from '/src/lib/parser.js'
+import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
+import { useObservable } from '@vueuse/rxjs'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
@@ -70,6 +72,8 @@ function userDocument$(uid) {
    )
 }
 
+const x = useObservable(shdlDocumentParsing$(props.document_uid))
+
 watch(() => props.document_uid, async (uid, previous_uid) => {
    updateUid = undefined
    if (previous_uid) {
@@ -94,22 +98,22 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
 
    // handle document content change
    if (subscription) subscription.unsubscribe()
-   subscription = userDocument$(uid).subscribe(document => {
+   subscription = userDocument$(uid).subscribe(async document => {
       console.log('document', document)
       selectedDoc.value.content = document.text
       selectedDocument.value = document
 
       if (document.type === 'shdl') {
-         try {
-            const x = parse(document.text)
-            console.log('x', x)
-            message.value.err = null
-            message.value.text = "OK"
-         } catch(err) {
-            console.log('err', err)
-            message.value.err = err
-            message.value.text = err.message
-         }
+         // try {
+         //    const x = await pegParseDeep(document.text)
+         //    console.log('x', x)
+         //    message.value.err = null
+         //    message.value.text = "Module OK"
+         // } catch(err) {
+         //    console.log('err', err)
+         //    message.value.err = err
+         //    message.value.text = `ligne ${err.location.start.line}, colonne ${err.location.start.column} : ${err.message}`
+         // }
       }
    })
 }, { immediate: true })
@@ -122,16 +126,16 @@ const onChange = async (text) => {
    // console.log('onChange', text)
 
    if (selectedDocument.value.type === 'shdl') {
-      try {
-         const x = parse(text)
-         console.log('x', x)
-         message.value.err = null
-         message.value.text = "OK"
-      } catch(err) {
-         console.log('err', err)
-         message.value.err = err
-         message.value.text = err.message
-      }
+      // try {
+      //    const x = await pegParseDeep(selectedDocument.value)
+      //    console.log('x', x)
+      //    message.value.err = null
+      //    message.value.text = "Module OK"
+      // } catch(err) {
+      //    console.log('err', err)
+      //    message.value.err = err
+      //       message.value.text = `ligne ${err.location.start}:${err.location.end}: err.message`
+      // }
    }
 
    await updateUserDocument(props.document_uid, {
