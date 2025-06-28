@@ -116,11 +116,19 @@ onUnmounted(() => {
 function handleSHDLDocumentChange(document) {
    if (subscription2) subscription2.unsubscribe()
    subscription2 = shdlDocumentParsing$(document.name).subscribe({
-      next: val => {
-         console.log('next', val)
-         message.value = { err: null, text: "OK"}
-         const err = checkStructure(val[0])
-         message.value = { err, text: err.message }
+      next: structureList => {
+         console.log('next', structureList)
+         const structureMap = structureList.reduce((accu, structure) => {
+            accu[structure.name] = structure
+            return accu
+         }, {})
+         const rootModuleName = structureList[0].name
+         const err = checkStructure(rootModuleName, structureMap)
+         if (err) {
+            message.value = { err, text: err?.message }
+         } else {
+            message.value = { err: null, text: "OK"}
+         }
       },
       error: err => {
          console.log('err', err)
