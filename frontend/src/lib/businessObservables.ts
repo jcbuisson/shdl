@@ -1,4 +1,4 @@
-import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
+import { Observable, from, map, of, merge, combineLatest, throwError } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
 // import { useUser } from '/src/use/useUser'
@@ -91,7 +91,7 @@ export function userGrade$(user_uid: string) {
    )
 }
 
-// Does the syntactic parsing of an SHDL module `name` and all its submodules
+// Perform the syntactic parsing of an SHDL module `name` and all its submodules
 // Emits a list of their structures, the first element being the structure of the root module
 export function shdlDocumentParsing$(name, checked=[]) {
    return userDocument$({ name }).pipe(
@@ -99,7 +99,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
       map(documents => {
          const document = documents[0]
          if (!document) {
-            console.log(`SHDL module ${name} not found`)
+            throw `module '${name}' not found`
          }
          return shdlPegParse(document.text)
       }),
@@ -124,5 +124,9 @@ export function shdlDocumentParsing$(name, checked=[]) {
             map(structures => [ structure, ...structures ]),
          )
       }),
+      catchError(err => {
+         // Rethrow a new error to be handled by the subscriber
+         return throwError(() => new Error(err))
+      })
    )
 }

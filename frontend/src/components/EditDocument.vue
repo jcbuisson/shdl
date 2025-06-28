@@ -1,5 +1,4 @@
 <template>
-   <div>{{  x  }}</div>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height">
 
@@ -11,9 +10,9 @@
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
          <codemirror
-            v-if="selectedDoc"
-            v-model="selectedDoc.content"
-            :extensions="selectedDoc.extensions"
+            v-if="selectedCodeMirrorDoc"
+            v-model="selectedCodeMirrorDoc.content"
+            :extensions="selectedCodeMirrorDoc.extensions"
             placeholder="Start coding here..."
             class="fill-height"
             @change="onChangeDebounced($event)"
@@ -62,7 +61,7 @@ let subscription
 let subscription2
 
 const uid2docDict = {}
-const selectedDoc = ref({})
+const selectedCodeMirrorDoc = ref({})
 const selectedDocument = ref()
 
 let updateUid
@@ -73,8 +72,6 @@ function userDocument$(uid) {
    )
 }
 
-const x = ref()
-
 watch(() => props.document_uid, async (uid, previous_uid) => {
    updateUid = undefined
    if (previous_uid) {
@@ -84,7 +81,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    }
    const doc = uid2docDict[uid]
    if (doc) {
-      selectedDoc.value = doc
+      selectedCodeMirrorDoc.value = doc
       // restore state
       currentEditorView.value.setState(doc.state)
    } else {
@@ -94,24 +91,18 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
          extensions: [myLang, EditorView.editable.of(props.editable)],
       }
       uid2docDict[uid] = newDoc
-      selectedDoc.value = newDoc
+      selectedCodeMirrorDoc.value = newDoc
    }
 
    // handle document content change
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async document => {
       console.log('document', document)
-      selectedDoc.value.content = document.text
+      selectedCodeMirrorDoc.value.content = document.text
       selectedDocument.value = document
 
       if (document.type === 'shdl') {
-
-         if (subscription2) subscription2.unsubscribe()
-         subscription2 = shdlDocumentParsing$(document.name).subscribe(async module => {
-            // x.value = module
-            console.log('module', module)
-         })
-
+         handleSHDLDocumentChange(document)
       }
    })
 
@@ -119,19 +110,28 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
 
 onUnmounted(() => {
    subscription && subscription.unsubscribe()
+   subscription2 && subscription2.unsubscribe()
 })
+
+function handleSHDLDocumentChange(document) {
+   if (subscription2) subscription2.unsubscribe()
+   subscription2 = shdlDocumentParsing$(document.name).subscribe({
+      next: val => {
+         console.log('next', val)
+         message.value = { err: null, text: "OK"}
+      },
+      error: err => {
+         console.log('err', err)
+         message.value = { err, text: err.message }
+      },
+   })
+}
 
 const onChange = async (text) => {
    // console.log('onChange', text)
 
    if (selectedDocument.value.type === 'shdl') {
-
-         if (subscription2) subscription2.unsubscribe()
-         subscription2 = shdlDocumentParsing$(selectedDocument.value.name).subscribe(async module => {
-            // x.value = module
-            console.log('module', module)
-         })
-
+      handleSHDLDocumentChange(selectedDocument.value)
    }
 
    await updateUserDocument(props.document_uid, {
