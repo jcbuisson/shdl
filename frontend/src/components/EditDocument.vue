@@ -33,7 +33,7 @@ import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
-import { useObservable } from '@vueuse/rxjs'
+import { checkStructure } from '/src/lib/shdl/shdlSyntax'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
@@ -119,13 +119,16 @@ function handleSHDLDocumentChange(document) {
       next: val => {
          console.log('next', val)
          message.value = { err: null, text: "OK"}
+         const err = checkStructure(val[0])
+         message.value = { err, text: err.message }
       },
       error: err => {
          console.log('err', err)
-         message.value = { err, text: err.message }
+         message.value = { err, text: err?.message }
       },
    })
 }
+
 
 const onChange = async (text) => {
    // console.log('onChange', text)

@@ -11,7 +11,7 @@
             Présence
          </v-tab>
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/workshop` }" router value='workshop'>
-            Travaux
+            Documents
          </v-tab>
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/grade` }" router value='grade'>
             Note

@@ -113,8 +113,8 @@ export function shdlDocumentParsing$(name, checked=[]) {
       switchMap(({ structure, submoduleNames }) => {
          const observableList = []
          for (const submoduleName of submoduleNames) {
-            if (checked.includes(submoduleName)) {
-               console.log(`circularity issue`)
+            if (checked.includes(submoduleName) || submoduleName === name) {
+               throw `circularity issue with module '${submoduleName}'`
             }
             observableList.push(shdlDocumentParsing$(submoduleName, checked))
             checked.push(submoduleName)
