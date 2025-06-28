@@ -1,7 +1,7 @@
 import { termArity, signalCompoundArity, sumOfTermsCompoundArity, argumentArity, parameterArity } from '/src/lib/shdl/shdlUtilities'
 
 
-export function checkStructure(moduleName, structureMap) {
+export function checkSyntax(moduleName, structureMap) {
    const structure = structureMap[moduleName]
    let err
    err = checkParameters(structure.params)
@@ -22,6 +22,8 @@ export function checkStructure(moduleName, structureMap) {
       if (err) return err
    }
 }
+
+////////////////////////////////               PARAMETERS             ////////////////////////////////.
 
 function checkParameters(params) {
    // check that vector start/stop are in decreasing order
@@ -125,22 +127,65 @@ function checkSumOfTermsArities(sumofterms) {
 ////////////////////////////////               MODULE INSTANCES             ////////////////////////////////.
 
 function checkModuleInstance(moduleInstance, structureMap) {
-      let arguments_ = moduleInstance.arguments
-      let parameters = structureMap[moduleInstance.name].params
-      if (arguments_.length !== parameters.length) {
+   let arguments_ = moduleInstance.arguments
+   let parameters = structureMap[moduleInstance.name].params
+   if (arguments_.length !== parameters.length) {
+      return {
+         message: `nombre d'arguments incorrects; il devrait y en avoir ${parameters.length} au lieu de ${arguments_.length}`,
+         location: moduleInstance.location,
+      }
+   }
+   for (let i = 0; i < parameters.length; i++) {
+      let argArity = argumentArity(arguments_[i])
+      let paramArity = parameterArity(parameters[i])
+      if (argArity !== paramArity) {
          return {
-            message: `wrong number of arguments; there should be ${parameters.length} instead of ${arguments_.length}`,
+            message: `l'argument #${i+1} devrait avoir une arité de ${paramArity} au lieu de ${argArity}`,
             location: moduleInstance.location,
          }
       }
-      for (let i = 0; i < parameters.length; i++) {
-         let argArity = argumentArity(arguments_[i])
-         let paramArity = parameterArity(parameters[i])
-         if (argArity !== paramArity) {
-            return {
-               message: `argument #${i+1} should have an arity of ${paramArity} instead of ${argArity}`,
-               location: moduleInstance.location,
-            }
-         }
+   }
+}
+
+////////////////////////////////               PREDEFINED MODULE INSTANCES             ////////////////////////////////.
+
+function checkPredefinedModuleInstance(moduleInstance) {
+   if (moduleInstance.name === 'ram_aread_swrite') {
+      return checkRamAreadSwrite(moduleInstance)
+   } else if (moduleInstance.name === 'rom') {
+      return undefined
+   } else {
+      return {
+         message: `module prédéfini inconnu : ${moduleInstance.name}`,
+         location: moduleInstance.location,
       }
+   }
+}
+
+function checkRamAreadSwrite(moduleInstance) {
+   // check that 1st argument (clk) has arity 1
+   let clkArity = argumentArity(moduleInstance.arguments[0])
+   if (clkArity !== 1) {
+      return {
+         message: `le premier argument (clock) ${moduleInstance.arguments[0]} devrait être un scalaire et non un vecteur`,
+         location: moduleInstance.location,
+      }
+   }
+   // check that 2nd argument (wr) has arity 1
+   let wrArity = argumentArity(moduleInstance.arguments[1])
+   if (wrArity !== 1) {
+      return {
+         message: `le deuxième argument (write) ${moduleInstance.arguments[1]} devrait être un scalaire et non un vecteur`,
+         location: moduleInstance.location,
+      }
+   }
+   // check that 4th argument (din) and 5th argument (dout) have same arity
+   let dinArity = argumentArity(moduleInstance.arguments[3])
+   let doutArity = argumentArity(moduleInstance.arguments[4])
+   if (dinArity !== doutArity) {
+      return {
+         message: `le 4ème argument (data-in) ${moduleInstance.arguments[3]} et le 5ème (data-out) ${moduleInstance.arguments[4]} doivent avoir la même arité`,
+         location: moduleInstance.location,
+      }
+   }
 }

@@ -33,7 +33,7 @@ import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
-import { checkStructure } from '/src/lib/shdl/shdlSyntax'
+import { checkSyntax } from '/src/lib/shdl/shdlSyntax'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
@@ -123,7 +123,7 @@ function handleSHDLDocumentChange(document) {
             return accu
          }, {})
          const rootModuleName = structureList[0].name
-         const err = checkStructure(rootModuleName, structureMap)
+         const err = checkSyntax(rootModuleName, structureMap)
          if (err) {
             message.value = { err, text: err?.message }
          } else {

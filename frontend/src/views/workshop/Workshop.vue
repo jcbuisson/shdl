@@ -171,6 +171,7 @@ const route = useRoute()
 const routeRegex = /\/home\/([a-z0-9]+)\/workshop\/([a-z0-9]+)/
 
 watch(() => [route.path, documentList.value], async () => {
+   if (!documentList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const uid = match[2]
