@@ -91,50 +91,35 @@ export function userGrade$(user_uid: string) {
    )
 }
 
-// this observer finally emits the syntactic structure of a root shdl document `document_uid` and all its submodule documents,
-// as they become available
-export function shdlDocumentParsing0$(name) {
+// Does the syntactic parsing of an SHDL module `name` and all its submodules
+// Emits a list of their structures, the first element being the structure of the root module
+export function shdlDocumentParsing$(name, checked=[]) {
    return userDocument$({ name }).pipe(
+      // parse root document
       map(documents => {
          const document = documents[0]
-         try {
-            const structure = shdlPegParse(document.text)
-            const submoduleNames = structure.instances.reduce((accu, instance) =>
-               instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
-            console.log('submoduleNames', submoduleNames)
-            // switchMap(submoduleNames => 
-            //    guardCombineLatest(
-            //       submoduleNames.map(submoduleName =>
-            //          userDocumentEvent$({ document_uid: document.uid })
-            //       )
-            //    )
-            // ),
-            const substructures = []
-            return [ structure, ...substructures]
-         } catch(err) {
-            return err
+         if (!document) {
+            console.log(`SHDL module ${name} not found`)
          }
-      })
-   )
-}
-
-export function shdlDocumentParsing$(name) {
-   return userDocument$({ name }).pipe(
-      map(documents => {
-         const document = documents[0]
          return shdlPegParse(document.text)
       }),
+      // extract its structure and its submodule names
       map(structure => {
          const submoduleNames = structure.instances.reduce((accu, instance) =>
-            instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
+            instance.type === 'module_instance' && !accu.includes(instance.name) && !checked.includes(instance.name) ? [instance.name, ...accu] : accu, [])
          return { name, structure, submoduleNames }
       }),
+      // recursively parse submodules
       switchMap(({ structure, submoduleNames }) => {
-         return guardCombineLatest(
-            submoduleNames.map(name =>
-               shdlDocumentParsing$(name)
-            )
-         ).pipe(
+         const observableList = []
+         for (const submoduleName of submoduleNames) {
+            if (checked.includes(submoduleName)) {
+               console.log(`circularity issue`)
+            }
+            observableList.push(shdlDocumentParsing$(submoduleName, checked))
+            checked.push(submoduleName)
+         }
+         return guardCombineLatest(observableList).pipe(
             map(listOfListOfStructures => listOfListOfStructures.reduce((accu, list) => [...accu, ...list], [])),
             map(structures => [ structure, ...structures ]),
          )
