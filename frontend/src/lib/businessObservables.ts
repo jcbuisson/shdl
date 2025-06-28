@@ -119,7 +119,6 @@ export function shdlDocumentParsing0$(name) {
 }
 
 export function shdlDocumentParsing$(name) {
-   console.log('running', name)
    return userDocument$({ name }).pipe(
       map(documents => {
          const document = documents[0]
@@ -128,19 +127,17 @@ export function shdlDocumentParsing$(name) {
       map(structure => {
          const submoduleNames = structure.instances.reduce((accu, instance) =>
             instance.type === 'module_instance' && !accu.includes(instance.name) ? [instance.name, ...accu] : accu, [])
-         console.log('submoduleNames', submoduleNames)
          return { name, structure, submoduleNames }
       }),
-      map(({ name, structure, submoduleNames }) => {
-         return ({ name, structure, submoduleNames })
-      }),
       switchMap(({ structure, submoduleNames }) => {
-         console.log('name2', name)
          return guardCombineLatest(
-            submoduleNames.map(name2 =>
-               shdlDocumentParsing$(name2)
+            submoduleNames.map(name =>
+               shdlDocumentParsing$(name)
             )
+         ).pipe(
+            map(listOfListOfStructures => listOfListOfStructures.reduce((accu, list) => [...accu, ...list], [])),
+            map(structures => [ structure, ...structures ]),
          )
-      })
+      }),
    )
 }
