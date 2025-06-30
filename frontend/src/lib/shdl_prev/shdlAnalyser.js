@@ -116,7 +116,7 @@ module.exports = (function() {
                   module: submodule.name,
                   message: typeError.message,
                   location: typeError.location,
-                  },
+               },
                moduleList: moduleList
             }
          }

@@ -1,8 +1,8 @@
 import { termArity, signalCompoundArity, sumOfTermsCompoundArity, argumentArity, parameterArity } from '/src/lib/shdl/shdlUtilities'
 
 
-export function checkSyntax(moduleName, structureMap) {
-   const structure = structureMap[moduleName]
+export function checkSyntax(moduleName, moduleMap) {
+   const structure = moduleMap[moduleName].structure
    let err
    err = checkParameters(structure.params)
    if (err) return err
@@ -15,7 +15,7 @@ export function checkSyntax(moduleName, structureMap) {
       } else if (instance.type === 'tri_state') {
          err = checkTriState(instance)
       } else if (instance.type === 'module_instance') {
-         err = checkModuleInstance(instance, structureMap)
+         err = checkModuleInstance(instance, moduleMap)
       } else if (instance.type === 'predefined_module_instance') {
          err = checkPredefinedModuleInstance(instance)
       }
@@ -126,9 +126,9 @@ function checkSumOfTermsArities(sumofterms) {
 
 ////////////////////////////////               MODULE INSTANCES             ////////////////////////////////.
 
-function checkModuleInstance(moduleInstance, structureMap) {
+function checkModuleInstance(moduleInstance, moduleMap) {
    let arguments_ = moduleInstance.arguments
-   let parameters = structureMap[moduleInstance.name].params
+   let parameters = moduleMap[moduleInstance.name].structure.params
    if (arguments_.length !== parameters.length) {
       return {
          message: `nombre d'arguments incorrects; il devrait y en avoir ${parameters.length} au lieu de ${arguments_.length}`,

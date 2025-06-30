@@ -33,7 +33,7 @@ import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
-import { checkSyntax } from '/src/lib/shdl/shdlSyntax'
+import { checkModuleMap } from '/src/lib/shdl/shdlAnalyser'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
@@ -116,14 +116,21 @@ onUnmounted(() => {
 function handleSHDLDocumentChange(document) {
    if (subscription2) subscription2.unsubscribe()
    subscription2 = shdlDocumentParsing$(document.name).subscribe({
-      next: structureList => {
-         console.log('next', structureList)
-         const structureMap = structureList.reduce((accu, structure) => {
-            accu[structure.name] = structure
+      next: syntacticStructureList => {
+         console.log('next', syntacticStructureList)
+         // transform syntacticStructureList into a map of modules
+         const moduleMap = syntacticStructureList.reduce((accu, syntacticStructure) => {
+            const moduleName = syntacticStructure.name
+            const module = {
+               name: moduleName,
+               structure: syntacticStructure,
+               equipotentials: {},
+               submoduleNames: syntacticStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
+            }
+            accu[moduleName] = module
             return accu
          }, {})
-         const rootModuleName = structureList[0].name
-         const err = checkSyntax(rootModuleName, structureMap)
+         const err = checkModuleMap(moduleMap)
          if (err) {
             message.value = { err, text: err?.message }
          } else {
