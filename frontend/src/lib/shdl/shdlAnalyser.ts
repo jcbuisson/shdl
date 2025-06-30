@@ -14,11 +14,10 @@ export function checkModuleMap(moduleMap) {
       if (m2.submoduleNames.includes(m1.name)) return -1
       return 0
    })
-   console.log('orderedModuleList', orderedModuleList.map(module => module.name))
    // check syntax in all modules and stop in case of error
    for (const module of orderedModuleList) {
       const err = checkSyntax(module.name, moduleMap)
-      if (err) return err
+      if (err) return { err, moduleList }
    }
    // extract the type and nature of each equipotential, starting with deepest submodules
    // they are stored in module.equipotentials, which is both an array (iterable) and a map: name -> equipotential index
@@ -44,8 +43,9 @@ export function checkModuleMap(moduleMap) {
       addUsedBy(submodule)
       // add isUnused attributes
       addUnused(submodule)
-      console.log(submodule.name, submodule.equipotentials)
    }
+   // return all module list (module and submodules) in order for SHDL editor to update their status
+   return { err: null, moduleList: moduleList }
 }
 
 // Collect the equipotentials of `module` and set its .equipotentials attribute

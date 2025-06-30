@@ -34,9 +34,12 @@ import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
 import { checkModuleMap } from '/src/lib/shdl/shdlAnalyser'
+import { useSHDLModule } from '/src/use/useSHDLModule'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
+
+const { getModule, addModule, updateModule } = useSHDLModule()
 
 
 const props = defineProps({
@@ -113,28 +116,35 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
+// analyze SHDL module and extract its equipotentials
 function handleSHDLDocumentChange(document) {
    if (subscription2) subscription2.unsubscribe()
+   // read SHDL documents recursively from `document` root and return an unordered list of module structures
    subscription2 = shdlDocumentParsing$(document.name).subscribe({
       next: syntacticStructureList => {
          console.log('next', syntacticStructureList)
-         // transform syntacticStructureList into a map of modules
+         // transform the list of syntactic structures into a map of modules
          const moduleMap = syntacticStructureList.reduce((accu, syntacticStructure) => {
             const moduleName = syntacticStructure.name
             const module = {
                name: moduleName,
                structure: syntacticStructure,
-               equipotentials: {},
+               equipotentials: [],
                submoduleNames: syntacticStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
             }
             accu[moduleName] = module
             return accu
          }, {})
-         const err = checkModuleMap(moduleMap)
+         // analyze the map of modules
+         // return an error and an ordered list of modules, leaves first and root last
+         const { err, moduleList } = checkModuleMap(moduleMap)
+         console.log('err', err)
+         console.log('moduleList', moduleList)
          if (err) {
             message.value = { err, text: err?.message }
          } else {
-            message.value = { err: null, text: "OK"}
+            const rootModule = moduleList[moduleList.length-1] // root module is last
+            message.value = { err: null, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles${''}`}
          }
       },
       error: err => {
@@ -144,19 +154,16 @@ function handleSHDLDocumentChange(document) {
    })
 }
 
-
 const onChange = async (text) => {
-   // console.log('onChange', text)
-
    if (selectedDocument.value.type === 'shdl') {
       handleSHDLDocumentChange(selectedDocument.value)
    }
-
+   // save document
    await updateUserDocument(props.document_uid, {
       text,
       update_count: selectedDocument.value.update_count + 1,
    })
-
+   // create or update document event
    if (updateUid) {
       await updateUserDocumentEvent(updateUid, {
          end: new Date(),
