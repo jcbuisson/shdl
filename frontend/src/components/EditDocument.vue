@@ -3,7 +3,7 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <div :style="{ backgroundColor: message.err ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+      <div :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
          <h5>{{ message.text }}</h5>
       </div>
 
@@ -33,13 +33,13 @@ import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
-import { checkModuleMap } from '/src/lib/shdl/shdlAnalyser'
+import { checkModuleMap } from '/src/lib/shdl/shdlAnalyzer'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
 
-const { getModule, addModule, updateModule } = useSHDLModule()
+const { addOrUpdateModule } = useSHDLModule()
 
 
 const props = defineProps({
@@ -116,44 +116,6 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
-// analyze SHDL module and extract its equipotentials
-function handleSHDLDocumentChange(document) {
-   if (subscription2) subscription2.unsubscribe()
-   // read SHDL documents recursively from `document` root and return an unordered list of module structures
-   subscription2 = shdlDocumentParsing$(document.name).subscribe({
-      next: syntacticStructureList => {
-         console.log('next', syntacticStructureList)
-         // transform the list of syntactic structures into a map of modules
-         const moduleMap = syntacticStructureList.reduce((accu, syntacticStructure) => {
-            const moduleName = syntacticStructure.name
-            const module = {
-               name: moduleName,
-               structure: syntacticStructure,
-               equipotentials: [],
-               submoduleNames: syntacticStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
-            }
-            accu[moduleName] = module
-            return accu
-         }, {})
-         // analyze the map of modules
-         // return an error and an ordered list of modules, leaves first and root last
-         const { err, moduleList } = checkModuleMap(moduleMap)
-         console.log('err', err)
-         console.log('moduleList', moduleList)
-         if (err) {
-            message.value = { err, text: err?.message }
-         } else {
-            const rootModule = moduleList[moduleList.length-1] // root module is last
-            message.value = { err: null, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles${''}`}
-         }
-      },
-      error: err => {
-         console.log('err', err)
-         message.value = { err, text: err?.message }
-      },
-   })
-}
-
 const onChange = async (text) => {
    if (selectedDocument.value.type === 'shdl') {
       handleSHDLDocumentChange(selectedDocument.value)
@@ -178,6 +140,73 @@ const onChange = async (text) => {
       updateUid = updateEvent.uid
    }
 }
-
 const onChangeDebounced = useDebounceFn(onChange, 500)
+
+// analyze SHDL module and extract its equipotentials
+function handleSHDLDocumentChange(document) {
+   if (subscription2) subscription2.unsubscribe()
+   // read SHDL documents recursively from `document` root and return an unordered list of module structures
+   subscription2 = shdlDocumentParsing$(document.name).subscribe({
+      next: syntaxStructureList => {
+         console.log('next', syntaxStructureList)
+         // transform the list of syntaxic structures into a map of modules
+         const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
+            const moduleName = syntaxStructure.name
+            const module = {
+               name: moduleName,
+               structure: syntaxStructure,
+               equipotentials: [],
+               submoduleNames: syntaxStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
+               err: null,
+            }
+            accu[moduleName] = module
+            return accu
+         }, {})
+
+         // analyze the map of modules
+         // return the main error and an ordered list of modules, leaves first and root last
+         const { err, moduleList } = checkModuleMap(moduleMap)
+         console.log('err', err)
+         console.log('moduleList', moduleList)
+
+         // save modules in Indexedb (asynchronous)
+         for (const module of moduleList) {
+            addOrUpdateModule(module)
+         }
+         // display status
+         const rootModule = moduleList[moduleList.length - 1]
+         if (err) {
+            displayErrorMessage(err, rootModule.name)
+         } else {
+            displayOKMessage(rootModule)
+         }
+      },
+
+      error: err => {
+         console.log('err22', err.moduleName, err.location, err.message)
+         displayErrorMessage(err, document.name)
+      },
+   })
+}
+
+function displayOKMessage(rootModule) {
+   message.value = { inError: false, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles${''}` }
+}
+
+function displayErrorMessage(err, currentModuleName) {
+   const locationStr = err.location ? `L ${err.location.start.line}, col ${err.location.start.column}` : null
+   if (currentModuleName === err.moduleName) {
+      if (locationStr) {
+         message.value = { inError: true, text: `${locationStr} : ${err.message}` }
+      } else {
+         message.value = { inError: true, text: err.message }
+      }
+   } else {
+      if (locationStr) {
+         message.value = { inError: true, text: `Module ${err.moduleName}, ${locationStr} : ${err.message}` }
+      } else {
+         message.value = { inError: true, text: `Module ${err.moduleName}: ${err.message}` }
+      }
+   }
+}
 </script>

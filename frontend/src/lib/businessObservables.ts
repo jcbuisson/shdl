@@ -10,6 +10,7 @@ import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
 import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
+import { SHDLError } from '/src/lib/shdl/SHDLError.ts'
 
 // const { getObservable: users$ } = useUser()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
@@ -99,7 +100,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
       map(documents => {
          const document = documents[0]
          if (!document) {
-            throw `module '${name}' not found`
+            throw new Error(`module '${name}' not found`)
          }
          return shdlPegParse(document.text)
       }),
@@ -124,9 +125,26 @@ export function shdlDocumentParsing$(name, checked=[]) {
             map(structures => [ structure, ...structures ]),
          )
       }),
-      catchError(err => {
+      catchError(error => {
+         console.log('err3', error.message)
          // Rethrow a new error to be handled by the subscriber
-         return throwError(() => new Error(err))
+         throw new SHDLError(error.message, name, error.location)
+
+         // const err = {
+         //    moduleName: name
+         // }
+         // if (error.name) {
+         //    // pegjs error
+         //    err.message = error.message
+         //    err.location = error.location.start
+         // } else {
+         //    // 'module not found' or 'circularity issue' error
+         //    err.message = error.message
+         //    err.location = null
+         // }
+         // console.log('xerr', err)
+         // // Rethrow a new error to be handled by the subscriber
+         // return throwError(() => new Error(err))
       })
    )
 }

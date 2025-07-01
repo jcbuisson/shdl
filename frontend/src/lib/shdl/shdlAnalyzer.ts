@@ -6,6 +6,7 @@ import { addUsedBy, addUnused, argumentArity, argumentsArity, argumentAt, argume
 let uuid = 0
 
 
+// return error and the module list (module and submodules) with their errors in order for SHDL editor to update their status
 export function checkModuleMap(moduleMap) {
    const moduleList = Object.values(moduleMap)
    // order modules by dependance, leaves first and root at the end
@@ -16,35 +17,49 @@ export function checkModuleMap(moduleMap) {
    })
    // check syntax in all modules and stop in case of error
    for (const module of orderedModuleList) {
-      const err = checkSyntax(module.name, moduleMap)
-      if (err) return { err, moduleList }
+      const syntaxError = checkSyntax(module.name, moduleMap)
+      if (syntaxError) {
+         const err = {
+            moduleName: module.name,
+            message: syntaxError.message,
+            location: syntaxError.location,
+         }
+         module.err = err
+         return { err, moduleList }
+      }
    }
    // extract the type and nature of each equipotential, starting with deepest submodules
    // they are stored in module.equipotentials, which is both an array (iterable) and a map: name -> equipotential index
-   for (const submodule of orderedModuleList) {
-      // collect equipotentials of `submodule`
-      let instanceError = collectEquipotentials(submodule.name, moduleMap)
+   for (const module of orderedModuleList) {
+      // collect equipotentials of `module`
+      const instanceError = collectEquipotentials(module.name, moduleMap)
       if (instanceError) {
-         return { err: instanceError, moduleList: moduleList }
+         const err = {
+            moduleName: module.name,
+            message: instanceError.message,
+            location: instanceError.location,
+         }
+         module.err = err
+         // stop immediately, do not try other modules
+         return { err, moduleList }
       }
       // check or set the type of all equipotentials and parameters
-      let typeError = checkIOStatus(submodule)
+      const typeError = checkIOStatus(module)
       if (typeError) {
-         return {
-            err: {
-               module: submodule.name,
-               message: typeError.message,
-               location: typeError.location,
-            },
-            moduleList: moduleList
+         const err = {
+            moduleName: module.name,
+            message: typeError.message,
+            location: typeError.location,
          }
+         module.err = err
+         // stop immediately, do not try other modules
+         return { err, moduleList }
       }
       // add usedBy attributes
-      addUsedBy(submodule)
+      addUsedBy(module)
       // add isUnused attributes
-      addUnused(submodule)
+      addUnused(module)
    }
-   // return all module list (module and submodules) in order for SHDL editor to update their status
    return { err: null, moduleList: moduleList }
 }
 
@@ -52,13 +67,14 @@ export function checkModuleMap(moduleMap) {
 // .equipotentials is both an array (with possible empty slots, but still iterable) and a map (name -> equipotential index)
 // It is supposed that all submodules have already been analysed and their equipotentials completed and simplified
 function collectEquipotentials(moduleName, moduleMap) {
-   let module = moduleMap[moduleName]
+   const module = moduleMap[moduleName]
    module.equipotentials = []
    uuid = 0
 
    // collect equipotentials, possibly creating aliases
-   for (let i = 0; i < module.structure.instances.length; i++) {
-      let instance = module.structure.instances[i]
+   // for (let i = 0; i < module.structure.instances.length; i++) {
+   //    let instance = module.structure.instances[i]
+   for (const instance of module.structure.instances) {
       let err
       if (instance.type === 'assignment') {
          err = collectAssignmentEquipotentials(instance, module.equipotentials)

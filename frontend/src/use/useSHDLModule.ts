@@ -17,16 +17,12 @@ export function useSHDLModule() {
       return await db.modules.get(name)
    }
 
-   async function addModule(module) {
-      return await db.modules.add(module)
-   }
-   
-   async function updateModule(module) {
-      return await db.modules.update(module.name, module)
+   async function addOrUpdateModule(module) {
+      return await db.modules.put(module)
    }
 
    return {
       db, reset,
-      getModule, addModule, updateModule,
+      getModule, addOrUpdateModule,
    }
 }
