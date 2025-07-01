@@ -102,6 +102,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
          if (!document) {
             throw new Error(`module '${name}' not found`)
          }
+         // parse document - may throw an error
          return shdlPegParse(document.text)
       }),
       // extract its structure and its submodule names
@@ -115,7 +116,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
          const observableList = []
          for (const submoduleName of submoduleNames) {
             if (checked.includes(submoduleName) || submoduleName === name) {
-               throw `circularity issue with module '${submoduleName}'`
+               throw new Error(`circularity issue with module '${submoduleName}'`)
             }
             observableList.push(shdlDocumentParsing$(submoduleName, checked))
             checked.push(submoduleName)
@@ -126,25 +127,8 @@ export function shdlDocumentParsing$(name, checked=[]) {
          )
       }),
       catchError(error => {
-         console.log('err3', error.message)
          // Rethrow a new error to be handled by the subscriber
          throw new SHDLError(error.message, name, error.location)
-
-         // const err = {
-         //    moduleName: name
-         // }
-         // if (error.name) {
-         //    // pegjs error
-         //    err.message = error.message
-         //    err.location = error.location.start
-         // } else {
-         //    // 'module not found' or 'circularity issue' error
-         //    err.message = error.message
-         //    err.location = null
-         // }
-         // console.log('xerr', err)
-         // // Rethrow a new error to be handled by the subscriber
-         // return throwError(() => new Error(err))
       })
    )
 }

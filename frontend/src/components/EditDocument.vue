@@ -157,7 +157,6 @@ function handleSHDLDocumentChange(document) {
                structure: syntaxStructure,
                equipotentials: [],
                submoduleNames: syntaxStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
-               err: null,
             }
             accu[moduleName] = module
             return accu
