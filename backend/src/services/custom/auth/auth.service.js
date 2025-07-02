@@ -54,7 +54,7 @@ export default function (app) {
                text: `<p>Bonjour,</p>
 <p>Une demande de création de compte pour l'email ${email} vient d'être réalisée.</p>
 <p><b>Ne faites rien si vous n'êtes pas à l'origine de cette demande.</b></p>
-<p>Si par contre vous êtes bien l'auteur de cette demande, cliquez <a href="${config.CLIENT_URL}/create-account/${token}">sur ce lien</a> pour confirmer votre inscription.</p>`,
+<p>Si par contre vous en êtes bien l'auteur, cliquez <a href="${config.CLIENT_URL}/create-account/${token}">sur ce lien</a> pour confirmer votre inscription.</p>`,
             })
          }
       },

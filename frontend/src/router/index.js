@@ -2,6 +2,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { extendExpiration } from "/src/use/useAuthentication"
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
+
+const { findWhere: findUserTabRelations } = useUserTabRelation()
 
 
 const routes = [
@@ -26,11 +29,17 @@ const routes = [
 
    {
       path: '/home/:signedinUid',
+      meta: {
+         requiresAuth: true,
+      },
       props: true,
       component: () => import('/src/views/Home.vue'),
       children: [
          {
             path: 'users',
+            meta: {
+               roles: ['users']
+            },
             props: true,
             component: () => import('/src/views/users/ManageUsers.vue'),
             children: [
@@ -48,6 +57,9 @@ const routes = [
          },
          {
             path: 'groups',
+            meta: {
+               roles: ['groups']
+            },
             props: true,
             component: () => import('/src/views/groups/ManageGroups.vue'),
             children: [
@@ -65,6 +77,9 @@ const routes = [
          },
          {
             path: 'workshop',
+            meta: {
+               roles: ['workshop']
+            },
             props: true,
             component: () => import('/src/views/workshop/Workshop.vue'),
             children: [
@@ -90,6 +105,9 @@ const routes = [
          },
          {
             path: 'followup',
+            meta: {
+               roles: ['followup']
+            },
             props: true,
             component: () => import('/src/views/followup/ManageStudents.vue'),
             children: [
@@ -146,6 +164,9 @@ const routes = [
          },
          {
             path: 'tests',
+            meta: {
+               roles: ['tests']
+            },
             props: true,
             component: () => import('/src/views/ManageTests.vue'),
          },
@@ -169,11 +190,20 @@ router.beforeEach(async (to, from, next) => {
 
    if (to.meta.requiresAuth) {
       try {
-         // extends session at each route change
+         // extend session at each route change
          extendExpiration()
       } catch(err) {
          console.log('router.beforeEach err', err.code, err.message)
          // restartApp()
+      }
+   }
+
+   if (to.meta.roles) {
+      // check that signed-in user has tabs corresponding to roles
+      const relations = await findUserTabRelations({ user_uid: to.params.signedinUid })
+      const tabs = relations.map(relation => relation.tab)
+      if (to.meta.roles.some(role => !tabs.includes(role))) {
+         next('/')
       }
    }
 

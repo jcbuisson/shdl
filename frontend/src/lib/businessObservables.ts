@@ -93,7 +93,7 @@ export function userGrade$(user_uid: string) {
 }
 
 // Perform the syntactic parsing of an SHDL module `name` and all its submodules
-// Emits a list of their structures, the first element being the structure of the root module
+// Emit a list of their structures, the first element being the structure of the root module
 export function shdlDocumentParsing$(name, checked=[]) {
    return userDocument$({ name }).pipe(
       // parse root document

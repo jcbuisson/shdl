@@ -46,7 +46,9 @@ export default function(dbName: string, modelName: string, fields) {
       await db.metadata.put(meta)
    })
 
-   
+
+   /////////////          CREATE/UPDATE/REMOVE          /////////////
+
    async function create(data) {
       const uid = uid16(16)
       // optimistic update
@@ -104,6 +106,18 @@ export default function(dbName: string, modelName: string, fields) {
       }
    }
 
+   /////////////          DIRECT CACHE ACCESS          /////////////
+
+   function findByUID(uid) {
+      return db.values.get(uid)
+   }
+
+   function findWhere(where = {}) {
+      const predicate = wherePredicate(where)
+      return db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()
+   }
+
+   /////////////          REAL-TIME OBSERVABLE          /////////////
 
    function getObservable(where = {}) {
       addSynchroWhere(where).then((isNew: boolean) => {
@@ -141,6 +155,7 @@ export default function(dbName: string, modelName: string, fields) {
    return {
       db, reset,
       create, update, remove,
+      findByUID, findWhere,
       getObservable,
       synchronizeAll,
    }
