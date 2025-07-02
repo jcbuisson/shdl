@@ -3,7 +3,7 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <div :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+      <div v-if="selectedDocument?.type !== 'text'" :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
          <h5>{{ message.text }}</h5>
       </div>
 
@@ -175,24 +175,24 @@ function handleSHDLDocumentChange(document) {
          // display status
          const rootModule = moduleList[moduleList.length - 1]
          if (err) {
-            displayErrorMessage(err, rootModule.name)
+            displayErrorMessageSHDL(err, rootModule.name)
          } else {
-            displayOKMessage(rootModule)
+            displayOKMessageSHDL(rootModule)
          }
       },
 
       error: err => {
          console.log('err22', err.moduleName, err.location, err.message)
-         displayErrorMessage(err, document.name)
+         displayErrorMessageSHDL(err, document.name)
       },
    })
 }
 
-function displayOKMessage(rootModule) {
-   message.value = { inError: false, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles${''}` }
+function displayOKMessageSHDL(rootModule) {
+   message.value = { inError: false, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles` }
 }
 
-function displayErrorMessage(err, currentModuleName) {
+function displayErrorMessageSHDL(err, currentModuleName) {
    const locationStr = err.location ? `L ${err.location.start.line}, col ${err.location.start.column}` : null
    if (currentModuleName === err.moduleName) {
       if (locationStr) {

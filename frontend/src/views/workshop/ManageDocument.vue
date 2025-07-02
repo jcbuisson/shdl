@@ -3,7 +3,7 @@
    <div class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <v-tabs slider-color="indigo" v-model="tab">
+      <v-tabs slider-color="indigo" v-if="userDocument?.type !== 'text'">
          <v-tab :to="{ path: `/home/${signedinUid}/workshop/${document_uid}/edit` }" router value='edit'>
             Édition
          </v-tab>
@@ -20,16 +20,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+import { useUserDocument } from '/src/use/useUserDocument'
+
+const { findByUID } = useUserDocument()
 
 const props = defineProps({
-   signedinUid: {
-      type: String,
-   },
+   // signedinUid: {
+   //    type: String,
+   // },
    document_uid: {
       type: String,
    },
 })
 
-const tab = ref()
+const userDocument = ref()
+watch(() => props.document_uid, async (uid) => {
+   userDocument.value = await findByUID(uid)
+})
 </script>
