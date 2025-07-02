@@ -3,8 +3,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { extendExpiration } from "/src/use/useAuthentication"
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
+import { useUserDocument } from '/src/use/useUserDocument'
 
 const { findWhere: findUserTabRelations } = useUserTabRelation()
+const { findByUID: findUserDocumentByUID } = useUserDocument()
 
 
 const routes = [
@@ -78,13 +80,16 @@ const routes = [
          {
             path: 'workshop',
             meta: {
-               roles: ['workshop']
+               roles: ['workshop'],
             },
             props: true,
             component: () => import('/src/views/workshop/Workshop.vue'),
             children: [
                {
                   path: ':document_uid',
+                  meta: {
+                     checks: ['same_document_user'],
+                  },
                   props: true,
                   component: () => import('/src/views/workshop/ManageDocument.vue'),
                   children: [
@@ -204,6 +209,18 @@ router.beforeEach(async (to, from, next) => {
       const tabs = relations.map(relation => relation.tab)
       if (to.meta.roles.some(role => !tabs.includes(role))) {
          next('/')
+      }
+   }
+
+   if (to.meta.checks) {
+      for (const check of to.meta.checks) {
+         if (check === 'same_document_user') {
+            // check that document's owner is signed-in user
+            const userDocument = await findUserDocumentByUID(to.params.document_uid)
+            if (userDocument.user_uid !== to.params.signedinUid) {
+               next('/')
+            }
+         }
       }
    }
 
