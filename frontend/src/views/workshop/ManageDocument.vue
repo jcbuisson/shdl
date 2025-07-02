@@ -27,9 +27,9 @@ import { useUserDocument } from '/src/use/useUserDocument'
 const { findByUID } = useUserDocument()
 
 const props = defineProps({
-   // signedinUid: {
-   //    type: String,
-   // },
+   signedinUid: {
+      type: String,
+   },
    document_uid: {
       type: String,
    },
