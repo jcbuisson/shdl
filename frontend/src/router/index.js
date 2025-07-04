@@ -88,6 +88,7 @@ const routes = [
                {
                   path: ':document_uid',
                   meta: {
+                     // check that document's owner is signed-in user
                      checks: ['same_document_user'],
                   },
                   props: true,
