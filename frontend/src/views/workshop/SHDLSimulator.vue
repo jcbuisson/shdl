@@ -23,9 +23,6 @@
             <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
                :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
             </v-fab>
-            <v-fab v-if="otherGroups.length > 0" @click="showOthers = !showOthers" small color="yellow" location="bottom start"
-               :icon="showOthers ? 'mdi-chevron-up' : 'mdi-chevron-down'">
-            </v-fab>
             <template v-for="signalGroup in parameterGroups">
                <v-list-item>
                   <template v-slot:prepend>
@@ -47,11 +44,14 @@
             </template>
          </v-list>
 
-         <template v-if="showOthers">
+         <template v-if="otherGroups.length > 0">
             <v-divider/>
             <v-list density="compact">
                <template v-for="signalGroup in otherGroups">
                   <v-list-item>
+                  <template v-slot:prepend>
+                     <v-icon></v-icon>
+                  </template>
                      <v-list-item-title>
                         {{ signalGroup.name }}
                      </v-list-item-title>
@@ -66,7 +66,6 @@
                </template>
             </v-list>
          </template>
-
       </div>
    </v-card>
 </template>
