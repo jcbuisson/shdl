@@ -9,6 +9,7 @@ import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
+import { useSHDLModule } from '/src/use/useSHDLModule'
 
 import router from '/src/router'
 
@@ -19,6 +20,7 @@ const { reset: resetUseUserTabRelation } = useUserTabRelation()
 const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
 const { reset: resetUseUserDocument } = useUserDocument()
 const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent()
+const { reset: resetSHDLModule } = useSHDLModule()
 
 
 export async function clearCaches() {
@@ -32,6 +34,7 @@ export async function clearCaches() {
    await resetUseUserGroupRelation()
    await resetUseUserDocument()
    await resetUseUserDocumentEvent()
+   await resetSHDLModule()
 }
 
 export const restartApp = async () => {

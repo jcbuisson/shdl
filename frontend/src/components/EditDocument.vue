@@ -153,6 +153,7 @@ function handleSHDLDocumentChange(document) {
          const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
             const moduleName = syntaxStructure.name
             const module = {
+               document_uid: document.uid,
                name: moduleName,
                structure: syntaxStructure,
                equipotentials: [],

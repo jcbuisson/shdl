@@ -97,12 +97,11 @@ const routes = [
                         path: 'edit',
                         props: true,
                         component: () => import('/src/components/EditDocument.vue'),
-                        // component: () => import('/src/components/Dummy.vue'),
                      },
                      {
                         path: 'simulate',
                         props: true,
-                        component: () => import('/src/components/SHDLSimulator.vue'),
+                        component: () => import('/src/views/workshop/SHDLSimulator.vue'),
                      },
                   ],      
                },
@@ -216,6 +215,7 @@ router.beforeEach(async (to, from, next) => {
       for (const check of to.meta.checks) {
          if (check === 'same_document_user') {
             // check that document's owner is signed-in user
+            // document is necessarily in cache since it is visible in the document list of ManageDocument.vue
             const userDocument = await findUserDocumentByUID(to.params.document_uid)
             if (userDocument.user_uid !== to.params.signedinUid) {
                next('/')

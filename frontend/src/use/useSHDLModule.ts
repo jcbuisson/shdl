@@ -1,4 +1,6 @@
 import Dexie from "dexie"
+import { from } from 'rxjs'
+import { liveQuery } from "dexie"
 
 
 export function useSHDLModule() {
@@ -6,16 +8,20 @@ export function useSHDLModule() {
    const db = new Dexie("SHDLModules")
 
    db.version(1).stores({
-      modules: "name",
+      modules: "document_uid, name",
    })
 
    const reset = async () => {
       await db.modules.clear()
    }
-   
-   async function getModule(name) {
-      return await db.modules.get(name)
+
+   const module$ = (document_uid) => {
+      return from(liveQuery(() => db.modules.get(document_uid)))
    }
+   
+   // async function getModule(name) {
+   //    return await db.modules.get(name)
+   // }
 
    async function addOrUpdateModule(module) {
       return await db.modules.put(module)
@@ -23,6 +29,8 @@ export function useSHDLModule() {
 
    return {
       db, reset,
-      getModule, addOrUpdateModule,
+      module$,
+      // getModule,
+      addOrUpdateModule,
    }
 }
