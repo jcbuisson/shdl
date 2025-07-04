@@ -27,8 +27,11 @@
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-chip v-if="ugg?.grade >= 0" size="x-small" variant="flat" :color="ugg?.grade < 10 ? 'red' : 'grey'">{{ ugg?.grade }}</v-chip>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(ugg.user)"></v-btn>
+                     <v-tooltip text="Note/20">
+                        <template v-slot:activator="{ props }">
+                           <v-chip v-bind="props" v-if="ugg?.grade >= 0" size="x-small" variant="flat" :color="ugg?.grade < 10 ? 'red' : 'grey'">{{ ugg?.grade }}</v-chip>
+                        </template>
+                     </v-tooltip>
                   </template>
                </v-list-item>
             </div>

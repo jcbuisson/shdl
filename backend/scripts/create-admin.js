@@ -4,7 +4,7 @@ import { expressX } from '@jcbuisson/express-x'
 
 import inquirer from 'inquirer'
 import bcrypt from 'bcryptjs'
-import { uid as uid16 } from 'uid'
+import { v7 as uuidv7 } from 'uuid'
 
 import config from '#config'
 import services from '#root/src/services/index.js'
@@ -49,7 +49,7 @@ async function main() {
          throw new Error("passwords do not match")
       }
       // create user
-      let uid = uid16(16)
+      let uid = uuidv7()
       const now = new Date()
       const [user, _] = await app.service('user').createWithMeta(uid, {
          email: answers.email,
@@ -58,7 +58,7 @@ async function main() {
          password: await bcrypt.hash(answers.password, 5),
       }, now)
       // create relation with 'users' (user management) tab
-      uid = uid16(16)
+      uid = uuidv7()
       await app.service('user_tab_relation').createWithMeta(uid, {
          user_uid: user.uid,
          tab: 'users',

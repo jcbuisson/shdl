@@ -15,7 +15,11 @@
                   <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-badge :color="document.update_count > 15 ? 'grey' : 'red'" inline :content="document.update_count"></v-badge>
+                     <v-tooltip text="Nombre de sauvegardes">
+                        <template v-slot:activator="{ props }">
+                           <v-badge v-bind="props" :color="document.update_count > 15 ? 'grey' : 'red'" inline :content="document.update_count"></v-badge>
+                        </template>
+                     </v-tooltip>
                   </template>
                </v-list-item>
             </div>

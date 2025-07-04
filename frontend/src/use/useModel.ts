@@ -1,7 +1,8 @@
 import Dexie from "dexie"
 import { from } from 'rxjs'
 import { liveQuery } from "dexie"
-import { uid as uid16 } from 'uid'
+// uuidv7 are monotonically increasing and much improve database performance amid B-tree indexes
+import { v7 as uuidv7 } from 'uuid'
 import { tryOnScopeDispose } from '@vueuse/core'
 
 import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
@@ -50,7 +51,7 @@ export default function(dbName: string, modelName: string, fields) {
    /////////////          CREATE/UPDATE/REMOVE          /////////////
 
    async function create(data) {
-      const uid = uid16(16)
+      const uid = uuidv7()
       // optimistic update
       const now = new Date()
       await db.values.add({ uid, ...data })

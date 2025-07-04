@@ -75,7 +75,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute} from 'vue-router'
-import { uid as uid16 } from 'uid'
+import { v7 as uuidv7 } from 'uuid'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
@@ -140,7 +140,7 @@ async function createDocument() {
       type: data.value.type,
       text: `module ${data.value.name}()\nend module`,
    })
-   const uid = uid16(16)
+   const uid = uuidv7()
    app.service('user_document_event').create({
       data: {
          uid,

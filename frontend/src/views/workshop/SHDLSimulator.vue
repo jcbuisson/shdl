@@ -96,7 +96,7 @@ const barStatusText = ref(null)
 let subscription
 
 onMounted(() => {
-
+   console.log('onMounted simulator')
    subscription = module$(props.document_uid).subscribe({
       next: module_ => {
          console.log('next', module_)

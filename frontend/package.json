@@ -32,7 +32,7 @@
     "rxjs": "^7.8.2",
     "socket.io-client": "^4.8.1",
     "typeface-roboto": "^1.1.13",
-    "uid": "^2.0.2",
+    "uuid": "^11.1.0",
     "vite-plugin-pwa": "^0.21.1",
     "vue": "^3.5.13",
     "vue-codemirror": "^6.1.1",

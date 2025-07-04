@@ -3,7 +3,7 @@
 
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { uid as uid16 } from 'uid'
+import { v7 as uuidv7 } from 'uuid'
 
 import hooks from './auth.hooks.js'
 import config from '#config'
@@ -69,13 +69,13 @@ export default function (app) {
             // create user
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
-            const uid = uid16(16)
+            const uid = uuidv7()
             const user = await prisma.user.create({
                data: { uid, email: payload.email, password, firstname, lastname }
             })
             // give user tab 'workshop'
             for (const tab of ['workshop']) {
-               const uid = uid16(16)
+               const uid = uuidv7()
                await prisma.user_tab_relation.create({
                   data: { uid, user_uid: user.uid, tab }
                })

@@ -151,7 +151,7 @@ const routes = [
                                  {
                                     path: 'simulate',
                                     props: true,
-                                    component: () => import('/src/components/SHDLSimulator.vue'),
+                                    component: () => import('/src/views/workshop/SHDLSimulator.vue'),
                                  },
                               ],      
                            },
