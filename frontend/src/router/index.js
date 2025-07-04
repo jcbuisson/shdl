@@ -103,7 +103,7 @@ const routes = [
                         props: true,
                         component: () => import('/src/views/workshop/SHDLSimulator.vue'),
                      },
-                  ],      
+                  ],     
                },
             ],      
          },
