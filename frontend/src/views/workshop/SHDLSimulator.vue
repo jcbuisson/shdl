@@ -18,53 +18,54 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <v-card>
-            <v-list>
-               <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
-                  :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
-               </v-fab>
-               <v-fab v-if="otherGroups.length > 0" @click="showOthers = !showOthers" small color="yellow" location="bottom start"
-                  :icon="showOthers ? 'mdi-chevron-up' : 'mdi-chevron-down'">
-               </v-fab>
 
-               <template v-for="signalGroup in parameterGroups">
-                  <v-list-item>
-                     <v-list-item-action>
-                        <v-icon :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
-                           {{ inputOutputIcon(signalGroup) }}
-                        </v-icon>
-                     </v-list-item-action>
-                     <v-list-item-content>{{ signalGroup.name }}</v-list-item-content>
-                     <v-list-item-action>
-                        <div>
+         <v-list density="compact">
+            <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
+               :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
+            </v-fab>
+            <v-fab v-if="otherGroups.length > 0" @click="showOthers = !showOthers" small color="yellow" location="bottom start"
+               :icon="showOthers ? 'mdi-chevron-up' : 'mdi-chevron-down'">
+            </v-fab>
+            <template v-for="signalGroup in parameterGroups">
+               <v-list-item>
+                  <template v-slot:prepend>
+                     <v-icon :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
+                        {{ inputOutputIcon(signalGroup) }}
+                     </v-icon>
+                  </template>
+                  <v-list-item-title>
+                     {{ signalGroup.name }}
+                  </v-list-item-title>
+                  <template v-slot:append>
+                     <div>
                         <template v-for="index in signalGroup.equipotentialIndexes">
                            <v-icon @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
                         </template>
+                     </div>
+                  </template>
+               </v-list-item>
+            </template>
+         </v-list>
+
+         <template v-if="showOthers">
+            <v-divider/>
+            <v-list density="compact">
+               <template v-for="signalGroup in otherGroups">
+                  <v-list-item>
+                     <v-list-item-title>
+                        {{ signalGroup.name }}
+                     </v-list-item-title>
+                     <template v-slot:append>
+                        <div>
+                           <template v-for="index in signalGroup.equipotentialIndexes">
+                              <v-icon disabled>{{ checkIcon(index, false) }}</v-icon>
+                           </template>
                         </div>
-                     </v-list-item-action>
+                     </template>
                   </v-list-item>
                </template>
             </v-list>
-         </v-card>
-
-         <v-card v-if="showOthers">
-            <v-divider/>
-            <template v-for="signalGroup in otherGroups">
-               <v-list-item>
-                  <v-list-item-action>
-                     <v-icon></v-icon>
-                  </v-list-item-action>
-                  <v-list-item-content>{{ signalGroup.name }}</v-list-item-content>
-                  <v-list-item-action>
-                     <div>
-                     <template v-for="index in signalGroup.equipotentialIndexes">
-                        <v-icon :disabled="true">{{ checkIcon(index, false) }}</v-icon>
-                     </template>
-                     </div>
-                  </v-list-item-action>
-               </v-list-item>
-            </template>
-         </v-card>
+         </template>
 
       </div>
    </v-card>
