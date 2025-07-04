@@ -1,81 +1,73 @@
 <template>
-   <div>parameterGroups: {{ parameterGroups }}</div>
-   <div>otherGroups: {{ otherGroups }}</div>
-   <div>equipotentials: {{ equipotentials }}</div>
-   <div>currentValues: {{ currentValues }}</div>
-   <!-- <v-layout row wrap>
+   <!-- makes the layout a vertical stack filling the full height -->
+   <v-card class="d-flex flex-column fill-height">
 
-      <v-flex class="sm12" v-if="barStatus > 0">
-         <v-toolbar dense :color="barStatus === 1 ? 'orange' : barStatus === 2 ? 'green' :  'red'" dark>
-            <span v-if="barStatus >= 2"> {{ barStatusText }} </span>
-            <span v-if="barStatus === 1">
-               TEST VECTOR
-               <input type="file" @change="onTestFileChange">
-            </span>
-            <v-spacer></v-spacer>
-            <span v-if="barStatus === 1 && getMemoryInstanceArray().length > 0">
-               MEMORY CONTENTS
-               <input type="file" @change="onMemFileChange">
-            </span>
-         </v-toolbar>
-      </v-flex>
+      <!-- Toolbar (does not grow) -->
+      <v-toolbar v-if="barStatus > 0" density="compact" :color="barStatus === 1 ? 'orange' : barStatus === 2 ? 'green' :  'red'" dark>
+         <span v-if="barStatus >= 2"> {{ barStatusText }} </span>
+         <span v-if="barStatus === 1">
+            TEST VECTOR
+            <input type="file" @change="onTestFileChange">
+         </span>
+         <v-spacer></v-spacer>
+         <span v-if="barStatus === 1 && getMemoryInstanceArray().length > 0">
+            MEMORY CONTENTS
+            <input type="file" @change="onMemFileChange">
+         </span>
+      </v-toolbar>
 
-      <v-flex xs12>
+      <!-- Fills remaining vertical space -->
+      <div class="d-flex flex-column flex-grow-1 overflow-auto">
          <v-card>
             <v-list>
-               <v-btn @click="onBarButtonClick"
-                     fab small color="yellow"
-                     top right absolute>
-                  <v-icon>{{ barStatus === 0 ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-               </v-btn>
-               <v-btn v-if="otherGroups.length > 0"
-                     @click="showOthers = !showOthers"
-                     fab small color="yellow"
-                     bottom left absolute>
-                  <v-icon>{{ showOthers ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</v-icon>
-               </v-btn>
+               <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
+                  :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
+               </v-fab>
+               <v-fab v-if="otherGroups.length > 0" @click="showOthers = !showOthers" small color="yellow" location="bottom start"
+                  :icon="showOthers ? 'mdi-chevron-up' : 'mdi-chevron-down'">
+               </v-fab>
 
                <template v-for="signalGroup in parameterGroups">
-                  <v-list-tile>
-                     <v-list-tile-action>
+                  <v-list-item>
+                     <v-list-item-action>
                         <v-icon :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
                            {{ inputOutputIcon(signalGroup) }}
                         </v-icon>
-                     </v-list-tile-action>
-                     <v-list-tile-content>{{ signalGroup.name }}</v-list-tile-content>
-                     <v-list-tile-action>
+                     </v-list-item-action>
+                     <v-list-item-content>{{ signalGroup.name }}</v-list-item-content>
+                     <v-list-item-action>
                         <div>
                         <template v-for="index in signalGroup.equipotentialIndexes">
                            <v-icon @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
                         </template>
                         </div>
-                     </v-list-tile-action>
-                  </v-list-tile>
+                     </v-list-item-action>
+                  </v-list-item>
                </template>
             </v-list>
          </v-card>
 
          <v-card v-if="showOthers">
             <v-divider/>
-               <template v-for="signalGroup in otherGroups">
-                  <v-list-tile>
-                     <v-list-tile-action>
-                        <v-icon></v-icon>
-                     </v-list-tile-action>
-                     <v-list-tile-content>{{ signalGroup.name }}</v-list-tile-content>
-                     <v-list-tile-action>
-                        <div>
-                        <template v-for="index in signalGroup.equipotentialIndexes">
-                           <v-icon :disabled="true">{{ checkIcon(index, false) }}</v-icon>
-                        </template>
-                        </div>
-                     </v-list-tile-action>
-                  </v-list-tile>
-               </template>
+            <template v-for="signalGroup in otherGroups">
+               <v-list-item>
+                  <v-list-item-action>
+                     <v-icon></v-icon>
+                  </v-list-item-action>
+                  <v-list-item-content>{{ signalGroup.name }}</v-list-item-content>
+                  <v-list-item-action>
+                     <div>
+                     <template v-for="index in signalGroup.equipotentialIndexes">
+                        <v-icon :disabled="true">{{ checkIcon(index, false) }}</v-icon>
+                     </template>
+                     </div>
+                  </v-list-item-action>
+               </v-list-item>
+            </template>
          </v-card>
 
-      </v-flex>
-   </v-layout> -->
+      </div>
+   </v-card>
 </template>
 
 
@@ -104,11 +96,6 @@ const barStatusText = ref(null)
 let subscription
 
 onMounted(() => {
-   // let error = updateState()
-   // if (error) {
-   //    barStatus.value = 3
-   //    barStatusText.value = error
-   // }
 
    subscription = module$(props.document_uid).subscribe({
       next: module_ => {
@@ -116,6 +103,11 @@ onMounted(() => {
          module.value = module_
          previousValues.value = module_.equipotentials.map(_ => null)
          currentValues.value = module_.equipotentials.map(_ => null)
+         let error = updateState()
+         if (error) {
+            barStatus.value = 3
+            barStatusText.value = error
+         }
       },
       error: err => {
          console.log('err33', err)
@@ -315,9 +307,9 @@ const otherGroups = computed(() => {
 
 function inputOutputIcon(signalGroup) {
    if (signalGroup.isInput) {
-      return 'fa-long-arrow-alt-right'
+      return 'mdi-arrow-right-thin'
    } else if (signalGroup.isOutput) {
-      return 'fa-long-arrow-alt-left'
+      return 'mdi-arrow-left-thin'
    } else {
       return null
    }
@@ -335,11 +327,11 @@ function inputOutputIconColor(signalGroup) {
 
 function checkIcon(index, isInput) {
    if (currentValues.value[index] === null) {
-      return isInput ? 'indeterminate_check_box' : 'remove_circle'
+      return isInput ? 'mdi-minus-box' : 'mdi-minus-circle'
    } else if (currentValues.value[index]) {
-      return isInput ? 'check_box' : 'radio_button_checked'
+      return isInput ? 'mdi-checkbox-marked' : 'mdi-radiobox-marked'
    } else {
-      return isInput ? 'check_box_outline_blank' : 'radio_button_unchecked'
+      return isInput ? 'mdi-checkbox-blank-outline' : 'mdi-radiobox-blank'
    }
 }
 
@@ -358,7 +350,6 @@ function onIconClick(index) {
 
 function clear(signalGroup) {
    if (!signalGroup.isInput) return
-   let self = this
    let first = currentValues.value[signalGroup.equipotentialIndexes[0]]
    let toggled = (first === null) ? false : (first ? null : true)
    signalGroup.equipotentialIndexes.forEach(function(index) {
@@ -518,16 +509,15 @@ function equipotentialValue(equipotentialIndex, dataArray, previousValueArray) {
 }
 
 function evaluateFormula(formula, dataArray) {
-   let self = this
    if (formula.op === 'or') {
       let one = formula.args.some(function(f) {
-         return (self.evaluateFormula(f, dataArray) === true)
+         return (evaluateFormula(f, dataArray) === true)
       })
       if (one) {
          return true
       }
       let zero = formula.args.every(function(f) {
-         return (self.evaluateFormula(f, dataArray) === false)
+         return (evaluateFormula(f, dataArray) === false)
       })
       if (zero) {
          return false
@@ -536,13 +526,13 @@ function evaluateFormula(formula, dataArray) {
       return null
    } else if (formula.op === 'and') {
       let zero = formula.args.some(function(f) {
-         return (self.evaluateFormula(f, dataArray) === false)
+         return (evaluateFormula(f, dataArray) === false)
       })
       if (zero) {
          return false
       }
       let one = formula.args.every(function(f) {
-         return (self.evaluateFormula(f, dataArray) === true)
+         return (evaluateFormula(f, dataArray) === true)
       })
       if (one) {
          return true

@@ -18,10 +18,6 @@ export function useSHDLModule() {
    const module$ = (document_uid) => {
       return from(liveQuery(() => db.modules.get(document_uid)))
    }
-   
-   // async function getModule(name) {
-   //    return await db.modules.get(name)
-   // }
 
    async function addOrUpdateModule(module) {
       return await db.modules.put(module)
@@ -30,7 +26,6 @@ export function useSHDLModule() {
    return {
       db, reset,
       module$,
-      // getModule,
       addOrUpdateModule,
    }
 }
