@@ -35,7 +35,7 @@
 
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref } from 'vue'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
@@ -75,7 +75,6 @@ function selectDocument(document) {
    } else if (document.type === 'craps') {
       router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/craps/${document.uid}`)
    }
-
 }
 
 // const route = useRoute()
