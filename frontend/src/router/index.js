@@ -98,7 +98,7 @@ const routes = [
                         path: '',
                         props: true,
                         components: {
-                           editor: () => import('/src/components/EditDocument.vue'),
+                           editor: () => import('/src/components/EditSHDLDocument.vue'),
                            simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
                         }
                      },
@@ -154,7 +154,7 @@ const routes = [
                                        document_uid: route.params.document_uid,
                                        editable: false,
                                     }),
-                                    component: () => import('/src/components/EditDocument.vue'),
+                                    component: () => import('/src/components/EditSHDLDocument.vue'),
                                  },
                                  {
                                     path: 'simulate',
