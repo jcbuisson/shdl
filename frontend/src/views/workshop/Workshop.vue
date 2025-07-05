@@ -130,8 +130,13 @@ const selectedDocument = ref(null)
 
 function selectDocument(module) {
    selectedDocument.value = module
-   // router.push(`/home/${props.signedinUid}/workshop/${module.uid}/edit`)
-   router.push(`/home/${props.signedinUid}/workshop/${module.uid}`)
+   if (module.type === 'shdl') {
+      router.push(`/home/${props.signedinUid}/workshop/shdl/${module.uid}`)
+   } else if (module.type === 'text') {
+      router.push(`/home/${props.signedinUid}/workshop/text/${module.uid}`)
+   } else if (module.type === 'craps') {
+      router.push(`/home/${props.signedinUid}/workshop/craps/${module.uid}`)
+   }
 }
 
 async function createDocument() {

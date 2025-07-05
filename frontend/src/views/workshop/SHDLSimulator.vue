@@ -96,7 +96,7 @@ let subscription
 
 watch(() => props.document_uid, async (document_uid) => {
    if (subscription) subscription.unsubscribe()
-   subscription = module$(props.document_uid).subscribe({
+   subscription = module$(document_uid).subscribe({
       next: module_ => {
          console.log('next simu', module_)
          module.value = module_
@@ -112,30 +112,10 @@ watch(() => props.document_uid, async (document_uid) => {
          console.log('err33', err)
       },
    })
-})
-
-
-// onMounted(() => {
-//    subscription = module$(props.document_uid).subscribe({
-//       next: module_ => {
-//          console.log('next simu', module_)
-//          module.value = module_
-//          previousValues.value = module_.equipotentials.map(_ => null)
-//          currentValues.value = module_.equipotentials.map(_ => null)
-//          let error = updateState()
-//          if (error) {
-//             barStatus.value = 3
-//             barStatusText.value = error
-//          }
-//       },
-//       error: err => {
-//          console.log('err33', err)
-//       },
-//    })
-// })
+}, { immediate: true })
 
 onUnmounted(() => {
-   subscription && subscription.unsubscribe()
+   if (subscription) subscription.unsubscribe()
 })
 
 const structure = computed(() => {

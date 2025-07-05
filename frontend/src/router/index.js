@@ -86,13 +86,13 @@ const routes = [
             component: () => import('/src/views/workshop/Workshop.vue'),
             children: [
                {
-                  path: ':document_uid',
+                  path: 'shdl/:document_uid',
                   meta: {
                      // check that document's owner is signed-in user
                      checks: ['same_document_user'],
                   },
                   props: true,
-                  component: () => import('/src/views/workshop/ManageDocument.vue'),
+                  component: () => import('/src/views/workshop/ManageSHDLDocument.vue'),
                   children: [
                      {
                         path: '',
@@ -103,6 +103,15 @@ const routes = [
                         }
                      },
                   ],     
+               },
+               {
+                  path: 'text/:document_uid',
+                  meta: {
+                     // check that document's owner is signed-in user
+                     checks: ['same_document_user'],
+                  },
+                  props: true,
+                  component: () => import('/src/views/workshop/ManageTextDocument.vue'),
                },
             ],      
          },

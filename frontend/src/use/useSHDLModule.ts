@@ -20,7 +20,6 @@ export function useSHDLModule() {
    }
 
    async function addOrUpdateModule(module) {
-      console.log('update', module)
       return await db.modules.put(module)
    }
 

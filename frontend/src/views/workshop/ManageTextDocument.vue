@@ -1,0 +1,3 @@
+<template>
+   TEXT DOC
+</template>

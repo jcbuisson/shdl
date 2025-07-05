@@ -8,8 +8,8 @@
 
             <template v-slot:append>
                <div class="d-flex ga-2">
-                  <v-btn size="small" @click="clearCaches">Clear</v-btn>
-                  <OnlineButton :isOnline="isConnected" @connect="connect" @disconnect="disconnect" />
+                  <!-- <v-btn size="small" @click="clearCaches">Clear</v-btn>
+                  <OnlineButton :isOnline="isConnected" @connect="connect" @disconnect="disconnect" /> -->
                   <GithubLink
                      url="https://github.com/jcbuisson/shdl"
                      svgPath="M12 2A10 10 0 0 0 2 12..."
