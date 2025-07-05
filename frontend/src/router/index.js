@@ -95,14 +95,12 @@ const routes = [
                   component: () => import('/src/views/workshop/ManageDocument.vue'),
                   children: [
                      {
-                        path: 'edit',
+                        path: '',
                         props: true,
-                        component: () => import('/src/components/EditDocument.vue'),
-                     },
-                     {
-                        path: 'simulate',
-                        props: true,
-                        component: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                        components: {
+                           editor: () => import('/src/components/EditDocument.vue'),
+                           simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                        }
                      },
                   ],     
                },

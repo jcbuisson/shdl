@@ -20,9 +20,9 @@
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
          <v-list density="compact">
-            <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
+            <!-- <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
                :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
-            </v-fab>
+            </v-fab> -->
             <template v-for="signalGroup in parameterGroups">
                <v-list-item>
                   <template v-slot:prepend>
@@ -72,7 +72,7 @@
 
 
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue'
+import { watch, onUnmounted, computed, ref } from 'vue'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
@@ -89,17 +89,16 @@ const props = defineProps({
 const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
-const showOthers = ref(false)
 const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
 const barStatusText = ref(null)
 
 let subscription
 
-onMounted(() => {
-   console.log('onMounted simulator')
+watch(() => props.document_uid, async (document_uid) => {
+   if (subscription) subscription.unsubscribe()
    subscription = module$(props.document_uid).subscribe({
       next: module_ => {
-         console.log('next', module_)
+         console.log('next simu', module_)
          module.value = module_
          previousValues.value = module_.equipotentials.map(_ => null)
          currentValues.value = module_.equipotentials.map(_ => null)
@@ -114,6 +113,26 @@ onMounted(() => {
       },
    })
 })
+
+
+// onMounted(() => {
+//    subscription = module$(props.document_uid).subscribe({
+//       next: module_ => {
+//          console.log('next simu', module_)
+//          module.value = module_
+//          previousValues.value = module_.equipotentials.map(_ => null)
+//          currentValues.value = module_.equipotentials.map(_ => null)
+//          let error = updateState()
+//          if (error) {
+//             barStatus.value = 3
+//             barStatusText.value = error
+//          }
+//       },
+//       error: err => {
+//          console.log('err33', err)
+//       },
+//    })
+// })
 
 onUnmounted(() => {
    subscription && subscription.unsubscribe()

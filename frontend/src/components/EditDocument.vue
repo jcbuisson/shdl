@@ -148,7 +148,7 @@ function handleSHDLDocumentChange(document) {
    // read SHDL documents recursively from `document` root and return an unordered list of module structures
    subscription2 = shdlDocumentParsing$(document.name).subscribe({
       next: syntaxStructureList => {
-         console.log('next', syntaxStructureList)
+         console.log('next edit', syntaxStructureList)
          // transform the list of syntaxic structures into a map of modules
          const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
             const moduleName = syntaxStructure.name

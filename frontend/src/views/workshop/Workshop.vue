@@ -130,7 +130,8 @@ const selectedDocument = ref(null)
 
 function selectDocument(module) {
    selectedDocument.value = module
-   router.push(`/home/${props.signedinUid}/workshop/${module.uid}/edit`)
+   // router.push(`/home/${props.signedinUid}/workshop/${module.uid}/edit`)
+   router.push(`/home/${props.signedinUid}/workshop/${module.uid}`)
 }
 
 async function createDocument() {
