@@ -22,7 +22,7 @@ model metadata {
 enum Tab {
    users       // users management
    groups      // groups management
-   test        // test management
+   tests       // tests management
    followup    // students followup
    workshop    // workshop for shdl, craps, text document
 }
@@ -118,7 +118,7 @@ model user_document {
 model user_document_event {
    uid                     String     @unique
    document_uid            String
-   type                    String     // 'create', 'edit', 'delete'
+   type                    String     // 'create', 'edit', 'delete', 'pass_test'
    start                   DateTime
    end                     DateTime?
 

@@ -36,7 +36,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute} from 'vue-router'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
@@ -46,7 +45,6 @@ import { setStudentManagerWorkshopSplitWidth, studentManagerWorkshopSplitWidth }
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
-import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { getObservable: documents$ } = useUserDocument()
 
@@ -66,18 +64,18 @@ const documentList = useObservable(documents$({user_uid: props.user_uid}).pipe(
    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
 ))
 
-const addModuleDialog = ref(false)
-const data = ref({})
-
-async function addModule() {
-   addModuleDialog.value = true
-}
-
 const selectedDocument = ref(null)
 
 function selectDocument(document) {
    selectedDocument.value = document
-   router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/${document.uid}/edit`)
+   if (document.type === 'shdl') {
+      router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/shdl/${document.uid}`)
+   } else if (document.type === 'text') {
+      router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/text/${document.uid}`)
+   } else if (document.type === 'craps') {
+      router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/craps/${document.uid}`)
+   }
+
 }
 
 // const route = useRoute()

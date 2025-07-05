@@ -144,26 +144,33 @@ const routes = [
                         component: () => import('/src/views/followup/StudentWorkshop.vue'),
                         children: [
                            {
-                              path: ':document_uid',
+                              path: 'shdl/:document_uid',
                               props: true,
-                              component: () => import('/src/views/followup/StudentDocument.vue'),
+                              component: () => import('/src/views/workshop/ManageSHDLDocument.vue'),
                               children: [
                                  {
-                                    path: 'edit',
+                                    path: '',
                                     props: route => ({
                                        document_uid: route.params.document_uid,
                                        editable: false,
                                     }),
-                                    component: () => import('/src/components/EditSHDLDocument.vue'),
+                                    components: {
+                                       editor: () => import('/src/components/EditSHDLDocument.vue'),
+                                       simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                                    }
                                  },
-                                 {
-                                    path: 'simulate',
-                                    props: true,
-                                    component: () => import('/src/views/workshop/SHDLSimulator.vue'),
-                                 },
-                              ],      
+                              ],     
                            },
-                        ],
+                           {
+                              path: 'text/:document_uid',
+                              meta: {
+                                 // check that document's owner is signed-in user
+                                 checks: ['same_document_user'],
+                              },
+                              props: true,
+                              component: () => import('/src/views/workshop/ManageTextDocument.vue'),
+                           },
+                        ],      
                      },
                      {
                         path: 'grade',

@@ -137,8 +137,8 @@ onMounted(async () => {
       routeTabUid.value = tabFromRoute.uid
    } else {
       const userTabList = await firstValueFrom(debouncedUserTabs$)
-      router.push(`/home/${props.signedinUid}/${userTabList[0].uid}`)
-      // router.push(`/home/${props.signedinUid}`)
+      // router.push(`/home/${props.signedinUid}/${userTabList[0].uid}`)
+      router.push(`/home/${props.signedinUid}`)
    }
 
    interval = setInterval(() => {
