@@ -119,6 +119,7 @@ const nameFilter = ref('')
 const sortedDocumentList = useObservable(documents$({user_uid: props.signedinUid}).pipe(
    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
 ))
+
 const filteredSortedDocumentList = computed(() => {
    if (!sortedDocumentList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
