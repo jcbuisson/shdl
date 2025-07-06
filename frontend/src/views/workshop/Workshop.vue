@@ -5,21 +5,26 @@
          <div class="d-flex flex-column fill-height">
 
             <!-- Filter by name (does not grow) -->
-            <v-toolbar color="red-darken-4" ddensity="compact">
+            <v-toolbar color="red-darken-4">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
             </v-toolbar>
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
-                  <v-list-item-title>{{ document.name }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
-                  <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteDocument(document)"></v-btn>
-                  </template>
-               </v-list-item>
+                  <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
+                     <template v-slot:prepend>
+                        <v-btn color="green" icon="mdi-checkbox-marked" variant="text" @click=""></v-btn>
+                     </template>
+
+                     <v-list-item-title>{{ document.name }}</v-list-item-title>
+                     <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
+
+                     <template v-slot:append>
+                        <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteDocument(document)"></v-btn>
+                     </template>
+                  </v-list-item>
             </div>
          </div>
       </template>

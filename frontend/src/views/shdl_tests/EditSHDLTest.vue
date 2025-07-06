@@ -2,6 +2,7 @@
    <v-card>
       <v-form>
          <v-container>
+
             <v-row>
                <v-col cols="12" md="6">
                   <v-text-field
@@ -12,6 +13,15 @@
                   ></v-text-field>
                </v-col>
             </v-row>
+
+            <v-row>
+               <v-textarea
+                  label="Test"
+                  :modelValue="test?.test_statements"
+                  @input="(e) => onFieldInputDebounced('test_statements', e.target.value)"
+               ></v-textarea>
+            </v-row>
+
          </v-container>
       </v-form>
    </v-card>
