@@ -8,7 +8,6 @@
             <!-- Filter by name (does not grow) -->
             <v-toolbar color="red-darken-4" ddensity="compact">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
-               <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
          
             <!-- Filter by group (does not grow) -->
