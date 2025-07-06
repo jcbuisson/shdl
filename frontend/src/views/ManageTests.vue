@@ -1,3 +1,0 @@
-<template>
-   MANAGE TESTS
-</template>

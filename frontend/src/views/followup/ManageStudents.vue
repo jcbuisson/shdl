@@ -4,15 +4,30 @@
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
-            <!-- Toolbar (does not grow) -->
-            <v-toolbar color="red-darken-4" density="compact">
-               <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
-               <v-text-field v-model="filter" single-line></v-text-field>
+
+            <!-- Filter by name (does not grow) -->
+            <v-toolbar color="red-darken-4" ddensity="compact">
+               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
+               <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
          
+            <!-- Filter by group (does not grow) -->
+            <div class="px-2">
+               <v-select
+                  variant="underlined"
+                  clearable
+                  v-model="userGroups"
+                  @update:modelValue="onGroupChange"
+                  :items="groupList"
+                  item-title="name"
+                  item-value="uid"
+                  label="Recherche par groupe..."
+               ></v-select>
+            </div>
+
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(ugg, index) in userAndGroupsAndGradeList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
+               <v-list-item three-line v-for="(ugg, index) in filteredUserAndGroupAndGradeList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(ugg.user)">
                         <v-img :src="ugg?.user.pict"></v-img>
@@ -53,7 +68,7 @@
 
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute} from 'vue-router'
 import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
@@ -85,7 +100,15 @@ const props = defineProps({
    },
 })
 
-const filter = ref('')
+const groupList = useObservable(groups$({}))
+const userGroups = ref([])
+
+const nameFilter = ref('')
+const groupFilter = ref('')
+
+function onGroupChange(uid) {
+   groupFilter.value = uid
+}
 
 const userAndGroups$ = users$({}).pipe(
    switchMap(users => 
@@ -117,6 +140,21 @@ const userAndGroupsAndGrades$ = combineLatest(userAndGroups$, grade$).pipe(
    }))
 )
 const userAndGroupsAndGradeList = useObservable(userAndGroupsAndGrades$)
+
+const filteredUserAndGroupAndGradeList = computed(() => {
+   if (!userAndGroupsAndGradeList.value) return []
+   const nameFilter_ = (nameFilter.value || '').toLowerCase()
+   return userAndGroupsAndGradeList.value.filter(ug => {
+      if (nameFilter_.length === 0) return true
+      if (ug.user.firstname.toLowerCase().indexOf(nameFilter_) > -1) return true
+      if (ug.user.lastname.toLowerCase().indexOf(nameFilter_) > -1) return true
+      return false
+   }).filter(ug => {
+      if (!groupFilter.value) return true
+      if (ug.groups.map(grp => grp.uid).includes(groupFilter.value)) return true
+      return false
+   })
+})
 
 
 const route = useRoute()

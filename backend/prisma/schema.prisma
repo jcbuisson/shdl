@@ -92,16 +92,9 @@ model user_slot_excuse {
 model shdl_test {
    uid                     String     @unique
    color                   String     @default("blue")
-   signature               String     // ex: "a, b, cin, s, cout"
-   text                    String     // ex: "set rst 1\ncheck a 0"
-}
-
-model user_shdl_test {
-   uid                     String     @unique
-   user_uid                String
-   shdl_test_uid           String
-   date                    DateTime
-   success                 Boolean
+   name                    String     // ex: "sequenceur load/store"
+   test_contents           String     // ex: "set rst 1\ncheck a 0"
+   memory_contents         String     // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
 }
 
 model user_document {

@@ -9,7 +9,8 @@ import userTabRelationService from './database/user_tab_relation/user_tab_relati
 import userGroupRelationService from './database/user_group_relation/user_group_relation.service.js'
 import userDocumentService from './database/user_document/user_document.service.js'
 import userDocumentEventService from './database/user_document_event/user_document_event.service.js'
-import userSlotExcuse from './database/user_slot_excuse/user_slot_excuse.service.js'
+import userSlotExcuseService from './database/user_slot_excuse/user_slot_excuse.service.js'
+import shdlTestService from './database/shdl_test/shdl_test.service.js'
 
 // custom services
 import authService from './custom/auth/auth.service.js'
@@ -29,7 +30,8 @@ export default function (app) {
    app.configure(userGroupRelationService)
    app.configure(userDocumentService)
    app.configure(userDocumentEventService)
-   app.configure(userSlotExcuse)
+   app.configure(userSlotExcuseService)
+   app.configure(shdlTestService)
 
    // add custom services
    app.configure(authService)

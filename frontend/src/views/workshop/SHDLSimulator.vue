@@ -100,8 +100,8 @@ watch(() => props.document_uid, async (document_uid) => {
       next: module_ => {
          console.log('next simu', module_)
          module.value = module_
-         previousValues.value = module_.equipotentials.map(_ => null)
-         currentValues.value = module_.equipotentials.map(_ => null)
+         previousValues.value = module_.equipotentials.map(_ => false)
+         currentValues.value = module_.equipotentials.map(_ => false)
          let error = updateState()
          if (error) {
             barStatus.value = 3

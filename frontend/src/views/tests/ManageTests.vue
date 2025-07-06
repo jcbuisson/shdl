@@ -1,38 +1,18 @@
 <template>
-   <!-- {{ userManagerSplitWidth }} -->
-   <SplitPanel :leftWidth="userManagerSplitWidth" @resize="onResize">
+   <SplitPanel>
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
 
-            <!-- Filter by name (does not grow) -->
+            <!-- Toolbar (does not grow) -->
             <v-toolbar color="red-darken-4" ddensity="compact">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
-
-            <!-- Filter by group (does not grow) -->
-            <div class="px-2">
-               <v-select
-                  variant="underlined"
-                  clearable
-                  v-model="userGroups"
-                  @update:modelValue="onGroupChange"
-                  :items="groupList"
-                  item-title="name"
-                  item-value="uid"
-                  label="Recherche par groupe..."
-               ></v-select>
-            </div>
-
+         
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                <v-list-item three-line v-for="(userAndGroups, index) in filteredUserAndGroupList" :key="index" :value="userAndGroups?.user" @click="selectUser(userAndGroups.user)" :active="selectedUser?.uid === userAndGroups?.user.uid">
-                  <template v-slot:prepend>
-                     <v-avatar @click="onAvatarClick(userAndGroups.user)">
-                        <v-img :src="userAndGroups?.user.pict"></v-img>
-                     </v-avatar>
-                  </template>
                   <v-list-item-title>{{ userAndGroups?.user.lastname }}</v-list-item-title>
                   <v-list-item-subtitle>{{ userAndGroups?.user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
@@ -77,7 +57,6 @@ import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { selectedUser } from '/src/use/useSelectedUser'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
-import { setUserManagerSplitWidth, userManagerSplitWidth } from "/src/use/useAppState"
 
 import { guardCombineLatest } from '/src/lib/businessObservables'
 import router from '/src/router'
@@ -176,9 +155,5 @@ async function deleteUser(user) {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
       }
    }
-}
-
-function onResize(width) {
-   setUserManagerSplitWidth(width)
 }
 </script>

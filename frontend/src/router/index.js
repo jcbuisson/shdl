@@ -187,7 +187,7 @@ const routes = [
                roles: ['tests']
             },
             props: true,
-            component: () => import('/src/views/ManageTests.vue'),
+            component: () => import('/src/views/tests/ManageTests.vue'),
          },
       ],
    },
