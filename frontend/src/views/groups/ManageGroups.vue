@@ -12,8 +12,9 @@
 
             <!-- fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(group, index) in filteredSortedGroupList":key="index" :value="group" @click="selectGroup(group)" :active="selectedGroup?.uid === group?.uid">
-                  <v-list-item-title>{{ group.name }}</v-list-item-title>
+               <v-list-item three-line v-for="(groupAndUsers, index) in filteredSortedGroupAndUsersList":key="index" :value="group" @click="selectGroup(groupAndUsers.group)" :active="selectedGroup?.uid === group?.uid">
+                  <v-list-item-title>{{ groupAndUsers?.group?.name }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ groupAndUsers?.users.length }} membre{{ groupAndUsers?.users.length > 1 ? 's' : '' }}</v-list-item-subtitle>
 
                   <template v-slot:append>
                      <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(group)"></v-btn>
@@ -37,6 +38,7 @@ import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFr
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import router from '/src/router'
@@ -44,8 +46,10 @@ import router from '/src/router'
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
+const { getObservable: user$ } = useUser()
 const { getObservable: groups$, remove: removeGroup } = useGroup()
 const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation()
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 
 const props = defineProps({
@@ -56,22 +60,37 @@ const props = defineProps({
 
 const nameFilter = ref('')
 
-const groupList = useObservable(groups$({}), [])
-const sortedGroupList = computed(() => groupList.value ? groupList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+const groupsAndUsers$ = groups$({}).pipe(
+   switchMap(groups => 
+      guardCombineLatest(
+         groups.map(group =>
+            userGroupRelations$({ group_uid: group.uid }).pipe(
+               switchMap(relations =>
+                  guardCombineLatest(relations.map(relation => user$({ uid: relation.user_uid }).pipe(map(users => users[0]))))
+               ),
+               map(users => ({ group, users }))
+            )
+         )
+      )
+   ),
+)
 
-const filteredSortedGroupList = computed(() => {
-   if (!sortedGroupList.value) return []
+const groupAndUsersList = useObservable(groupsAndUsers$, [])
+const sortedGroupAndUsersList = computed(() => groupAndUsersList.value ? groupAndUsersList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+
+const filteredSortedGroupAndUsersList = computed(() => {
+   if (!sortedGroupAndUsersList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
-   return sortedGroupList.value.filter(group => {
+   return sortedGroupAndUsersList.value.filter(gu => {
       if (nameFilter_.length === 0) return true
-      if (group.name.toLowerCase().indexOf(nameFilter_) > -1) return true
+      if (gu.group.name.toLowerCase().indexOf(nameFilter_) > -1) return true
       return false
    })
 })
 
-const debouncedGroupRelations$ = (group_uid) => userGroupRelations$({ group_uid }).pipe(
-   debounceTime(300) // wait until no new value for 300ms
-)
+// const debouncedGroupRelations$ = (group_uid) => userGroupRelations$({ group_uid }).pipe(
+//    debounceTime(300) // wait until no new value for 300ms
+// )
 
 async function addGroup() {
    router.push(`/home/${props.signedinUid}/groups/create`)
@@ -86,7 +105,7 @@ function selectGroup(group) {
 
 async function deleteGroup(group) {
    // const userGroupRelations = await firstValueFrom(debouncedGroupRelations$(group.uid))
-   // group relations are in cache since
+   // group relations are in cache since they are displayed
    const userGroupRelations = await findGroupWhere({ group_uid: group.uid })
    if (window.confirm(`Supprimer le groupe ${group.name} ? (nombre d'utilisateurs membres : ${userGroupRelations.length})`)) {
       try {
@@ -104,11 +123,11 @@ async function deleteGroup(group) {
 const route = useRoute()
 const routeRegex = /\/home\/([a-z0-9]+)\/groups\/([a-z0-9]+)/
 
-watch(() => [route.path, groupList.value], async () => {
-   if (!groupList.value) return
+watch(() => [route.path, groupAndUsersList.value], async () => {
+   if (!groupAndUsersList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const group_uid = match[2]
-   selectedGroup.value = groupList.value.find(group => group.uid === group_uid)
+   selectedGroup.value = groupAndUsersList.value.find(group => group.uid === group_uid)
 }, { immediate: true })
 </script>
