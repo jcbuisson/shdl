@@ -188,6 +188,18 @@ const routes = [
             },
             props: true,
             component: () => import('/src/views/tests/ManageTests.vue'),
+            children: [
+               {
+                  path: 'create',
+                  props: true,
+                  component: () => import('/src/views/tests/CreateTest.vue'),
+               },
+               {
+                  path: ':group_uid',
+                  props: true,
+                  component: () => import('/src/views/tests/EditTest.vue'),
+               },
+            ],      
          },
       ],
    },

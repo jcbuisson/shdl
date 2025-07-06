@@ -93,8 +93,8 @@ model shdl_test {
    uid                     String     @unique
    color                   String     @default("blue")
    name                    String     // ex: "sequenceur load/store"
-   test_contents           String     // ex: "set rst 1\ncheck a 0"
-   memory_contents         String     // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
+   test_contents           String?    // ex: "set rst 1\ncheck a 0"
+   memory_contents         String?    // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
 }
 
 model user_document {

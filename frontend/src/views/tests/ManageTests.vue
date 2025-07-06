@@ -7,22 +7,17 @@
             <!-- Toolbar (does not grow) -->
             <v-toolbar color="red-darken-4" ddensity="compact">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
-               <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
+               <v-btn icon="mdi-plus" variant="text" @click="addTest"></v-btn>
             </v-toolbar>
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userAndGroups, index) in filteredUserAndGroupList" :key="index" :value="userAndGroups?.user" @click="selectUser(userAndGroups.user)" :active="selectedUser?.uid === userAndGroups?.user.uid">
-                  <v-list-item-title>{{ userAndGroups?.user.lastname }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ userAndGroups?.user.firstname }}</v-list-item-subtitle>
-                  <v-list-item-subtitle>
-                     <template v-for="group in userAndGroups.groups">
-                        <v-chip size="x-small">{{ group?.name }}</v-chip>
-                     </template>
-                  </v-list-item-subtitle>
+               <v-list-item three-line v-for="(test, index) in filteredSortedTestList" :key="index"
+                     :value="test" @click="selectTest(test)" :active="selectedTest.uid === test.uid">
+                  <v-list-item-title>{{ test?.name }}</v-list-item-title>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userAndGroups.user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteTest(test)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -34,12 +29,6 @@
          <router-view></router-view>
       </template>
    </SplitPanel>
-
-   <v-dialog v-model="avatarDialog" width="auto">
-      <v-img :width="800" aspect-ratio="16/9" cover 
-         :src="selectedUser?.pict"
-      ></v-img>
-   </v-dialog>
 </template>
 
 
@@ -50,22 +39,16 @@ import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFr
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
-import { useUser, getFullname } from '/src/use/useUser'
-import { useGroup } from '/src/use/useGroup'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useSHDLTest } from '/src/use/useSHDLTest'
 
-import { selectedUser } from '/src/use/useSelectedUser'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
 
-import { guardCombineLatest } from '/src/lib/businessObservables'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { getObservable: users$, remove: removeUser } = useUser()
-const { getObservable: groups$ } = useGroup()
-const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation()
+const { getObservable: tests$, remove: removeTest } = useSHDLTest()
 
 
 const props = defineProps({
@@ -74,82 +57,61 @@ const props = defineProps({
    },
 })
 
-const groupList = useObservable(groups$({}))
-const userGroups = ref([])
+const testList = useObservable(tests$({}))
+const sortedTestList = computed(() => testList.value ? testList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
 const nameFilter = ref('')
-const groupFilter = ref('')
 
-const userAndGroups$ = users$({}).pipe(
-   switchMap(users => 
-      guardCombineLatest(
-         users.map(user =>
-            userGroupRelations$({ user_uid: user.uid }).pipe(
-               switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
-               ),
-               map(groups => ({ user, groups }))
-            )
-         )
-      )
-   ),
-)
-const userAndGroupsList = useObservable(userAndGroups$)
-
-function onGroupChange(uid) {
-   groupFilter.value = uid
-}
-
-const filteredUserAndGroupList = computed(() => {
-   if (!userAndGroupsList.value) return []
+const filteredSortedTestList = computed(() => {
+   if (!sortedTestList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
-   return userAndGroupsList.value.filter(ug => {
+   return sortedTestList.value.filter(test => {
       if (nameFilter_.length === 0) return true
-      if (ug.user.firstname.toLowerCase().indexOf(nameFilter_) > -1) return true
-      if (ug.user.lastname.toLowerCase().indexOf(nameFilter_) > -1) return true
-      return false
-   }).filter(ug => {
-      if (!groupFilter.value) return true
-      if (ug.groups.map(grp => grp.uid).includes(groupFilter.value)) return true
+      if (test.name.toLowerCase().indexOf(nameFilter_) > -1) return true
       return false
    })
 })
 
 
-async function addUser() {
-   router.push(`/home/${props.signedinUid}/users/create`)
+async function addTest() {
+   router.push(`/home/${props.signedinUid}/tests/create`)
 }
 
-const route = useRoute()
-const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
+// const route = useRoute()
+// const routeRegex = /home\/[a-z0-9]+\/tests\/([a-z0-9]+)/
 
-watch(() => [route.path, userAndGroupsList.value], async () => {
-   if (!userAndGroupsList.value) return
-   selectedUser.value = null
-   const match = route.path.match(routeRegex)
-   if (!match) return
-   const user_uid = route.path.match(routeRegex)[1]
-   const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
-   selectUser(user)
-}, { immediate: true })
+// watch(() => [route.path, testAndGroupsList.value], async () => {
+//    if (!testAndGroupsList.value) return
+//    selectedTest.value = null
+//    const match = route.path.match(routeRegex)
+//    if (!match) return
+//    const test_uid = route.path.match(routeRegex)[1]
+//    const test = testAndGroupsList.value.map(testAndGroups => testAndGroups.test).find(test => test.uid === test_uid)
+//    selectTest(test)
+// }, { immediate: true })
 
+const selectedTest = ref()
 
-function selectUser(user) {
+function selectTest(test) {
    extendExpiration()
-   selectedUser.value = user
-   router.push(`/home/${props.signedinUid}/users/${user.uid}`)
+   selectedTest.value = test
+   router.push(`/home/${props.signedinUid}/tests/${test.uid}`)
 }
 
-async function deleteUser(user) {
-   const userGroupRelations = await firstValueFrom(userGroupRelations$({ user_uid: user.uid }))
-   console.log('userGroupRelations', userGroupRelations)
-   if (window.confirm(`Supprimer ${getFullname(user)} ?`)) {
+async function deleteTest(test) {
+   // const testGroupRelations = await firstValueFrom(testGroupRelations$({ test_uid: test.uid }))
+   if (window.confirm(`Supprimer ${test.name} ?`)) {
       try {
-         // remove user-group relations
-         await Promise.all(userGroupRelations.map(relation => removeGroupRelation(relation.uid)))
-         // remove user
-         await removeUser(user.uid)
-         router.push(`/home/${props.signedinUid}/users`)
+
+
+         // REMLOVE TEST-SLOT RELATIONS
+
+
+         // // remove test-group relations
+         // await Promise.all(testGroupRelations.map(relation => removeGroupRelation(relation.uid)))
+         // remove test
+         await removeTest(test.uid)
+         router.push(`/home/${props.signedinUid}/tests`)
          displaySnackbar({ text: "Suppression effectuée avec succès !", color: 'success', timeout: 2000 })
       } catch(err) {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
