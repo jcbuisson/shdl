@@ -195,7 +195,7 @@ const routes = [
                   component: () => import('/src/views/shdl_tests/CreateSHDLTest.vue'),
                },
                {
-                  path: ':group_uid',
+                  path: ':test_uid',
                   props: true,
                   component: () => import('/src/views/shdl_tests/EditSHDLTest.vue'),
                },
