@@ -13,7 +13,7 @@
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                <v-list-item three-line v-for="(test, index) in filteredSortedTestList" :key="index"
-                     :value="test" @click="selectTest(test)" :active="selectedTest.uid === test.uid">
+                     :value="test" @click="selectTest(test)" :active="selectedTest?.uid === test.uid">
                   <v-list-item-title>{{ test?.name }}</v-list-item-title>
 
                   <template v-slot:append>
