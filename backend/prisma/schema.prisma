@@ -20,11 +20,12 @@ model metadata {
 //////////////        BUSINESS MODELS        //////////////
 
 enum Tab {
-   users       // users management
-   groups      // groups management
-   tests       // tests management
-   followup    // students followup
-   workshop    // workshop for shdl, craps, text document
+   users        // users management
+   groups       // groups management
+   shdl_tests   // SHDL tests management
+   craps_tests  // CRAPS tests management
+   followup     // students followup
+   workshop     // workshop for shdl, craps, text document
 }
 
 model user {
@@ -91,9 +92,8 @@ model user_slot_excuse {
 
 model shdl_test {
    uid                     String     @unique
-   color                   String     @default("blue")
    name                    String     // ex: "sequenceur load/store"
-   test_contents           String?    // ex: "set rst 1\ncheck a 0"
+   test_statements         String?    // ex: "set rst 1\ncheck a 0"
    memory_contents         String?    // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
 }
 

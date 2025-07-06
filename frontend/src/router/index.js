@@ -182,22 +182,22 @@ const routes = [
             ],      
          },
          {
-            path: 'tests',
+            path: 'shdl_tests',
             meta: {
-               roles: ['tests']
+               roles: ['shdl_tests']
             },
             props: true,
-            component: () => import('/src/views/tests/ManageTests.vue'),
+            component: () => import('/src/views/shdl_tests/ManageSHDLTests.vue'),
             children: [
                {
                   path: 'create',
                   props: true,
-                  component: () => import('/src/views/tests/CreateTest.vue'),
+                  component: () => import('/src/views/shdl_tests/CreateSHDLTest.vue'),
                },
                {
                   path: ':group_uid',
                   props: true,
-                  component: () => import('/src/views/tests/EditTest.vue'),
+                  component: () => import('/src/views/shdl_tests/EditSHDLTest.vue'),
                },
             ],      
          },

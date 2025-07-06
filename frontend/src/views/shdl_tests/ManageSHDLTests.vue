@@ -95,7 +95,7 @@ const selectedTest = ref()
 function selectTest(test) {
    extendExpiration()
    selectedTest.value = test
-   router.push(`/home/${props.signedinUid}/tests/${test.uid}`)
+   router.push(`/home/${props.signedinUid}/shdl_tests/${test.uid}`)
 }
 
 async function deleteTest(test) {
