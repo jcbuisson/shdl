@@ -116,10 +116,14 @@ export function shdlDocumentParsing$(name, checked=[]) {
          const observableList = []
          for (const submoduleName of submoduleNames) {
             if (checked.includes(submoduleName) || submoduleName === name) {
-               throw new Error(`circularity issue with module '${submoduleName}'`)
+               throw new SHDLError(`circularity issue with module '${submoduleName}'`, submoduleName, null)
             }
-            observableList.push(shdlDocumentParsing$(submoduleName, checked))
-            checked.push(submoduleName)
+            try {
+               observableList.push(shdlDocumentParsing$(submoduleName, checked))
+               checked.push(submoduleName)
+            } catch(err) {
+               throw new SHDLError(err.message, submoduleName, err.location)
+            }
          }
          return guardCombineLatest(observableList).pipe(
             map(listOfListOfStructures => listOfListOfStructures.reduce((accu, list) => [...accu, ...list], [])),
@@ -128,7 +132,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
       }),
       catchError(error => {
          // Rethrow a new error to be handled by the subscriber
-         throw new SHDLError(error.message, name, error.location)
+         throw new SHDLError(error.message, error.moduleName ?? name, error.location)
       })
    )
 }

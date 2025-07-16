@@ -1,5 +1,5 @@
 <template>
-   <SplitPanel leftWidth="500">
+   <SplitPanel :leftWidth="500">
       <!-- editor -->
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->

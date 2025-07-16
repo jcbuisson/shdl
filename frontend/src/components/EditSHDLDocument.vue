@@ -145,7 +145,7 @@ const onChangeDebounced = useDebounceFn(onChange, 500)
 // analyze SHDL module and extract its equipotentials
 function handleSHDLDocumentChange(document) {
    if (subscription2) subscription2.unsubscribe()
-   // read SHDL documents recursively from `document` root and return an unordered list of module structures
+   // observe SHDL module and its submodules recursively from `document` root and return an unordered list of module structures
    subscription2 = shdlDocumentParsing$(document.name).subscribe({
       next: syntaxStructureList => {
          console.log('next edit', syntaxStructureList)
@@ -184,6 +184,7 @@ function handleSHDLDocumentChange(document) {
 
       error: err => {
          console.log('err22', err.moduleName, err.location, err.message)
+         console.log('err22', err.toString())
          displayErrorMessageSHDL(err, document.name)
       },
    })
