@@ -103,6 +103,7 @@ model user_document {
    type                    String     // 'shdl', 'craps', 'text'
    name                    String
    text                    String
+   is_valid                Boolean?   // for shdl/craps documents
    update_count            Int        @default(0)
 
    user_document_events    user_document_event[]

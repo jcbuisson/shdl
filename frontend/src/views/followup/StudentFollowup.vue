@@ -14,7 +14,7 @@
             Documents
          </v-tab>
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/grade` }" router value='grade'>
-            Note
+            Évaluation
          </v-tab>
       </v-tabs>
 

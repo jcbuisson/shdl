@@ -16,7 +16,7 @@
                   />
                </div>
 
-               <v-menu :location="location">
+               <v-menu>
                   <template v-slot:activator="{ props }">
                      <v-btn v-bind="props">
                         {{ isAuthenticated ? signedinUserFullname : "Connexion" }}
