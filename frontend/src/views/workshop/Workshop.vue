@@ -1,4 +1,5 @@
 <template>
+   {{ moduleList }}
    <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -15,7 +16,9 @@
 
                   <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
                      <template v-slot:prepend>
-                        <v-btn color="green" icon="mdi-checkbox-marked" variant="text" @click=""></v-btn>
+                        <v-btn :color="documentColor(document)"
+                           :icon="documentIcon(document)" variant="text"
+                        ></v-btn>
                      </template>
 
                      <v-list-item-title>{{ document.name }}</v-list-item-title>
@@ -79,7 +82,7 @@
 
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute} from 'vue-router'
 import { v7 as uuidv7 } from 'uuid'
 import { useObservable } from '@vueuse/rxjs'
@@ -96,6 +99,9 @@ import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
+import { useSHDLModule } from '/src/use/useSHDLModule'
+
+const { modules$ } = useSHDLModule()
 
 
 const props = defineProps({
@@ -135,6 +141,31 @@ const filteredSortedDocumentList = computed(() => {
    })
 })
 
+const documentColor = computed(() => (document) => {
+   if (document.type === 'shdl') {
+      const valid = true
+      return valid ? 'green' : 'red'
+   }
+   if (document.type === 'craps') {
+      return 'orange'
+   }
+   return 'white'
+})
+
+const documentIcon = computed(() => (document) => {
+   if (document.type === 'shdl') {
+      const valid = false
+      return valid ? 'mdi-check' : 'mdi-close'
+   }
+   if (document.type === 'craps') {
+      return ''
+   }
+   return ''
+})
+
+const moduleList = useObservable(modules$())
+
+
 const addDocumentDialog = ref(false)
 const data = ref({})
 
@@ -145,14 +176,14 @@ async function addDocument() {
 
 const selectedDocument = ref(null)
 
-function selectDocument(module) {
-   selectedDocument.value = module
-   if (module.type === 'shdl') {
-      router.push(`/home/${props.signedinUid}/workshop/shdl/${module.uid}`)
-   } else if (module.type === 'text') {
-      router.push(`/home/${props.signedinUid}/workshop/text/${module.uid}`)
-   } else if (module.type === 'craps') {
-      router.push(`/home/${props.signedinUid}/workshop/craps/${module.uid}`)
+function selectDocument(document) {
+   selectedDocument.value = document
+   if (document.type === 'shdl') {
+      router.push(`/home/${props.signedinUid}/workshop/shdl/${document.uid}`)
+   } else if (document.type === 'text') {
+      router.push(`/home/${props.signedinUid}/workshop/text/${document.uid}`)
+   } else if (document.type === 'craps') {
+      router.push(`/home/${props.signedinUid}/workshop/craps/${document.uid}`)
    }
 }
 

@@ -8,11 +8,15 @@ export function useSHDLModule() {
    const db = new Dexie("SHDLModules")
 
    db.version(1).stores({
-      modules: "document_uid, name",
+      modules: "document_uid, name, is_valid",
    })
 
    const reset = async () => {
       await db.modules.clear()
+   }
+
+   const modules$ = () => {
+      return from(liveQuery(() => db.modules.toArray()))
    }
 
    const module$ = (document_uid) => {
@@ -25,6 +29,7 @@ export function useSHDLModule() {
 
    return {
       db, reset,
+      modules$,
       module$,
       addOrUpdateModule,
    }

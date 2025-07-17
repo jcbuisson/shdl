@@ -100,29 +100,34 @@ export function shdlDocumentParsing$(name, checked=[]) {
       map(documents => {
          const document = documents[0]
          if (!document) {
-            throw new Error(`module '${name}' not found`)
+            throw new SHDLError(`module '${name}' not found`, null, name, null)
          }
          // parse document - may throw an error
-         return shdlPegParse(document.text)
+         try {
+            const structure = shdlPegParse(document.text)
+            return { document, structure }
+         } catch(err) {
+            throw new SHDLError(err.message, document.uid, name, null)
+         }
       }),
       // extract its structure and its submodule names
-      map(structure => {
+      map(({ document, structure }) => {
          const submoduleNames = structure.instances.reduce((accu, instance) =>
             instance.type === 'module_instance' && !accu.includes(instance.name) && !checked.includes(instance.name) ? [instance.name, ...accu] : accu, [])
-         return { name, structure, submoduleNames }
+         return { name, document, structure, submoduleNames }
       }),
       // recursively parse submodules
-      switchMap(({ structure, submoduleNames }) => {
+      switchMap(({ document, structure, submoduleNames }) => {
          const observableList = []
          for (const submoduleName of submoduleNames) {
             if (checked.includes(submoduleName) || submoduleName === name) {
-               throw new SHDLError(`circularity issue with module '${submoduleName}'`, submoduleName, null)
+               throw new SHDLError(`circularity issue with module '${submoduleName}'`, document.uid, submoduleName, null)
             }
             try {
                observableList.push(shdlDocumentParsing$(submoduleName, checked))
                checked.push(submoduleName)
             } catch(err) {
-               throw new SHDLError(err.message, submoduleName, err.location)
+               throw new SHDLError(err.message, document.uid, submoduleName, err.location)
             }
          }
          return guardCombineLatest(observableList).pipe(
@@ -131,8 +136,8 @@ export function shdlDocumentParsing$(name, checked=[]) {
          )
       }),
       catchError(error => {
-         // Rethrow a new error to be handled by the subscriber
-         throw new SHDLError(error.message, error.moduleName ?? name, error.location)
+         // re-throw error
+         throw new SHDLError(error.message, error.documentUID, error.moduleName ?? name, error.location)
       })
    )
 }

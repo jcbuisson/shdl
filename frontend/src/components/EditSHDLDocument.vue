@@ -183,9 +183,13 @@ function handleSHDLDocumentChange(document) {
       },
 
       error: err => {
-         console.log('err22', err.moduleName, err.location, err.message)
-         console.log('err22', err.toString())
+         console.log('err22', err.documentUID, err.moduleName, err.location, err.message)
          displayErrorMessageSHDL(err, document.name)
+         addOrUpdateModule({
+            document_uid: err.documentUID,
+            name: err.moduleName,
+            structure: null,
+         })
       },
    })
 }
