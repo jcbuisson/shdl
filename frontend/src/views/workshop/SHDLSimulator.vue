@@ -3,22 +3,22 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <v-toolbar>
+      <v-toolbar :extended="!!testName">
          <v-select
+            v-model="testName"
             :items="['test1', 'test2']"
             label="Choisir un test"
             clearable
-            open-on-clear
             persistent-hint
             variant="underlined"
          ></v-select>
 
-         <template v-slot:append>
+         <template v-slot:extension v-if="!!testName">
             <v-btn icon="mdi-play"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
          </template>
       </v-toolbar>
-      
+
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
@@ -92,8 +92,10 @@ const props = defineProps({
 const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
-const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
-const barStatusText = ref(null)
+// const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
+// const barStatusText = ref(null)
+
+const testName = ref()
 
 let subscription
 

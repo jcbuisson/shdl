@@ -99,13 +99,12 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
 
    // handle document content change
    if (subscription) subscription.unsubscribe()
-   subscription = userDocument$(uid).subscribe(async document => {
-      console.log('document', document)
-      selectedCodeMirrorDoc.value.content = document.text
-      selectedDocument.value = document
+   subscription = userDocument$(uid).subscribe(async doc => {
+      selectedCodeMirrorDoc.value.content = doc.text
+      selectedDocument.value = doc
 
-      if (document.type === 'shdl') {
-         handleSHDLDocumentChange(document)
+      if (doc.type === 'shdl') {
+         handleSHDLDocumentChange(doc)
       }
    })
 
@@ -143,17 +142,17 @@ const onChange = async (text) => {
 const onChangeDebounced = useDebounceFn(onChange, 500)
 
 // analyze SHDL module and extract its equipotentials
-function handleSHDLDocumentChange(document) {
+function handleSHDLDocumentChange(doc) {
    if (subscription2) subscription2.unsubscribe()
-   // observe SHDL module and its submodules recursively from `document` root and return an unordered list of module structures
-   subscription2 = shdlDocumentParsing$(document.name).subscribe({
+   // observe SHDL module and its submodules recursively from `doc` root and return an unordered list of module structures
+   subscription2 = shdlDocumentParsing$(doc.name).subscribe({
       next: syntaxStructureList => {
          console.log('next edit', syntaxStructureList)
          // transform the list of syntaxic structures into a map of modules
          const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
             const moduleName = syntaxStructure.name
             const module = {
-               document_uid: document.uid,
+               document_uid: doc.uid,
                name: moduleName,
                structure: syntaxStructure,
                equipotentials: [],
@@ -184,7 +183,7 @@ function handleSHDLDocumentChange(document) {
 
       error: err => {
          console.log('err22', err.documentUID, err.moduleName, err.location, err.message)
-         displayErrorMessageSHDL(err, document.name)
+         displayErrorMessageSHDL(err, doc.name)
          addOrUpdateModule({
             document_uid: err.documentUID,
             name: err.moduleName,
