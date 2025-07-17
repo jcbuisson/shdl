@@ -1,19 +1,22 @@
 <template>
+   {{ selectedTest }}
    <!-- makes the layout a vertical stack filling the full height -->
-   <v-card class="d-flex flex-column fill-height">
+   <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Toolbar (does not grow) -->
-      <v-toolbar :extended="!!testName">
+      <v-toolbar :extended="!!selectedTest">
          <v-select
-            v-model="testName"
-            :items="['test1', 'test2']"
+            v-model="selectedTest"
+            :items="sortedTestList"
+            item-title="name"
+            :item-value="test => test"
             label="Choisir un test"
             clearable
             persistent-hint
             variant="underlined"
          ></v-select>
 
-         <template v-slot:extension v-if="!!testName">
+         <template v-slot:extension v-if="!!selectedTest">
             <v-btn icon="mdi-play"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
          </template>
@@ -80,22 +83,32 @@ import { watch, onUnmounted, computed, ref } from 'vue'
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
+import { useSHDLTest } from '/src/use/useSHDLTest'
 
 const { module$ } = useSHDLModule()
+const { getObservable: tests$ } = useSHDLTest()
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
+import { useObservable } from '@vueuse/rxjs'
 
 const props = defineProps({
+   signedinUid: String,
    document_uid: String,
 })
 
 const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
-// const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
-// const barStatusText = ref(null)
+const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
+const barStatusText = ref(null)
 
-const testName = ref()
+// const sortedTestList = useObservable(tests$().pipe(
+//    map(tests => tests.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
+// ))
+
+const sortedTestList = useObservable(tests$())
+
+const selectedTest = ref()
 
 let subscription
 
@@ -104,13 +117,17 @@ watch(() => props.document_uid, async (document_uid) => {
    subscription = module$(document_uid).subscribe({
       next: module_ => {
          console.log('next simu', module_)
-         module.value = module_
-         previousValues.value = module_.equipotentials.map(_ => false)
-         currentValues.value = module_.equipotentials.map(_ => false)
-         let error = updateState()
-         if (error) {
-            barStatus.value = 3
-            barStatusText.value = error
+         if (module_.structure) {
+            module.value = module_
+            previousValues.value = module_.equipotentials.map(_ => false)
+            currentValues.value = module_.equipotentials.map(_ => false)
+            let error = updateState()
+            if (error) {
+               barStatus.value = 3
+               barStatusText.value = error
+            }
+         } else {
+            module.value = null
          }
       },
       error: err => {
