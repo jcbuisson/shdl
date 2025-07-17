@@ -1,5 +1,4 @@
 <template>
-   {{ moduleList }}
    <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -141,26 +140,32 @@ const filteredSortedDocumentList = computed(() => {
    })
 })
 
-const documentColor = computed(() => (document) => {
-   if (document.type === 'shdl') {
-      const valid = true
-      return valid ? 'green' : 'red'
-   }
-   if (document.type === 'craps') {
-      return 'orange'
-   }
-   return 'white'
+// undefined, true, false
+const shdlDocumentStatus = computed(() => (document) => {
+   if (document.type !== 'shdl') return
+   return moduleList.value.some(module => module.document_uid === document.uid && module.structure)
 })
 
 const documentIcon = computed(() => (document) => {
    if (document.type === 'shdl') {
-      const valid = false
-      return valid ? 'mdi-check' : 'mdi-close'
+      const status = shdlDocumentStatus.value(document)
+      return status === undefined ? '': status ? 'mdi-check' : 'mdi-close'
    }
    if (document.type === 'craps') {
       return ''
    }
    return ''
+})
+
+const documentColor = computed(() => (document) => {
+   if (document.type === 'shdl') {
+      const status = shdlDocumentStatus.value(document)
+      return status === undefined ? '': status ? 'green' : 'red'
+   }
+   if (document.type === 'craps') {
+      return 'orange'
+   }
+   return 'white'
 })
 
 const moduleList = useObservable(modules$())
