@@ -3,19 +3,22 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <v-toolbar v-if="barStatus > 0" density="compact" :color="barStatus === 1 ? 'orange' : barStatus === 2 ? 'green' :  'red'" dark>
-         <span v-if="barStatus >= 2"> {{ barStatusText }} </span>
-         <span v-if="barStatus === 1">
-            TEST VECTOR
-            <input type="file" @change="onTestFileChange">
-         </span>
-         <v-spacer></v-spacer>
-         <span v-if="barStatus === 1 && getMemoryInstanceArray().length > 0">
-            MEMORY CONTENTS
-            <input type="file" @change="onMemFileChange">
-         </span>
-      </v-toolbar>
+      <v-toolbar>
+         <v-select
+            :items="['test1', 'test2']"
+            label="Choisir un test"
+            clearable
+            open-on-clear
+            persistent-hint
+            variant="underlined"
+         ></v-select>
 
+         <template v-slot:append>
+            <v-btn icon="mdi-play"></v-btn>
+            <v-btn icon="mdi-debug-step-over"></v-btn>
+         </template>
+      </v-toolbar>
+      
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
