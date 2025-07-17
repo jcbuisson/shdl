@@ -1,10 +1,9 @@
 <template>
-   {{ selectedTest }}
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Toolbar (does not grow) -->
-      <v-toolbar :extended="!!selectedTest">
+      <v-toolbar>
          <v-select
             v-model="selectedTest"
             :items="sortedTestList"
@@ -15,9 +14,12 @@
             persistent-hint
             variant="underlined"
          ></v-select>
+      </v-toolbar>
 
-         <template v-slot:extension v-if="!!selectedTest">
-            <v-btn icon="mdi-play"></v-btn>
+      <v-toolbar density="compact" v-if="!!selectedTest" :color="statusColor">
+         <div class="px-2">{{ barStatusText }}</div>
+         <template v-slot:append>
+            <v-btn icon="mdi-play" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
          </template>
       </v-toolbar>
@@ -101,6 +103,10 @@ const previousValues = ref(null)
 const currentValues = ref(null)
 const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
 const barStatusText = ref(null)
+
+const statusColor = computed(() => {
+   if (barStatus.value === 3) return 'red-darken-4'
+})
 
 // const sortedTestList = useObservable(tests$().pipe(
 //    map(tests => tests.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
@@ -365,7 +371,7 @@ function onIconClick(index) {
    let error = updateState()
    if (error) {
       barStatus.value = 3
-      barStatus.valueText = error
+      barStatusText.value = error
    }
 }
 
@@ -380,7 +386,7 @@ function clear(signalGroup) {
    let error = updateState()
    if (error) {
       barStatus.value = 3
-      barStatus.valueText = error
+      barStatusText.value = error
    }
 }
 
@@ -583,25 +589,12 @@ function evaluateFormula(formula, dataArray) {
    }
 }
 
-function onBarButtonClick() {
-   if (barStatus.value === 0) {
-      barStatus.value = 1
-   } else {
-      barStatus.value = 0
-   }
+////////////////////////////        TEST        ////////////////////////////
+
+function runTest() {
+   executeTest(selectedTest.value.test_statements)
 }
 
-function onTestFileChange(e) {
-   var files = e.target.files || e.dataTransfer.files
-   if (!files.length) return
-
-   var reader = new FileReader()
-   reader.onload = (e) => {
-      let testContent = e.target.result
-      executeTest(testContent)
-   }
-   reader.readAsText(files[0])
-}
 
 function executeTest(testContent) {
    barStatus.value = 2
@@ -610,24 +603,24 @@ function executeTest(testContent) {
    for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line.trim().length == 0) continue
-      barStatus.valueText = `line ${i+1} / ${lines.length}`
+      barStatusText.value = `line ${i+1} / ${lines.length}`
       // execute line
       let status = executeLine(line)
       if (status.length > 0) {
          barStatus.value = 3
-         barStatus.valueText = ` line ${i+1} / ${lines.length} ${status}`
+         barStatusText.value = ` line ${i+1} / ${lines.length} ${status}`
          break
       }
       // update vue
       let error = updateState()
       if (error) {
          barStatus.value = 3
-         barStatus.valueText = ` line ${i+1} / ${lines.length} ${error}`
+         barStatusText.value = ` line ${i+1} / ${lines.length} ${error}`
          break
       }
    }
    if (barStatus.value === 2) {
-      barStatus.valueText = "SUCCESS"
+      barStatusText.value = "SUCCESS"
    }
 }
 
@@ -716,13 +709,13 @@ function loadMemContents(memoryFileContent) {
       memoryContentArray = JSON.parse(memoryFileContent)
    } catch(err) {
       barStatus.value = 3
-      barStatus.valueText = "JSON syntax error"
+      barStatusText.value = "JSON syntax error"
       return
    }
    let memoryInstanceArray = getMemoryInstanceArray()
    if (memoryInstanceArray.length != memoryContentArray.length) {
       barStatus.value = 3
-      barStatus.valueText = "Wrong number of memory initialization blocks"
+      barStatusText.value = "Wrong number of memory initialization blocks"
       return
    }
 
@@ -737,22 +730,23 @@ function loadMemContents(memoryFileContent) {
          let dataArray = strToBin(memoryContent[addr], dataLength)
          if (dataArray.length !== dataLength || addr.length !== addrLength) {
             barStatus.value = 3
-            barStatus.valueText = `arity issue for ${addr} : ${memoryContent[addr]}`
+            barStatusText.value = `arity issue for ${addr} : ${memoryContent[addr]}`
             break
          }
          // fill memory
          let status = loadMemLine(addr, dataArray, memEquipotentials)
          if (status.length > 0) {
             barStatus.value = 3
-            barStatus.valueText = status
+            barStatusText.value = status
             break
          }
       }
    })
    if (barStatus.value === 2) {
-      barStatus.valueText = "MEMORY LOADED"
+      barStatusText.value = "MEMORY LOADED"
    }
 }
+
 
 function loadMemLine(addr, dataArray, memEquipotentials) {
    for (let i = 0; i < addr.length; i++) {
