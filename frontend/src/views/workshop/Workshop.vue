@@ -141,9 +141,11 @@ const filteredSortedDocumentList = computed(() => {
 })
 
 // undefined, true, false
-const shdlDocumentStatus = computed(() => (document) => {
-   if (document.type !== 'shdl') return
-   return moduleList.value.some(module => module.document_uid === document.uid && module.structure)
+const shdlDocumentStatus = computed(() => (doc) => {
+   if (doc.type !== 'shdl') return
+   const module = moduleList.value.find(module => module.document_uid === doc.uid)
+   if (!module) return
+   return !!module.structure
 })
 
 const documentIcon = computed(() => (document) => {
