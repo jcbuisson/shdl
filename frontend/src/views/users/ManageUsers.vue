@@ -6,7 +6,7 @@
          <v-card class="d-flex flex-column fill-height">
 
             <!-- Filter by name (does not grow) -->
-            <v-toolbar color="red-darken-4" ddensity="compact">
+            <v-toolbar color="red-darken-4">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addUser"></v-btn>
             </v-toolbar>
@@ -180,5 +180,13 @@ async function deleteUser(user) {
 
 function onResize(width) {
    setUserManagerSplitWidth(width)
+}
+
+//////////////////////        AVATAR DISPLAY        //////////////////////
+
+const avatarDialog = ref(false)
+
+function onAvatarClick() {
+   avatarDialog.value = true
 }
 </script>

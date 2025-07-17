@@ -17,7 +17,7 @@
       </v-toolbar>
 
       <v-toolbar density="compact" v-if="!!selectedTest" :color="statusColor">
-         <div class="px-2">{{ barStatusText }}</div>
+         <div class="px-4">{{ barStatusText }}</div>
          <template v-slot:append>
             <v-btn icon="mdi-play" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
