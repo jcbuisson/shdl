@@ -5,7 +5,7 @@
          <div class="d-flex flex-column fill-height">
 
             <!-- Filter by name (does not grow) -->
-            <v-toolbar color="blue-darken-4">
+            <v-toolbar color="red-darken-4">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
                <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
             </v-toolbar>

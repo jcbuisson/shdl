@@ -3,7 +3,7 @@
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Toolbar (does not grow) -->
-      <v-toolbar>
+      <!-- <v-toolbar>
          <v-select
             v-model="selectedTest"
             @change="initTest"
@@ -17,13 +17,37 @@
          ></v-select>
       </v-toolbar>
 
-      <v-toolbar density="compact" v-if="!!selectedTest" :color="statusColor">
-         <div class="px-4">{{ testStatusText }}</div>
+      <v-toolbar density="compact" v-if="!!selectedTest">
          <template v-slot:append>
             <v-btn icon="mdi-play" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
             <v-btn icon="mdi-replay" @click="runTest"></v-btn>
          </template>
+      </v-toolbar> -->
+
+      <div class="d-flex ga-4 flex-wrap">
+         <v-select
+         class="px-2"
+            v-model="selectedTest"
+            @update:modelValue="() => selectedTest && initTest()"
+            :items="sortedTestList"
+            item-title="name"
+            :item-value="test => test"
+            label="Choisir un test"
+            clearable
+            persistent-hint
+            variant="underlined"
+         ></v-select>
+
+         <div v-if="!!selectedTest" class="mt-2">
+            <v-btn icon="mdi-play" variant="text" @click="runTest"></v-btn>
+            <v-btn icon="mdi-debug-step-over" variant="text"></v-btn>
+            <v-btn icon="mdi-replay" variant="text" @click="() => { initTest(); runTest() }"></v-btn>
+         </div>
+      </div>
+
+      <v-toolbar density="compact" v-if="!!selectedTest && testStatusCode === 3" :color="statusColor">
+         <div class="px-4">{{ testStatusText }}</div>
       </v-toolbar>
 
       <!-- Fills remaining vertical space -->
@@ -590,16 +614,20 @@ function evaluateFormula(formula, dataArray) {
 const testStatusCode = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
 const testStatusText = ref(null)
 
+let testStatements
+
 const statusColor = computed(() => {
    if (testStatusCode.value === 3) return 'red-darken-4'
 })
 
 function runTest() {
-   const testStatements = selectedTest.value.test_statements
+   console.log("runTest")
    executeTest(testStatements)
 }
 
 function initTest() {
+   console.log("initTest")
+   testStatements = selectedTest.value.test_statements
    testStatusCode.value = 2
 }
 
@@ -610,6 +638,7 @@ function executeTest(testStatements) {
    let lines = testStatements.split(/\r?\n/)
    for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
+      console.log("line", line)
       if (line.trim().length == 0) continue
       testStatusText.value = `line ${i+1} / ${lines.length}`
       // execute line
