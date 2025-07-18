@@ -3,31 +3,9 @@
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Toolbar (does not grow) -->
-      <!-- <v-toolbar>
+      <div class="d-flex align-center flex-wrap">
          <v-select
-            v-model="selectedTest"
-            @change="initTest"
-            :items="sortedTestList"
-            item-title="name"
-            :item-value="test => test"
-            label="Choisir un test"
-            clearable
-            persistent-hint
-            variant="underlined"
-         ></v-select>
-      </v-toolbar>
-
-      <v-toolbar density="compact" v-if="!!selectedTest">
-         <template v-slot:append>
-            <v-btn icon="mdi-play" @click="runTest"></v-btn>
-            <v-btn icon="mdi-debug-step-over"></v-btn>
-            <v-btn icon="mdi-replay" @click="runTest"></v-btn>
-         </template>
-      </v-toolbar> -->
-
-      <div class="d-flex ga-4 flex-wrap">
-         <v-select
-         class="px-2"
+            class="px-2"
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
             :items="sortedTestList"
@@ -39,24 +17,25 @@
             variant="underlined"
          ></v-select>
 
-         <div v-if="!!selectedTest" class="mt-2">
-            <v-btn icon="mdi-play" variant="text" @click="runTest"></v-btn>
-            <v-btn icon="mdi-debug-step-over" variant="text"></v-btn>
-            <v-btn icon="mdi-replay" variant="text" @click="() => { initTest(); runTest() }"></v-btn>
+         <div v-if="!!selectedTest">
+            <v-btn icon="mdi-play" variant="text" :disabled="testStatusCode >= 2" @click="runTest"></v-btn>
+            <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2" @click="stepTest"></v-btn>
+            <v-btn icon="mdi-replay" variant="text" @click="initTest"></v-btn>
+         </div>
+
+         <div v-if="!!selectedTest" class="px-2">
+            {{ testCurrentLine }}
          </div>
       </div>
 
-      <v-toolbar density="compact" v-if="!!selectedTest && testStatusCode === 3" :color="statusColor">
-         <div class="px-4">{{ testStatusText }}</div>
-      </v-toolbar>
+      <div v-if="testStatusCode >= 2" :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }" style="color: white; height: 40px; padding: 10px;">
+         <h5>{{ testStatusText }}</h5>
+      </div>
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
          <v-list density="compact">
-            <!-- <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
-               :icon="testStatusCode === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
-            </v-fab> -->
             <template v-for="signalGroup in parameterGroups">
                <v-list-item>
                   <template v-slot:prepend>
@@ -612,52 +591,49 @@ function evaluateFormula(formula, dataArray) {
 ////////////////////////////        TEST        ////////////////////////////
 
 const testStatusCode = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
-const testStatusText = ref(null)
+const testStatusText = ref()
+const testCurrentLineNo = ref(0)
+const testStatementList = ref()
 
-let testStatements
-
-const statusColor = computed(() => {
-   if (testStatusCode.value === 3) return 'red-darken-4'
+const testCurrentLine = computed(() => {
+   const currentStatement = testStatementList.value[testCurrentLineNo.value]
+   return `${testCurrentLineNo.value}/${testStatementList.value.length} - ${currentStatement}`
 })
 
 function runTest() {
    console.log("runTest")
-   executeTest(testStatements)
+   while (testStatusCode.value < 2) {
+      stepTest()
+   }
 }
 
 function initTest() {
    console.log("initTest")
-   testStatements = selectedTest.value.test_statements
-   testStatusCode.value = 2
+   testStatementList.value = selectedTest.value.test_statements.split(/\r?\n/)
+   testStatusCode.value = 0
+   testCurrentLineNo.value = 0
 }
 
+function stepTest() {
+   console.log("stepTest")
+   if (testStatusCode.value >= 2) return // should not happen
 
-function executeTest(testStatements) {
-   testStatusCode.value = 2
-   // split text in lines
-   let lines = testStatements.split(/\r?\n/)
-   for (let i = 0; i < lines.length; i++) {
-      let line = lines[i]
-      console.log("line", line)
-      if (line.trim().length == 0) continue
-      testStatusText.value = `line ${i+1} / ${lines.length}`
-      // execute line
-      let status = executeLine(line)
-      if (status.length > 0) {
-         testStatusCode.value = 3
-         testStatusText.value = ` line ${i+1} / ${lines.length} ${status}`
-         break
+   // execute current line
+   const currentStatement = testStatementList.value[testCurrentLineNo.value]
+   console.log("currentStatement", currentStatement)
+   const error = executeLine(currentStatement)
+   console.log('error', error)
+   if (error) {
+      testStatusCode.value = 3
+      testStatusText.value = error
+   } else {
+      // next line or end with success
+      if (testCurrentLineNo.value < testStatementList.value.length - 1) {
+         testCurrentLineNo.value += 1
+      } else {
+         testStatusCode.value = 2
+         testStatusText.value = "Validé !"
       }
-      // update vue
-      let error = updateState()
-      if (error) {
-         testStatusCode.value = 3
-         testStatusText.value = ` line ${i+1} / ${lines.length} ${error}`
-         break
-      }
-   }
-   if (testStatusCode.value === 2) {
-      testStatusText.value = "SUCCESS"
    }
 }
 
@@ -668,12 +644,12 @@ function executeLine(line) {
       if (command.cmd === 'comment') return ''
       if (command.signal.type === 'scalar') {
          if (command.value.length !== 1) {
-            return "*** value arity error ***"
+            return "Erreur d'arité"
          }
          let signalName = command.signal.name
          let equipotentialIndex = equipotentials.value["__" + signalName]
          if (equipotentialIndex === undefined) {
-            return `*** unknown signal name: ${signalName} ***`
+            return `Nom de signal inconnu : ${signalName}`
          }
          let value = command.value === '0' ? false : command.value === '1' ? true : null
          if (command.cmd === 'set') {
@@ -681,19 +657,19 @@ function executeLine(line) {
          } else if (command.cmd === 'check') {
             let currentValue = currentValues.value[equipotentialIndex]
             if (currentValue !== value) {
-               return `*** expected ${signalName} = ${command.value} ***`
+               return `Attendu ${signalName} = ${command.value}`
             }
          }
       } if (command.signal.type === 'vector') {
          let vectorSize = command.signal.start - command.signal.stop + 1
          if (vectorSize !== command.value.length) {
-            return "*** value arity error ***"
+            return "Erreur d'arité"
          }
          for (let index = command.signal.start; index >= command.signal.stop; index--) {
             let signalName = `${command.signal.name}[${index}]`
             let equipotentialIndex = equipotentials.value["__" + signalName]
             if (equipotentialIndex === undefined) {
-               return `*** unknown signal name: ${signalName} ***`
+               return `Nom de" signal inconnu : ${signalName}`
             }
             let i = command.signal.start - index
             let value = command.value[i] === '0' ? false : command.value[i] === '1' ? true : null
@@ -702,14 +678,14 @@ function executeLine(line) {
             } else if (command.cmd === 'check') {
                let currentValue = currentValues.value[equipotentialIndex]
                if (currentValue !== value) {
-                  return `*** expected ${signalName} = ${command.value[i]} ***`
+                  return `Attendu ${signalName} = ${command.value[i]}`
                }
             }
          }
       }
       return ''
    } catch(err) {
-      return "*** syntax error ***"
+      return "*** erreur de syntaxe ***"
    }
 }
 
