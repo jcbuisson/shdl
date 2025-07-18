@@ -6,6 +6,7 @@
       <v-toolbar>
          <v-select
             v-model="selectedTest"
+            @change="initTest"
             :items="sortedTestList"
             item-title="name"
             :item-value="test => test"
@@ -17,10 +18,11 @@
       </v-toolbar>
 
       <v-toolbar density="compact" v-if="!!selectedTest" :color="statusColor">
-         <div class="px-4">{{ barStatusText }}</div>
+         <div class="px-4">{{ testStatusText }}</div>
          <template v-slot:append>
             <v-btn icon="mdi-play" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over"></v-btn>
+            <v-btn icon="mdi-replay" @click="runTest"></v-btn>
          </template>
       </v-toolbar>
 
@@ -29,7 +31,7 @@
 
          <v-list density="compact">
             <!-- <v-fab @click="onBarButtonClick" small color="yellow" location="top end"
-               :icon="barStatus === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
+               :icon="testStatusCode === 0 ? 'mdi-chevron-down' : 'mdi-chevron-up'">
             </v-fab> -->
             <template v-for="signalGroup in parameterGroups">
                <v-list-item>
@@ -101,12 +103,6 @@ const props = defineProps({
 const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
-const barStatus = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
-const barStatusText = ref(null)
-
-const statusColor = computed(() => {
-   if (barStatus.value === 3) return 'red-darken-4'
-})
 
 // const sortedTestList = useObservable(tests$().pipe(
 //    map(tests => tests.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
@@ -129,8 +125,8 @@ watch(() => props.document_uid, async (document_uid) => {
             currentValues.value = module_.equipotentials.map(_ => false)
             let error = updateState()
             if (error) {
-               barStatus.value = 3
-               barStatusText.value = error
+               testStatusCode.value = 3
+               testStatusText.value = error
             }
          } else {
             module.value = null
@@ -370,8 +366,8 @@ function onIconClick(index) {
    }
    let error = updateState()
    if (error) {
-      barStatus.value = 3
-      barStatusText.value = error
+      testStatusCode.value = 3
+      testStatusText.value = error
    }
 }
 
@@ -385,8 +381,8 @@ function clear(signalGroup) {
    // propagate changes
    let error = updateState()
    if (error) {
-      barStatus.value = 3
-      barStatusText.value = error
+      testStatusCode.value = 3
+      testStatusText.value = error
    }
 }
 
@@ -591,36 +587,48 @@ function evaluateFormula(formula, dataArray) {
 
 ////////////////////////////        TEST        ////////////////////////////
 
+const testStatusCode = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
+const testStatusText = ref(null)
+
+const statusColor = computed(() => {
+   if (testStatusCode.value === 3) return 'red-darken-4'
+})
+
 function runTest() {
-   executeTest(selectedTest.value.test_statements)
+   const testStatements = selectedTest.value.test_statements
+   executeTest(testStatements)
+}
+
+function initTest() {
+   testStatusCode.value = 2
 }
 
 
-function executeTest(testContent) {
-   barStatus.value = 2
+function executeTest(testStatements) {
+   testStatusCode.value = 2
    // split text in lines
-   let lines = testContent.split(/\r?\n/)
+   let lines = testStatements.split(/\r?\n/)
    for (let i = 0; i < lines.length; i++) {
       let line = lines[i]
       if (line.trim().length == 0) continue
-      barStatusText.value = `line ${i+1} / ${lines.length}`
+      testStatusText.value = `line ${i+1} / ${lines.length}`
       // execute line
       let status = executeLine(line)
       if (status.length > 0) {
-         barStatus.value = 3
-         barStatusText.value = ` line ${i+1} / ${lines.length} ${status}`
+         testStatusCode.value = 3
+         testStatusText.value = ` line ${i+1} / ${lines.length} ${status}`
          break
       }
       // update vue
       let error = updateState()
       if (error) {
-         barStatus.value = 3
-         barStatusText.value = ` line ${i+1} / ${lines.length} ${error}`
+         testStatusCode.value = 3
+         testStatusText.value = ` line ${i+1} / ${lines.length} ${error}`
          break
       }
    }
-   if (barStatus.value === 2) {
-      barStatusText.value = "SUCCESS"
+   if (testStatusCode.value === 2) {
+      testStatusText.value = "SUCCESS"
    }
 }
 
@@ -703,19 +711,19 @@ function getMemoryInstanceArray() {
 }
 
 function loadMemContents(memoryFileContent) {
-   barStatus.value = 2
+   testStatusCode.value = 2
    let memoryContentArray
    try {
       memoryContentArray = JSON.parse(memoryFileContent)
    } catch(err) {
-      barStatus.value = 3
-      barStatusText.value = "JSON syntax error"
+      testStatusCode.value = 3
+      testStatusText.value = "JSON syntax error"
       return
    }
    let memoryInstanceArray = getMemoryInstanceArray()
    if (memoryInstanceArray.length != memoryContentArray.length) {
-      barStatus.value = 3
-      barStatusText.value = "Wrong number of memory initialization blocks"
+      testStatusCode.value = 3
+      testStatusText.value = "Wrong number of memory initialization blocks"
       return
    }
 
@@ -729,21 +737,21 @@ function loadMemContents(memoryFileContent) {
          let addrArray = strToBin(addr, addrLength)
          let dataArray = strToBin(memoryContent[addr], dataLength)
          if (dataArray.length !== dataLength || addr.length !== addrLength) {
-            barStatus.value = 3
-            barStatusText.value = `arity issue for ${addr} : ${memoryContent[addr]}`
+            testStatusCode.value = 3
+            testStatusText.value = `arity issue for ${addr} : ${memoryContent[addr]}`
             break
          }
          // fill memory
          let status = loadMemLine(addr, dataArray, memEquipotentials)
          if (status.length > 0) {
-            barStatus.value = 3
-            barStatusText.value = status
+            testStatusCode.value = 3
+            testStatusText.value = status
             break
          }
       }
    })
-   if (barStatus.value === 2) {
-      barStatusText.value = "MEMORY LOADED"
+   if (testStatusCode.value === 2) {
+      testStatusText.value = "MEMORY LOADED"
    }
 }
 

@@ -67,7 +67,7 @@ function studentEvents$(user_uid: string) {
          guardCombineLatest(
             documentList.map(doc =>
                userDocumentEvent$({ document_uid: doc.uid }).pipe(
-                  map(events => ({ doc, events }))
+                  map(events => ({ document: doc, events }))
                )
             )
          )
