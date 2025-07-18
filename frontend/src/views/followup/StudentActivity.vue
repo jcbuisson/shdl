@@ -46,6 +46,7 @@ const frLocale = timeFormatLocale({
                   'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
 })
 
+const monthFormat = frLocale.format('%b %y') // e.g., "juin 2024"
 const dayFormat = frLocale.format('%a %d %b') // e.g., "mardi 04 juin"
 const hourFormat = frLocale.format('%H:%M') // e.g., "10:00"
 
@@ -186,7 +187,7 @@ function drawChart(slots, events) {
 
    xAxis = svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat))
+      .call(d3.axisBottom(xScale).ticks(d3.timeDay.every(5)).tickFormat(dayFormat))
 
    yAxis = svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
@@ -206,9 +207,20 @@ function drawChart(slots, events) {
          const transform = e.transform
          const newXScale = transform.rescaleX(xScale)
          const zoomScale = e.transform.k
-         xAxis.call(zoomScale < 5 ?
-            d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
-            d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat))
+         xAxis.call(
+            zoomScale < 1 ?
+               d3.axisBottom(newXScale).ticks(d3.timeMonth.every(1)).tickFormat(monthFormat) :
+            zoomScale < 2 ?
+               d3.axisBottom(newXScale).ticks(d3.timeDay.every(5)).tickFormat(dayFormat) :
+            zoomScale < 5 ?
+               d3.axisBottom(newXScale).ticks(d3.timeDay.every(1)).tickFormat(dayFormat) :
+            zoomScale < 20 ?
+               d3.axisBottom(newXScale).ticks(d3.timeHour.every(6)).tickFormat(hourFormat) :
+            zoomScale < 40 ?
+               d3.axisBottom(newXScale).ticks(d3.timeHour.every(3)).tickFormat(hourFormat) :
+               d3.axisBottom(newXScale).ticks(d3.timeHour.every(1)).tickFormat(hourFormat)
+         )
+
          drawSlots(newXScale, slots, zoomScale)
          drawBars(newXScale, events)
       })
