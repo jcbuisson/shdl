@@ -3,9 +3,11 @@
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Toolbar (does not grow) -->
-      <div class="d-flex align-center flex-wrap">
+      <div class="d-flex align-center flex-wrap justify-space-between">
          <v-select
             class="px-2"
+            max-width="250"
+            ssstyle="max-width: 200px;"
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
             :items="sortedTestList"
@@ -17,14 +19,14 @@
             variant="underlined"
          ></v-select>
 
+         <div v-if="!!selectedTest" class="px-2">
+            {{ testCurrentLine }}
+         </div>
+
          <div v-if="!!selectedTest">
             <v-btn icon="mdi-play" variant="text" :disabled="testStatusCode >= 2" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2" @click="stepTest"></v-btn>
             <v-btn icon="mdi-replay" variant="text" @click="initTest"></v-btn>
-         </div>
-
-         <div v-if="!!selectedTest" class="px-2">
-            {{ testCurrentLine }}
          </div>
       </div>
 
