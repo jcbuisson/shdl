@@ -1,11 +1,5 @@
 <template>
    <div ref="chartContainer"></div>
-
-   <!-- <div>userSlotsAndEvents: {{ userSlotsAndEvents }}</div> -->
-
-   <v-tooltip v-model="show" text="azer">
-      <span>Programmatic tooltip</span>
-   </v-tooltip>
 </template>
 
 <script setup lang="ts">
@@ -231,7 +225,7 @@ function drawBars(xScale, events) {
    const eventRects = eventsGroup.selectAll('rect')
       .data(events, d => d)
 
-   eventRects.enter()
+   const rects = eventRects.enter()
       .append('rect')
       .merge(eventRects)
       .attr('x', d => xScale(new Date(d.start)))
@@ -242,9 +236,13 @@ function drawBars(xScale, events) {
       // .on('mouseover', (event, d) => showTooltip(event, d))
       // .on('mousemove', (event, d) => showTooltip(event, d))
       // .on('mouseout', hideTooltip)
-      .on('click', (event, d) => displayData(d))
-
+      // .on('click', (event, d) => displayData(d))
+  
    eventRects.exit().remove()
+
+   // SHOULD WORK, BUT DOESN'T - see https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/title
+   rects.select('title').remove()
+   rects.append('title').text(d => d.name || 'my tooltip!!')
 }
 
 function drawSlots(xScale, slots, zoomScale) {
@@ -262,7 +260,7 @@ function drawSlots(xScale, slots, zoomScale) {
       // .on('mouseover', (event, d) => showTooltip(event, d))
       // .on('mousemove', (event, d) => showTooltip(event, d))
       // .on('mouseout', hideTooltip)
-      .on('click', (event, d) => displayData(d))
+      // .on('click', (event, d) => displayData(d))
 
    slotRects.exit().remove()
 
@@ -281,11 +279,4 @@ function drawSlots(xScale, slots, zoomScale) {
 
    slotLabels.exit().remove()
 }
-
-function displayData(data) {
-   console.log('data', data)
-   show.value = true
-}
-
-const show = ref(false)
 </script>
