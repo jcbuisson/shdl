@@ -623,8 +623,14 @@ function stepTest() {
    // execute current line
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
    console.log("currentStatement", currentStatement)
-   const error = executeLine(currentStatement)
+   let error = executeLine(currentStatement)
    console.log('error', error)
+
+   if (!error) {
+      // propagate changes
+      error = updateState()
+   }
+
    if (error) {
       testStatusCode.value = 3
       testStatusText.value = error
