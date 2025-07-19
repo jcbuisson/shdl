@@ -7,6 +7,7 @@
                   <v-text-field
                      label="Nom"
                      v-model="data.name"
+                     :rules="nameRules"
                      variant="underlined"
                   ></v-text-field>
                </v-col>
@@ -39,6 +40,9 @@ const props = defineProps({
 const data = ref({})
 
 const valid = ref()
+const nameRules = [
+   (v) => !!v || "Le nom est obligatoire",
+]
 
 async function submit() {
    try {
