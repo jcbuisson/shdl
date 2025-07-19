@@ -31,6 +31,7 @@
    </v-card>
 
    <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
+      {{ testAndSlotsList }}
       <v-form v-model="valid" lazy-validation>
          <v-card :title="edit ? 'Éditer créneau horaire' : 'Nouveau créneau horaire'">
             <v-card-text>
@@ -69,6 +70,15 @@
                            :rules="timeRules"
                         ></v-text-field>
                      </v-row>
+                     <v-row dense>
+                        <v-select
+                           multiple
+                           label="Tests durant la période"
+                           :items="testAndSlotsList"
+                           :item-value="ts => ts"
+                           :item-title="ts => ts.test.name"
+                        ></v-select>
+                     </v-row>
                   </v-col>
                </v-row>
             </v-card-text>
@@ -91,11 +101,21 @@
 import { ref, onUnmounted, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
+import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
 
 import { useGroupSlot } from '/src/use/useGroupSlot'
+import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
+
+import { guardCombineLatest } from '/src/lib/businessObservables'
+
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot()
+const { getObservable: shdlTests$ } = useSHDLTest()
+const { getObservable: groupslotShdltestRelations$ } = useGroupSlotSHDLTestRelation()
 
 
 const props = defineProps({
@@ -185,4 +205,22 @@ const deleteSlot = async (slot) => {
       }
    }
 }
+
+//////////////////////        RELATION GROUP_SLOT <-> SHDL_TEST        //////////////////////
+
+const testAndSlots$ = shdlTests$({}).pipe(
+   switchMap(tests => 
+      guardCombineLatest(
+         tests.map(test =>
+            groupslotShdltestRelations$({ shdl_test_uid: test.uid }).pipe(
+               switchMap(relations =>
+                  guardCombineLatest(relations.map(relation => shdlTests$({ uid: relation.group_slot_uid }).pipe(map(groupSlots => groupSlots[0]))))
+               ),
+               map(groupSlots => ({ test, groupSlots }))
+            )
+         )
+      )
+   ),
+)
+const testAndSlotsList = useObservable(testAndSlots$)
 </script>

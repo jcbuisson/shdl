@@ -13,7 +13,7 @@
             <!-- fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                <v-list-item three-line v-for="(groupAndUsers, index) in filteredSortedGroupAndUsersList":key="index"
-                     :value="group" @click="selectGroup(groupAndUsers.group)" :active="selectedGroup?.uid === groupAndUsers.group.uid">
+                     :value="groupAndUsers.group" @click="selectGroup(groupAndUsers.group)" :active="selectedGroup?.uid === groupAndUsers.group.uid">
                   <v-list-item-title>{{ groupAndUsers?.group?.name }}</v-list-item-title>
                   <v-list-item-subtitle>{{ groupAndUsers?.users.length }} membre{{ groupAndUsers?.users.length > 1 ? 's' : '' }}</v-list-item-subtitle>
 
