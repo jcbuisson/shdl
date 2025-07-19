@@ -78,6 +78,7 @@ model group_slot {
    end                     DateTime
 
    user_slot_excuses       user_slot_excuse[]
+   groupslot_shdltest_relations groupslot_shdltest_relation[]
 }
 
 model user_slot_excuse {
@@ -95,6 +96,18 @@ model shdl_test {
    name                    String     // ex: "sequenceur load/store"
    test_statements         String?    // ex: "set rst 1\ncheck a 0"
    memory_contents         String?    // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
+
+   groupslot_shdltest_relations groupslot_shdltest_relation[]
+}
+
+model groupslot_shdltest_relation {
+   uid                     String     @unique
+   group_slot_uid          String
+   shdl_test_uid           String
+
+   group_slot group_slot @relation(fields: [group_slot_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   shdl_test shdl_test @relation(fields: [shdl_test_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   @@unique([group_slot_uid, shdl_test_uid])
 }
 
 model user_document {
@@ -103,7 +116,6 @@ model user_document {
    type                    String     // 'shdl', 'craps', 'text'
    name                    String
    text                    String
-   // is_valid                Boolean?   // for shdl/craps documents
    update_count            Int        @default(0)
 
    user_document_events    user_document_event[]

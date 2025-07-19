@@ -11,6 +11,7 @@ import userDocumentService from './database/user_document/user_document.service.
 import userDocumentEventService from './database/user_document_event/user_document_event.service.js'
 import userSlotExcuseService from './database/user_slot_excuse/user_slot_excuse.service.js'
 import shdlTestService from './database/shdl_test/shdl_test.service.js'
+import groupSlotSHDLTestRelationService from './database/groupslot_shdltest_relation/groupslot_shdltest_relation.service.js'
 
 // custom services
 import authService from './custom/auth/auth.service.js'
@@ -32,6 +33,7 @@ export default function (app) {
    app.configure(userDocumentEventService)
    app.configure(userSlotExcuseService)
    app.configure(shdlTestService)
+   app.configure(groupSlotSHDLTestRelationService)
 
    // add custom services
    app.configure(authService)

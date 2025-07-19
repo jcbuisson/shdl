@@ -1,4 +1,5 @@
 <template>
+   {{ testAndSlotsList }}
    <v-card>
       <v-form>
          <v-container>
@@ -24,13 +25,20 @@ import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { useObservable } from '@vueuse/rxjs'
+
+import { guardCombineLatest } from '/src/lib/businessObservables'
 
 import { useGroup } from '/src/use/useGroup'
+import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 import GroupSlots from '/src/views/groups/GroupSlots.vue'
 
 const { getObservable: groups$, update: updateGroup } = useGroup()
+const { getObservable: shdlTests$ } = useSHDLTest()
+const { getObservable: groupslotShdltestRelations$ } = useGroupSlotSHDLTestRelation()
 
 
 const props = defineProps({
@@ -71,4 +79,24 @@ const onFieldInput = async (field, value) => {
    }
 }
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
+
+
+//////////////////////        RELATION GROUP_SLOT <-> SHDL_TEST        //////////////////////
+
+const testAndSlots$ = shdlTests$({}).pipe(
+   switchMap(tests => 
+      guardCombineLatest(
+         tests.map(test =>
+            groupslotShdltestRelations$({ shdl_test_uid: test.uid }).pipe(
+               switchMap(relations =>
+                  guardCombineLatest(relations.map(relation => shdlTests$({ uid: relation.group_slot_uid }).pipe(map(groupSlots => groupSlots[0]))))
+               ),
+               map(groupSlots => ({ test, groupSlots }))
+            )
+         )
+      )
+   ),
+)
+const testAndSlotsList = useObservable(testAndSlots$)
+
 </script>
