@@ -31,48 +31,58 @@
    </v-card>
 
    <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
-      <v-card :title="edit ? 'Éditer créneau' : 'Nouveau créneau'">
-         <v-card-text>
-            <v-row dense>
-               <v-col cols="12" md="12">
-                  <v-text-field label="Nom" required v-model="data.name"></v-text-field>
-                  <v-row dense>
+      <v-form v-model="valid" lazy-validation>
+         <v-card :title="edit ? 'Éditer créneau horaire' : 'Nouveau créneau horaire'">
+            <v-card-text>
+               <v-row dense>
+                  <v-col cols="12" md="12">
                      <v-text-field
-                        label="date début"
-                        v-model="data.startdate"
-                        type="date"
+                        label="Nom"
+                        v-model="data.name"
+                        :rules="nameRules"
                      ></v-text-field>
-                     <v-text-field
-                        label="heure"
-                        v-model="data.starttime"
-                        type="time"
-                     ></v-text-field>
-                  </v-row>
-                  <v-row dense>
-                     <v-text-field
-                        label="date fin"
-                        v-model="data.enddate"
-                        type="date"
-                     ></v-text-field>
-                     <v-text-field
-                        label="heure"
-                        v-model="data.endtime"
-                        type="time"
-                     ></v-text-field>
-                  </v-row>
-               </v-col>
-            </v-row>
-         </v-card-text>
+                     <v-row dense>
+                        <v-text-field
+                           type="date"
+                           label="date début"
+                           v-model="data.startdate"
+                           :rules="dateRules"
+                        ></v-text-field>
+                        <v-text-field
+                           type="time"
+                           label="heure"
+                           v-model="data.starttime"
+                           :rules="timeRules"
+                        ></v-text-field>
+                     </v-row>
+                     <v-row dense>
+                        <v-text-field
+                           type="date"
+                           label="date fin"
+                           v-model="data.enddate"
+                           :rules="dateRules"
+                        ></v-text-field>
+                        <v-text-field
+                           type="time"
+                           label="heure"
+                           v-model="data.endtime"
+                           :rules="timeRules"
+                        ></v-text-field>
+                     </v-row>
+                  </v-col>
+               </v-row>
+            </v-card-text>
 
-         <v-divider></v-divider>
+            <v-divider></v-divider>
 
-         <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text="Annuler" variant="plain" @click="addOrEditSlotDialog = false"></v-btn>
-            <v-btn v-if="edit" color="primary" text="Modifier" variant="tonal" @click="addOrEditSlotDialog = false; updateSlot()"></v-btn>
-            <v-btn v-else color="primary" text="Créer" variant="tonal" @click="addOrEditSlotDialog = false; createSlot()"></v-btn>
-         </v-card-actions>
-      </v-card>
+            <v-card-actions>
+               <v-spacer></v-spacer>
+               <v-btn text="Annuler" variant="plain" @click="addOrEditSlotDialog = false"></v-btn>
+               <v-btn v-if="edit" :disabled="!valid" color="primary" text="Modifier" variant="tonal" @click="addOrEditSlotDialog = false; updateSlot()"></v-btn>
+               <v-btn v-else :disabled="!valid" color="primary" text="Créer" variant="tonal" @click="addOrEditSlotDialog = false; createSlot()"></v-btn>
+            </v-card-actions>
+         </v-card>
+      </v-form>
    </v-dialog>
 
 </template>
@@ -112,6 +122,17 @@ onUnmounted(() => {
 const addOrEditSlotDialog = ref(false)
 const edit = ref(false)
 const data = ref({})
+const valid = ref()
+
+const nameRules = [
+   (v) => !!v || "Le nom est obligatoire",
+]
+const dateRules = [
+   (v) => !!v || "La date est obligatoire",
+]
+const timeRules = [
+   (v) => !!v || "L'heure est obligatoire",
+]
 
 async function addSlot() {
    data.value = {}
