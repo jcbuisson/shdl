@@ -599,7 +599,7 @@ const testStatementList = ref()
 
 const testCurrentLine = computed(() => {
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
-   return `${testCurrentLineNo.value}/${testStatementList.value.length} - ${currentStatement}`
+   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${currentStatement}`
 })
 
 function runTest() {
@@ -646,6 +646,7 @@ function stepTest() {
 }
 
 function executeLine(line) {
+   if (line.trim().length === 0) return ''
    try {
       // parse line
       let command = testLineParse(line)
