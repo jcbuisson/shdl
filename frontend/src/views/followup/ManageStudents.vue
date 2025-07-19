@@ -180,4 +180,12 @@ function selectUser(user) {
 function onResize(width) {
    setStudentManagerSplitWidth(width)
 }
+
+//////////////////////        AVATAR DISPLAY        //////////////////////
+
+const avatarDialog = ref(false)
+
+function onAvatarClick() {
+   avatarDialog.value = true
+}
 </script>
