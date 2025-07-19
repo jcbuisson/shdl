@@ -31,7 +31,6 @@
    </v-card>
 
    <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
-      {{ testAndSlotsList }}
       <v-form v-model="valid" lazy-validation>
          <v-card :title="edit ? 'Éditer créneau horaire' : 'Nouveau créneau horaire'">
             <v-card-text>
