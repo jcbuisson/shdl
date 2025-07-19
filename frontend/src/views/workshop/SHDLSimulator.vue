@@ -30,7 +30,7 @@
          </div>
       </div>
 
-      <div v-if="testStatusCode >= 2" :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }" style="color: white; height: 40px; padding: 10px;">
+      <div v-if="!!selectedTest && testStatusCode >= 2" :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }" style="color: white; height: 40px; padding: 10px;">
          <h5>{{ testStatusText }}</h5>
       </div>
 
@@ -124,6 +124,7 @@ watch(() => props.document_uid, async (document_uid) => {
    subscription = module$(document_uid).subscribe({
       next: module_ => {
          console.log('next simu', module_)
+         selectedTest.value = null
          if (module_.structure) {
             module.value = module_
             previousValues.value = module_.equipotentials.map(_ => false)
@@ -640,7 +641,7 @@ function stepTest() {
          testCurrentLineNo.value += 1
       } else {
          testStatusCode.value = 2
-         testStatusText.value = "Validé !"
+         testStatusText.value = "SUCCÈS !"
       }
    }
 }
