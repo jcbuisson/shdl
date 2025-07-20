@@ -5,7 +5,11 @@ const mutex = new Mutex()
 
 // ex: where = { uid: 'azer' }
 export async function synchronize(app, modelName, idbValues, idbMetadata, where, cutoffDate) {
+   
    await mutex.acquire()
+
+   console.log('synchronize, typeof(where)', typeof(where))
+
    try {
       const requestPredicate = wherePredicate(where)
 

@@ -76,6 +76,7 @@
                            :items="testAndSlotsList"
                            :item-value="ts => ts"
                            :item-title="ts => ts.test.name"
+                           @update:modelValue="onTestsChange"
                         ></v-select>
                      </v-row>
                   </v-col>
@@ -114,7 +115,7 @@ import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot()
 const { getObservable: shdlTests$ } = useSHDLTest()
-const { getObservable: groupslotShdltestRelations$ } = useGroupSlotSHDLTestRelation()
+const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation()
 
 
 const props = defineProps({
@@ -222,4 +223,20 @@ const testAndSlots$ = shdlTests$({}).pipe(
    ),
 )
 const testAndSlotsList = useObservable(testAndSlots$)
+
+const onTestsChange = async (testUIDs) => {
+   try {
+      const [toAddTestUIDs, toRemoveRelationUIDs] = await groupDifference(props.user_uid, testUIDs)
+      for (const shdl_test_uid of toAddTestUIDs) {
+         await createGroupSlotSHDLTestRelation({ user_uid: props.user_uid, shdl_test_uid })
+      }
+      for (const relation_uid of toRemoveRelationUIDs) {
+         await removeGroupSlotSHDLTestRelation(relation_uid)
+      }
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch(err) {
+      displaySnackbar({ text: "Erreur lors de l'enregistrement...", color: 'error', timeout: 4000 })
+   }
+}
+
 </script>

@@ -4,6 +4,39 @@ import useModel from '/src/use/useModel'
 
 export function useGroupSlotSHDLTestRelation() {
 
-   return useModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'user_groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+   const model = useModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'user_groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+
+   /////////////          UTILITY          /////////////
+
+   async function groupDifference(user_uid, newTestUIDs) {
+      const db = model.db
+
+      const toAddTestUIDs = []
+      const toRemoveRelationUIDs = []
+      // collect active user-group relations with `user_uid`
+      const allUserRelations = await db.values.filter(value => value.user_uid === user_uid).toArray()
+      const currentUserRelations = []
+      for (const relation of allUserRelations) {
+         const metadata = await db.metadata.get(relation.uid)
+         if (metadata.deleted_at) continue
+         currentUserRelations.push(relation)
+      }
+      // relations to add
+      for (const shdl_test_uid of newTestUIDs) {
+         if (!currentUserRelations.some(relation => relation.shdl_test_uid === shdl_test_uid)) {
+            toAddTestUIDs.push(shdl_test_uid)
+         }
+      }
+      // relations to remove
+      for (const relation of currentUserRelations) {
+         if (!newTestUIDs.includes(relation.shdl_test_uid)) {
+            toRemoveRelationUIDs.push(relation.uid)
+         }
+      }
+      return [toAddTestUIDs, toRemoveRelationUIDs]
+   }
+
+   return { ...model, groupDifference }
+
 
 }
