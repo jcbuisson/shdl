@@ -8,8 +8,6 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
    
    await mutex.acquire()
 
-   console.log('synchronize, typeof(where)', typeof(where))
-
    try {
       const requestPredicate = wherePredicate(where)
 
@@ -155,6 +153,7 @@ export async function removeSynchroDBWhere(where, whereDb) {
 
 export async function synchronizeModelWhereList(app, modelName, idbValues, idbMetadata, cutoffDate, whereDb) {
    const whereList = await getWhereList(whereDb)
+   console.log('synchronizeModelWhereList', modelName, whereList, typeof(whereList[0]))
    for (const where of whereList) {
       await synchronize(app, modelName, idbValues, idbMetadata, where, cutoffDate)
    }
