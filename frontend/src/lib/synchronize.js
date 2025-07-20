@@ -152,9 +152,9 @@ export async function removeSynchroDBWhere(where, whereDb) {
 }
 
 export async function synchronizeModelWhereList(app, modelName, idbValues, idbMetadata, cutoffDate, whereDb) {
-   const whereList = await getWhereList(whereDb)
-   console.log('synchronizeModelWhereList', modelName, whereList, typeof(whereList[0]))
-   for (const where of whereList) {
+   const swhereList = await getWhereList(whereDb)
+   for (const swhere of swhereList) {
+      const where = JSON.parse(swhere)
       await synchronize(app, modelName, idbValues, idbMetadata, where, cutoffDate)
    }
 }
