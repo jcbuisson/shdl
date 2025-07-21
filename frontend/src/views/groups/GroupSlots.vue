@@ -192,7 +192,7 @@ const updateSlot = async () => {
    // update group_slot <-> shdl_test relations
    const [toAddTestUIDs, toRemoveRelationUIDs] = await groupDifference(slotData.value.uid, groupTestUIDs.value)
    for (const shdl_test_uid of toAddTestUIDs) {
-      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.uid, shdl_test_uid })
+      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.value.uid, shdl_test_uid })
    }
    for (const relation_uid of toRemoveRelationUIDs) {
       await removeGroupSlotSHDLTestRelation(relation_uid)
