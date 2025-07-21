@@ -38,20 +38,20 @@
                   <v-col cols="12" md="12">
                      <v-text-field
                         label="Nom"
-                        v-model="data.name"
+                        v-model="slotData.name"
                         :rules="nameRules"
                      ></v-text-field>
                      <v-row dense>
                         <v-text-field
                            type="date"
                            label="date début"
-                           v-model="data.startdate"
+                           v-model="slotData.startdate"
                            :rules="dateRules"
                         ></v-text-field>
                         <v-text-field
                            type="time"
                            label="heure"
-                           v-model="data.starttime"
+                           v-model="slotData.starttime"
                            :rules="timeRules"
                         ></v-text-field>
                      </v-row>
@@ -59,13 +59,13 @@
                         <v-text-field
                            type="date"
                            label="date fin"
-                           v-model="data.enddate"
+                           v-model="slotData.enddate"
                            :rules="dateRules"
                         ></v-text-field>
                         <v-text-field
                            type="time"
                            label="heure"
-                           v-model="data.endtime"
+                           v-model="slotData.endtime"
                            :rules="timeRules"
                         ></v-text-field>
                      </v-row>
@@ -73,10 +73,10 @@
                         <v-select
                            multiple
                            label="Tests durant la période"
-                           :items="testAndSlotsList"
-                           :item-value="ts => ts"
-                           :item-title="ts => ts.test.name"
-                           @update:modelValue="onTestsChange"
+                           :items="shdlTestList"
+                           :item-value="test => test.uid"
+                           :item-title="test => test.name"
+                           v-model="groupTestUIDs"
                         ></v-select>
                      </v-row>
                   </v-col>
@@ -124,6 +124,7 @@ const props = defineProps({
    },
 })
 
+const shdlTestList = useObservable(shdlTests$())
 const slotList = ref([])
 
 let subscription
@@ -141,7 +142,7 @@ onUnmounted(() => {
 
 const addOrEditSlotDialog = ref(false)
 const edit = ref(false)
-const data = ref({})
+const slotData = ref({})
 const valid = ref()
 
 const nameRules = [
@@ -155,14 +156,14 @@ const timeRules = [
 ]
 
 async function addSlot() {
-   data.value = {}
+   slotData.value = {}
    edit.value = false
    addOrEditSlotDialog.value = true
 }
 
 async function editSlot(slot) {
    console.log('slot', slot)
-   data.value = {
+   slotData.value = {
       uid: slot.uid,
       group_uid: slot.group_uid,
       name: slot.name,
@@ -178,20 +179,31 @@ async function editSlot(slot) {
 const createSlot = async () => {
    const createdGroupSlot = await createGroupSlot({
       group_uid: props.group_uid,
-      name: data.value.name,
-      start: new Date(data.value.startdate + 'T' + data.value.starttime),
-      end: new Date(data.value.enddate + 'T' + data.value.endtime),
+      name: slotData.value.name,
+      start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
+      end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
    })
    console.log('createdGroupSlot', createdGroupSlot)
 }
 
 const updateSlot = async () => {
-   console.log('update', data.value)
-   await updateGroupSlot(data.value.uid, {
-      group_uid: data.value.group_uid,
-      name: data.value.name,
-      start: new Date(data.value.startdate + 'T' + data.value.starttime),
-      end: new Date(data.value.enddate + 'T' + data.value.endtime),
+   console.log('update', slotData.value)
+
+   // update group_slot <-> shdl_test relations
+   const [toAddTestUIDs, toRemoveRelationUIDs] = await groupDifference(slotData.value.uid, groupTestUIDs.value)
+   for (const shdl_test_uid of toAddTestUIDs) {
+      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.uid, shdl_test_uid })
+   }
+   for (const relation_uid of toRemoveRelationUIDs) {
+      await removeGroupSlotSHDLTestRelation(relation_uid)
+   }
+
+   // update group slot
+   await updateGroupSlot(slotData.value.uid, {
+      group_uid: slotData.value.group_uid,
+      name: slotData.value.name,
+      start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
+      end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
    })
 }
 
@@ -223,6 +235,8 @@ const testAndSlots$ = shdlTests$({}).pipe(
    ),
 )
 const testAndSlotsList = useObservable(testAndSlots$)
+
+const groupTestUIDs = ref([])
 
 const onTestsChange = async (testUIDs) => {
    try {

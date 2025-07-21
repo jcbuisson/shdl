@@ -37,4 +37,8 @@ export default function(app) {
         return context.methodName.startsWith('find') ? [] : ['authenticated']
     })
 
+    app.service('groupslot_shdltest_relation').publish(async (context) => {
+        return context.methodName.startsWith('find') ? [] : ['authenticated']
+    })
+
 }
