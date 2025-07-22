@@ -168,7 +168,6 @@ async function addSlot() {
 // when a new slot is edited, start observing its associated tests
 const groupSlotToEdit = ref()
 watch(groupSlotToEdit, (groupSlot) => {
-   console.log('watch!', groupSlot)
    if (slotSubscription) slotSubscription.unsubscribe()
    if (groupSlot === null) {
       selectedTestUIDs.value = []
@@ -196,13 +195,17 @@ async function editSlot(groupSlot) {
 }
 
 const createSlot = async () => {
+   // create group slot
    const createdGroupSlot = await createGroupSlot({
       group_uid: props.group_uid,
       name: slotData.value.name,
       start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
       end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
    })
-   console.log('createdGroupSlot', createdGroupSlot)
+   // add group_slot <-> shdl_test relations
+   for (const shdl_test_uid of selectedTestUIDs.value) {
+      await createGroupSlotSHDLTestRelation({ group_slot_uid: createdGroupSlot.uid, shdl_test_uid })
+   }
 }
 
 const updateSlot = async () => {
