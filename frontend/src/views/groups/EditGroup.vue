@@ -33,6 +33,9 @@ const { getObservable: groups$, update: updateGroup } = useGroup()
 
 
 const props = defineProps({
+   signedinUid: {
+      type: String,
+   },
    group_uid: {
       type: String,
    },
