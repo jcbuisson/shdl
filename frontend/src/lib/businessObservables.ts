@@ -8,6 +8,8 @@ import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useGroupSlot } from '/src/use/useGroupSlot'
+import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
 
 import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
 import { SHDLError } from '/src/lib/shdl/SHDLError.ts'
@@ -19,6 +21,8 @@ const { getObservable: userSlotExcuses$ } = useUserSlotExcuse()
 const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlots$ } = useGroupSlot()
+const { getObservable: shdlTests$ } = useSHDLTest()
+const { getObservable: groupSlotSHDLTestRelation$ } = useGroupSlotSHDLTestRelation()
 
 
 export function guardCombineLatest(observables) {
@@ -58,6 +62,23 @@ export function userEvents$(user_uid: string) {
          )
       ),
       map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+   )
+}
+
+// emit the list of SHDL tests uids for this user, looking into all group slots he/she is member of
+export function userSHDLTest$(user_uid: string) {
+   return userSlots$(user_uid).pipe(
+      switchMap(slotList =>
+         guardCombineLatest(
+            slotList.map(slot =>
+               groupSlotSHDLTestRelation$({ group_slot_uid: slot.uid })
+            )
+         )
+      ),
+      map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []).map(relation => relation.shdl_test_uid))]),
+      // switchMap(testUidList =>
+      //    guardCombineLatest(testUidList.map(uid => shdlTests$({ uid }).pipe(map(tests => tests[0]))))
+      // ),
    )
 }
 
