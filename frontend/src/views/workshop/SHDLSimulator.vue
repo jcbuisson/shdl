@@ -23,7 +23,7 @@
             {{ testCurrentLine }}
          </div>
 
-         <v-sheet v-if="!!selectedTest" color="grey-lighten-4" rounded>
+         <v-sheet color="grey-lighten-4" rounded>
             <v-btn icon="mdi-play" variant="text" :disabled="testStatusCode >= 2" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2" @click="stepTest"></v-btn>
             <v-btn icon="mdi-replay" variant="text" @click="initTest"></v-btn>
@@ -611,21 +611,17 @@ function runTest() {
 }
 
 function initTest() {
-   console.log("initTest")
    testStatementList.value = selectedTest.value.test_statements.split(/\r?\n/)
    testStatusCode.value = 0
    testCurrentLineNo.value = 0
 }
 
 function stepTest() {
-   console.log("stepTest")
    if (testStatusCode.value >= 2) return // should not happen
 
    // execute current line
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
-   console.log("currentStatement", currentStatement)
    let error = executeLine(currentStatement)
-   console.log('error', error)
 
    if (!error) {
       // propagate changes

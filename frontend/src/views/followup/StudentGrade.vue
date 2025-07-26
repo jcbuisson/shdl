@@ -6,7 +6,10 @@
       </template>
 
       <!-- test results -->
-      <div>Tests : {{ tests }}</div>
+      <div>Tests : {{ tests.map(test => test.name) }}</div>
+
+      <!-- test events -->
+      <div>Test events : {{ testEvents }}</div>
 
       <!-- final grade -->
       <div>Note finale : {{ grade }}</div>
@@ -16,7 +19,7 @@
 <script setup lang="ts">
 import { ref, onUnmounted, computed, watch } from 'vue'
 
-import { userGroups$, userGrade$, userSHDLTest$ } from '/src/lib/businessObservables'
+import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
 
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
@@ -30,6 +33,7 @@ const props = defineProps({
 const userGroups = ref([])
 const grade = ref(-1)
 const tests = ref()
+const testEvents = ref()
 
 const subscriptions = []
 
@@ -45,8 +49,12 @@ watch(
          grade.value = grade_
       }))
 
-      subscriptions.push(userSHDLTest$(props.user_uid).subscribe(tests_ => {
+      subscriptions.push(userSHDLTests$(props.user_uid).subscribe(tests_ => {
          tests.value = tests_
+      }))
+
+      subscriptions.push(userSHDLTestsEvents$(props.user_uid).subscribe(testEvents_ => {
+         testEvents.value = testEvents_
       }))
    },
    { immediate: true } // so that it's called on component mount

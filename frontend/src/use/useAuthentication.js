@@ -2,39 +2,51 @@ import { useDebounceFn } from '@vueuse/core'
 import { app, isConnected } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
-import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useGroupSlot } from '/src/use/useGroupSlot'
-import { useUserTabRelation } from '/src/use/useUserTabRelation'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
+import { useSHDLModule } from '/src/use/useSHDLModule'
+import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useUser } from '/src/use/useUser'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-import { useSHDLModule } from '/src/use/useSHDLModule'
+import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
+import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
 
 import router from '/src/router'
 
-const { reset: resetUseUser, putUser } = useUser()
 const { reset: resetUseGroup } = useGroup()
 const { reset: resetUseGroupSlot } = useGroupSlot()
-const { reset: resetUseUserTabRelation } = useUserTabRelation()
-const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
+const { reset: resetUseGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation()
+const { reset: resetSHDLModule } = useSHDLModule()
+const { reset: resetUseSHDLTest } = useSHDLTest()
+const { reset: resetUseUser, putUser } = useUser()
 const { reset: resetUseUserDocument } = useUserDocument()
 const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent()
-const { reset: resetSHDLModule } = useSHDLModule()
+const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
+const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestEvent()
+const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse()
+const { reset: resetUseUserTabRelation } = useUserTabRelation()
 
 
 export async function clearCaches() {
    console.log('clearCaches')   
    // resetUseAuthentication()
    await resetUseAppState()
-   await resetUseUser()
    await resetUseGroup()
    await resetUseGroupSlot()
-   await resetUseUserTabRelation()
-   await resetUseUserGroupRelation()
+   await resetUseGroupSlotSHDLTestRelation
+   await resetSHDLModule()
+   await resetUseSHDLTest()
+   await resetUseUser()
    await resetUseUserDocument()
    await resetUseUserDocumentEvent()
-   await resetSHDLModule()
+   await resetUseUserGroupRelation()
+   await resetUseUserSHDLTestEvent()
+   await resetUseUserSlotExcuse()
+   await resetUseUserTabRelation()
 }
 
 export const restartApp = async () => {
