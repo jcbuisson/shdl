@@ -74,7 +74,7 @@ const filteredSortedTestList = computed(() => {
 
 
 async function addTest() {
-   router.push(`/home/${props.signedinUid}/tests/create`)
+   router.push(`/home/${props.signedinUid}/shdl_tests/create`)
 }
 
 // const route = useRoute()

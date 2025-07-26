@@ -7,9 +7,6 @@
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
             Activité
          </v-tab>
-         <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/attendance` }" router value='attendance'>
-            Présence
-         </v-tab>
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/workshop` }" router value='workshop'>
             Documents
          </v-tab>

@@ -16,9 +16,19 @@
 
             <v-row>
                <v-textarea
-                  label="Test"
+                  label="Directives de test"
+                  rows="20"
                   :modelValue="test?.test_statements"
                   @input="(e) => onFieldInputDebounced('test_statements', e.target.value)"
+               ></v-textarea>
+            </v-row>
+
+            <v-row>
+               <v-textarea
+                  label="Contenu des mémoires"
+                  rows="20"
+                  :modelValue="test?.memory_contents"
+                  @input="(e) => onFieldInputDebounced('memory_contents', e.target.value)"
                ></v-textarea>
             </v-row>
 

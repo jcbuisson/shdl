@@ -134,11 +134,6 @@ const routes = [
                         component: () => import('/src/views/followup/StudentActivity.vue'),
                      },
                      {
-                        path: 'attendance',
-                        props: true,
-                        component: () => import('/src/views/followup/StudentAttendance.vue'),
-                     },
-                     {
                         path: 'workshop',
                         props: true,
                         component: () => import('/src/views/followup/StudentWorkshop.vue'),
@@ -165,7 +160,7 @@ const routes = [
                               path: 'text/:document_uid',
                               meta: {
                                  // check that document's owner is signed-in user
-                                 checks: ['same_document_user'],
+                                 //checks: ['same_document_user'],
                               },
                               props: true,
                               component: () => import('/src/views/workshop/ManageTextDocument.vue'),

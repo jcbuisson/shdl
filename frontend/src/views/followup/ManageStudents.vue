@@ -152,6 +152,16 @@ const filteredUserAndGroupAndGradeList = computed(() => {
       if (!groupFilter.value) return true
       if (ug.groups.map(grp => grp.uid).includes(groupFilter.value)) return true
       return false
+   }).sort(function(ug1, ug2) {
+      const lname1 = ug1.user.lastname.toLowerCase()
+      const lname2 = ug2.user.lastname.toLowerCase()
+      if (lname1 < lname2) return -1
+      if (lname1 > lname2) return 1
+      const fname1 = ug1.user.firstname.toLowerCase()
+      const fname2 = ug2.user.firstname.toLowerCase()
+      if (fname1 < fname2) return -1
+      if (fname1 > fname2) return 1
+      return 0
    })
 })
 
