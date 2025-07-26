@@ -3,10 +3,8 @@
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
       <!-- Test selector (does not grow) -->
-      <div cclass="d-flex align-center flex-wrap justify-space-between">
+      <div class="px-2">
          <v-select
-            class="px-2"
-            mmax-width="250"
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
             :items="sortedTestList"
@@ -20,16 +18,16 @@
       </div>
 
       <!-- Toolbar (does not grow) -->
-      <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between">
-         <div class="px-2">
+      <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
+         <div>
             {{ testCurrentLine }}
          </div>
 
-         <div v-if="!!selectedTest">
+         <v-sheet v-if="!!selectedTest" color="grey-lighten-4" rounded>
             <v-btn icon="mdi-play" variant="text" :disabled="testStatusCode >= 2" @click="runTest"></v-btn>
             <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2" @click="stepTest"></v-btn>
             <v-btn icon="mdi-replay" variant="text" @click="initTest"></v-btn>
-         </div>
+         </v-sheet>
       </div>
 
       <div v-if="!!selectedTest && testStatusCode >= 2" :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }" style="color: white; height: 40px; padding: 10px;">
