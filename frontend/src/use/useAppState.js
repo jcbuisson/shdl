@@ -69,20 +69,20 @@ export const workshopSplitWidth = computed(() => kvWorkshopSplitWidth?.value?.va
 
 
 
-/////////////////       activity graph date min & max       /////////////////
+// /////////////////       activity graph date min & max       /////////////////
 
-export async function setActivityGraphDateMin(value) {
-   db.keyval.put({ key: 'activity-graph-date-min', value })
-}
+// export async function setActivityGraphDateMin(value) {
+//    db.keyval.put({ key: 'activity-graph-date-min', value })
+// }
 
-const kvActivityGraphDateMin = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-min')))
-export const activityGraphDateMin = computed(() => kvActivityGraphDateMin?.value?.value)
+// const kvActivityGraphDateMin = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-min')))
+// export const activityGraphDateMin = computed(() => kvActivityGraphDateMin?.value?.value)
 
 
-export async function setActivityGraphDateMax(value) {
-   db.keyval.put({ key: 'activity-graph-date-max', value })
-}
+// export async function setActivityGraphDateMax(value) {
+//    db.keyval.put({ key: 'activity-graph-date-max', value })
+// }
 
-const kvActivityGraphDateMax = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-max')))
-export const activityGraphDateMax = computed(() => kvActivityGraphDateMax?.value?.value)
+// const kvActivityGraphDateMax = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-max')))
+// export const activityGraphDateMax = computed(() => kvActivityGraphDateMax?.value?.value)
 

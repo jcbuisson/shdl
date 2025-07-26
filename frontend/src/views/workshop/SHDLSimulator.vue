@@ -2,12 +2,11 @@
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
-      <!-- Toolbar (does not grow) -->
-      <div class="d-flex align-center flex-wrap justify-space-between">
+      <!-- Test selector (does not grow) -->
+      <div cclass="d-flex align-center flex-wrap justify-space-between">
          <v-select
             class="px-2"
-            max-width="250"
-            ssstyle="max-width: 200px;"
+            mmax-width="250"
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
             :items="sortedTestList"
@@ -18,8 +17,11 @@
             persistent-hint
             variant="underlined"
          ></v-select>
+      </div>
 
-         <div v-if="!!selectedTest" class="px-2">
+      <!-- Toolbar (does not grow) -->
+      <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between">
+         <div class="px-2">
             {{ testCurrentLine }}
          </div>
 

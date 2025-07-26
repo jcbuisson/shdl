@@ -16,7 +16,7 @@ import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
-import { setActivityGraphDateMin, activityGraphDateMin, setActivityGraphDateMax, activityGraphDateMax } from "/src/use/useAppState"
+// import { setActivityGraphDateMin, activityGraphDateMin, setActivityGraphDateMax, activityGraphDateMax } from "/src/use/useAppState"
 
 const { getObservable: userDocument$ } = useUserDocument()
 const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
@@ -195,7 +195,7 @@ function drawChart(slots, events) {
 
    svg.call(
       d3.zoom()
-      .scaleExtent([1, 100])
+      .scaleExtent([1, 300])
       .translateExtent([[margin.left, 0], [width - margin.right, height]])
       .on('zoom', (e) => {
          const transform = e.transform
@@ -240,7 +240,7 @@ function drawBars(xScale, events) {
   
    eventRects.exit().remove()
 
-   // SHOULD WORK, BUT DOESN'T - see https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/title
+   // SHOULD WORK AS TOOLTIP, BUT DOESN'T - see https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/title
    rects.select('title').remove()
    rects.append('title').text(d => d.name || 'my tooltip!!')
 }
