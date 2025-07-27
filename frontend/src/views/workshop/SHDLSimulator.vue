@@ -94,6 +94,8 @@ import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 
+import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
+
 const { module$ } = useSHDLModule()
 const { getObservable: tests$ } = useSHDLTest()
 
@@ -113,7 +115,10 @@ const currentValues = ref(null)
 //    map(tests => tests.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
 // ))
 
-const sortedTestList = useObservable(tests$())
+// const testList = useObservable(tests$())
+const testList = useObservable(userSHDLTests$(props.signedinUid))
+
+const sortedTestList = computed(() => testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
 
 const selectedTest = ref()
 
