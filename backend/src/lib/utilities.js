@@ -1,8 +1,8 @@
 
-export function sortedJson(obj) {
+export function stringifyWithSortedKeys(obj) {
    return JSON.stringify(obj, Object.keys(obj).sort())
 }
-console.log('sortedJson({ age: 30, name: "Alice", city: "Paris" })', sortedJson({ age: 30, name: "Alice", city: "Paris" }))
+console.log('stringifyWithSortedKeys({ age: 30, name: "Alice", city: "Paris" })', stringifyWithSortedKeys({ age: 30, name: "Alice", city: "Paris" }))
 
 
 export class Mutex {

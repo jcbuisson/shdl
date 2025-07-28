@@ -1,6 +1,6 @@
 <template>
+   <div>currentUserSlots: {{ currentUserSlots }}</div>
    <div>periodicUserSlots: {{ periodicUserSlots }}</div>
-   <div>currentSlots: {{ currentSlots }}</div>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -124,25 +124,47 @@ const testList = useObservable(userSHDLTests$(props.signedinUid))
 
 const sortedTestList = computed(() => testList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
+// const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
+//    switchMap(relations => {
+//       const currentTime = (new Date()).toISOString()
+//       return guardCombineLatest(relations.map(relation => groupSlots$({
+//          group_uid: relation.group_uid,
+//          start: {
+//             lte: currentTime
+//          },
+//          end: {
+//             gte: currentTime
+//          },
+//       })))
+//    }),
+//    map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+// )
+// const periodicUserSlots$ = timer(0, 3000).pipe(
+//    switchMap(() => currentUserSlots$)
+// )
+// const periodicUserSlots = useObservable(periodicUserSlots$)
+
 const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
    switchMap(relations => {
-      const currentTime = (new Date()).toISOString()
       return guardCombineLatest(relations.map(relation => groupSlots$({
          group_uid: relation.group_uid,
-         start: {
-            lte: currentTime
-         },
-         end: {
-            gte: currentTime
-         },
       })))
    }),
    map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
 )
-const periodicUserSlots$ = timer(0, 3000).pipe(
-   switchMap(() => currentUserSlots$)
-)
-const periodicUserSlots = useObservable(periodicUserSlots$)
+
+const currentUserSlots = useObservable(currentUserSlots$)
+const periodicUserSlots = ref([])
+
+const intervalId = setInterval(updateCurrentSlots, 3000)
+updateCurrentSlots() // immediate execution
+
+function updateCurrentSlots() {
+   console.log('interval!')
+   if (!currentUserSlots.value) return
+   const currentTime = (new Date()).toISOString()
+   periodicUserSlots.value = currentUserSlots.value.filter(slot => true || slot.start <= currentTime && slot.end >= currentTime)
+}
 
 const selectedTest = ref()
 

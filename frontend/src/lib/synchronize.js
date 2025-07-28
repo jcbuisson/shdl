@@ -1,5 +1,5 @@
 
-import { sortedJson, Mutex } from "/src/lib/utilities"
+import { stringifyWithSortedKeys, Mutex } from "/src/lib/utilities"
 
 const mutex = new Mutex()
 
@@ -140,11 +140,12 @@ async function getWhereList(whereDb) {
 export async function addSynchroDBWhere(where, whereDb) {
    await mutex.acquire()
    let modified = false
-   const swhere = sortedJson(where)
+   const swhere = stringifyWithSortedKeys(where)
    try {
       const whereList = await getWhereList(whereDb)
       if (!whereList.includes(swhere)) {
-         await whereDb.add({ sortedjson: sortedJson(where) })
+         console.log('where', where, 'sortedjson', stringifyWithSortedKeys(where))
+         await whereDb.add({ sortedjson: stringifyWithSortedKeys(where) })
          modified = true
       }
    } catch(err) {
@@ -158,7 +159,7 @@ export async function addSynchroDBWhere(where, whereDb) {
 export async function removeSynchroDBWhere(where, whereDb) {
    await mutex.acquire()
    try {
-      const swhere = sortedJson(where)
+      const swhere = stringifyWithSortedKeys(where)
       await whereDb.filter(value => (value.sortedjson === swhere)).delete()
    } catch(err) {
       console.log('err removeSynchroDBWhere', err)

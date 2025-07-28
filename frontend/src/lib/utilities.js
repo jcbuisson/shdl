@@ -1,9 +1,21 @@
 
-export function sortedJson(obj) {
-   return JSON.stringify(obj, Object.keys(obj).sort())
+export function stringifyWithSortedKeys(obj, space = null) {
+   return JSON.stringify(obj, (key, value) => {
+      // If the value is a plain object (not an array, null, or other object type like Date)
+      if (value && typeof value === 'object' && !Array.isArray(value) && Object.prototype.toString.call(value) === '[object Object]') {
+         const sorted = {};
+         // Get all keys, sort them, and then re-add them to a new object
+         // This new object will maintain the sorted order when stringified
+         Object.keys(value).sort().forEach(k => {
+            sorted[k] = value[k];
+         });
+         return sorted;
+      }
+      // For all other types (primitives, arrays, null, etc.), return the value as is
+      return value;
+   }, space); // 'space' is optional for pretty-printing (e.g., 2 or 4)
 }
-console.log('sortedJson({ age: 30, name: "Alice", city: "Paris" })', sortedJson({ age: 30, name: "Alice", city: "Paris" }))
-
+console.log('stringifyWithSortedKeys({ age: 30, name: "Alice", data: { city: "Paris", color: "red" }})', stringifyWithSortedKeys({ age: 30, name: "Alice", data: { city: "Paris", color: "red" } }))
 
 export class Mutex {
    constructor() {
