@@ -92,9 +92,25 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
 
 export function wherePredicate(where) {
    return (elt) => {
-      for (const [key, value] of Object.entries(where)) {
-         // implements only 'attr = value' clauses 
-         if (elt[key] !== value) return false
+      for (const [attr, value] of Object.entries(where)) {
+         const eltAttrValue = elt[attr]
+
+         if (typeof(value) === 'string' || typeof(value) === 'number') {
+            // 'attr = value' clause
+            if (eltAttrValue !== value) return false
+
+         } else if (typeof(value) === 'object') {
+            // 'attr = { lt/lte/gt/gte: value }' clause
+            if (value.lte) {
+               if (eltAttrValue > value.lte) return false
+            } else if (value.lt) {
+               if (eltAttrValue >= value.lt) return false
+            } else if (value.gte) {
+               if (eltAttrValue < value.gte) return false
+            } else if (value.gt) {
+               if (eltAttrValue <= value.gt) return false
+            }
+         }
       }
       return true
    }

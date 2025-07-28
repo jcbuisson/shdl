@@ -1,4 +1,6 @@
 <template>
+   <div>periodicUserSlots: {{ periodicUserSlots }}</div>
+   <div>currentSlots: {{ currentSlots }}</div>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -88,15 +90,21 @@
 
 <script setup>
 import { watch, onUnmounted, computed, ref } from 'vue'
+import { interval, of, from, map, timer } from 'rxjs'
+import { withLatestFrom, startWith, switchMap } from 'rxjs/operators'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useGroupSlot } from '/src/use/useGroupSlot'
 
-import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
+import { guardCombineLatest, userSHDLTests$ } from '/src/lib/businessObservables'
 
 const { module$ } = useSHDLModule()
+const { getObservable: userGroupRelations$ } = useUserGroupRelation()
+const { getObservable: groupSlots$ } = useGroupSlot()
 const { getObservable: tests$ } = useSHDLTest()
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
@@ -111,14 +119,30 @@ const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
 
-// const sortedTestList = useObservable(tests$().pipe(
-//    map(tests => tests.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
-// ))
-
 // const testList = useObservable(tests$())
 const testList = useObservable(userSHDLTests$(props.signedinUid))
 
-const sortedTestList = computed(() => testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
+const sortedTestList = computed(() => testList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+
+const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
+   switchMap(relations => {
+      const currentTime = (new Date()).toISOString()
+      return guardCombineLatest(relations.map(relation => groupSlots$({
+         group_uid: relation.group_uid,
+         start: {
+            lte: currentTime
+         },
+         end: {
+            gte: currentTime
+         },
+      })))
+   }),
+   map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+)
+const periodicUserSlots$ = timer(0, 3000).pipe(
+   switchMap(() => currentUserSlots$)
+)
+const periodicUserSlots = useObservable(periodicUserSlots$)
 
 const selectedTest = ref()
 
