@@ -124,6 +124,7 @@ const testList = useObservable(userSHDLTests$(props.signedinUid))
 
 const sortedTestList = computed(() => testList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
+// DON'T DO THIS BECAUSE IT CREATES LOTS OF 'WHERE' CLAUSES
 // const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
 //    switchMap(relations => {
 //       const currentTime = (new Date()).toISOString()
@@ -163,7 +164,7 @@ function updateCurrentSlots() {
    console.log('interval!')
    if (!currentUserSlots.value) return
    const currentTime = (new Date()).toISOString()
-   periodicUserSlots.value = currentUserSlots.value.filter(slot => true || slot.start <= currentTime && slot.end >= currentTime)
+   periodicUserSlots.value = currentUserSlots.value.filter(slot => slot.start <= currentTime && slot.end >= currentTime)
 }
 
 const selectedTest = ref()
