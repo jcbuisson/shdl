@@ -96,7 +96,11 @@ const routes = [
                   children: [
                      {
                         path: '',
-                        props: true,
+                        props: route => ({
+                           user_uid: route.params.signedinUid,
+                           document_uid: route.params.document_uid,
+                           editable: true,
+                        }),
                         components: {
                            editor: () => import('/src/components/EditSHDLDocument.vue'),
                            simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
@@ -146,6 +150,7 @@ const routes = [
                                  {
                                     path: '',
                                     props: route => ({
+                                       user_uid: route.params.user_uid,
                                        document_uid: route.params.document_uid,
                                        editable: false,
                                     }),

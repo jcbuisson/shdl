@@ -110,7 +110,7 @@ import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.
 import { useObservable } from '@vueuse/rxjs'
 
 const props = defineProps({
-   signedinUid: String,
+   user_uid: String,
    document_uid: String,
 })
 
@@ -118,14 +118,13 @@ const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
 
-
 const currentTime = ref((new Date()).toISOString())
 useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { immediate: true }) // useIntervalFn automatically takes care of cleaning on dispose
 
-const userSlots = useObservable(userSlots$(props.signedinUid))
+const userSlots = useObservable(userSlots$(props.user_uid))
 
-const userTestList = useObservable(userSHDLTests$(props.signedinUid))
-const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.signedinUid))
+const userTestList = useObservable(userSHDLTests$(props.user_uid))
+const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
 
 // every time 'currentTime' changes, this computed is re-evaluated, without running a new 'where' clause
 const filteredTestList = computed(() => {
