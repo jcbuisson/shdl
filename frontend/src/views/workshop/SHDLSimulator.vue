@@ -1,6 +1,4 @@
 <template>
-   <!-- {{ currentTime }} {{ userSlots }} {{ testRelationList }} -->
-   {{ filteredTestList.map(test => test.uid) }}
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -120,24 +118,24 @@ const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
 
+
 const currentTime = ref((new Date()).toISOString())
 useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { immediate: true }) // useIntervalFn automatically takes care of cleaning on dispose
 
 const userSlots = useObservable(userSlots$(props.signedinUid))
 
-const testList = useObservable(userSHDLTests$(props.signedinUid))
+const userTestList = useObservable(userSHDLTests$(props.signedinUid))
 const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.signedinUid))
 
-// allows to get the available tests without running a new 'where' clause everytime 'currentTime' changes
+// every time 'currentTime' changes, this computed is re-evaluated, without running a new 'where' clause
 const filteredTestList = computed(() => {
-   if (!currentTime.value) return []
-   if (!userSlots.value) return []
-   if (!testList.value) return []
+   if (!currentTime.value || !userSlots.value || !userTestList.value) return []
+   // filter user slots compatible with 'currentTime'
    const slotUIDs = userSlots.value.filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value).map(slot => slot.uid)
+   // get associated tests using already loaded user test relation list and test list
    const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.shdl_test_uid)
-   return testUIDs.map(testUID => testList.value.find(test => test.uid === testUID))
+   return testUIDs.map(testUID => userTestList.value.find(test => test.uid === testUID))
 })
-
 const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
 
