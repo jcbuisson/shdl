@@ -138,8 +138,7 @@ const filteredTestList = computed(() => {
    return testUIDs.map(testUID => testList.value.find(test => test.uid === testUID))
 })
 
-const sortedTestList = computed(() => filteredTestList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
-// const sortedTestList = computed(() => testList.value)
+const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
 
 const selectedTest = ref()
