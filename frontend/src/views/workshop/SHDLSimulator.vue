@@ -7,7 +7,7 @@
          <v-select
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
-            :items="sortedTestList"
+            :items="editable ? sortedTestList : userTestList"
             item-title="name"
             :item-value="test => test"
             label="Choisir un test"
@@ -112,6 +112,7 @@ import { useObservable } from '@vueuse/rxjs'
 const props = defineProps({
    user_uid: String,
    document_uid: String,
+   editable: Boolean,
 })
 
 const module = ref()
