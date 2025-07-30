@@ -1,6 +1,6 @@
 <template>
-   <div>currentUserSlots: {{ currentUserSlots }}</div>
-   <div>periodicUserSlots: {{ periodicUserSlots }}</div>
+   <!-- {{ currentTime }} {{ userSlots }} {{ testRelationList }} -->
+   {{ filteredTestList.map(test => test.uid) }}
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -92,6 +92,7 @@
 import { watch, onUnmounted, computed, ref } from 'vue'
 import { interval, of, from, map, timer } from 'rxjs'
 import { withLatestFrom, startWith, switchMap } from 'rxjs/operators'
+import { useIntervalFn } from '@vueuse/core'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
@@ -100,7 +101,7 @@ import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 
-import { guardCombineLatest, userSHDLTests$ } from '/src/lib/businessObservables'
+import { guardCombineLatest, userSlots$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } from '/src/lib/businessObservables'
 
 const { module$ } = useSHDLModule()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
@@ -119,53 +120,27 @@ const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
 
-// const testList = useObservable(tests$())
+const currentTime = ref((new Date()).toISOString())
+useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { immediate: true }) // useIntervalFn automatically takes care of cleaning on dispose
+
+const userSlots = useObservable(userSlots$(props.signedinUid))
+
 const testList = useObservable(userSHDLTests$(props.signedinUid))
+const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.signedinUid))
 
-const sortedTestList = computed(() => testList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+// allows to get the available tests without running a new 'where' clause everytime 'currentTime' changes
+const filteredTestList = computed(() => {
+   if (!currentTime.value) return []
+   if (!userSlots.value) return []
+   if (!testList.value) return []
+   const slotUIDs = userSlots.value.filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value).map(slot => slot.uid)
+   const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.shdl_test_uid)
+   return testUIDs.map(testUID => testList.value.find(test => test.uid === testUID))
+})
 
-// DON'T DO THIS BECAUSE IT CREATES LOTS OF 'WHERE' CLAUSES
-// const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
-//    switchMap(relations => {
-//       const currentTime = (new Date()).toISOString()
-//       return guardCombineLatest(relations.map(relation => groupSlots$({
-//          group_uid: relation.group_uid,
-//          start: {
-//             lte: currentTime
-//          },
-//          end: {
-//             gte: currentTime
-//          },
-//       })))
-//    }),
-//    map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
-// )
-// const periodicUserSlots$ = timer(0, 3000).pipe(
-//    switchMap(() => currentUserSlots$)
-// )
-// const periodicUserSlots = useObservable(periodicUserSlots$)
+const sortedTestList = computed(() => filteredTestList.value ? testList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+// const sortedTestList = computed(() => testList.value)
 
-const currentUserSlots$ = userGroupRelations$({ user_uid: props.signedinUid }).pipe(
-   switchMap(relations => {
-      return guardCombineLatest(relations.map(relation => groupSlots$({
-         group_uid: relation.group_uid,
-      })))
-   }),
-   map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
-)
-
-const currentUserSlots = useObservable(currentUserSlots$)
-const periodicUserSlots = ref([])
-
-const intervalId = setInterval(updateCurrentSlots, 3000)
-updateCurrentSlots() // immediate execution
-
-function updateCurrentSlots() {
-   console.log('interval!')
-   if (!currentUserSlots.value) return
-   const currentTime = (new Date()).toISOString()
-   periodicUserSlots.value = currentUserSlots.value.filter(slot => slot.start <= currentTime && slot.end >= currentTime)
-}
 
 const selectedTest = ref()
 

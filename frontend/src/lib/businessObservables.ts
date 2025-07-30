@@ -72,15 +72,24 @@ export function userSHDLTests$(user_uid: string) {
    return userSlots$(user_uid).pipe(
       switchMap(slotList =>
          guardCombineLatest(
-            slotList.map(slot =>
-               groupSlotSHDLTestRelation$({ group_slot_uid: slot.uid })
-            )
+            slotList.map(slot => groupSlotSHDLTestRelation$({ group_slot_uid: slot.uid }))
          )
       ),
       map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []).map(relation => relation.shdl_test_uid))]),
       switchMap(testUidList =>
          guardCombineLatest(testUidList.map(uid => shdlTests$({ uid }).pipe(map(tests => tests[0]))))
       ),
+   )
+}
+
+export function userGroupSlotSHDLTestRelation$(user_uid: string) {
+   return userSlots$(user_uid).pipe(
+      switchMap(slotList =>
+         guardCombineLatest(
+            slotList.map(slot => groupSlotSHDLTestRelation$({ group_slot_uid: slot.uid }))
+         )
+      ),
+      map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []))]),
    )
 }
 
