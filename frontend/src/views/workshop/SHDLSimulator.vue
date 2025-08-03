@@ -110,6 +110,7 @@ import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.
 import { useObservable } from '@vueuse/rxjs'
 
 const props = defineProps({
+   signedinUid: String,
    user_uid: String,
    document_uid: String,
    editable: Boolean,
@@ -124,6 +125,7 @@ useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { imm
 
 const userSlots = useObservable(userSlots$(props.user_uid))
 
+const testList = useObservable(tests$())
 const userTestList = useObservable(userSHDLTests$(props.user_uid))
 const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
 

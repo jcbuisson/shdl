@@ -18,7 +18,7 @@
                   <v-list-item-subtitle>{{ groupAndUsers?.users.length }} membre{{ groupAndUsers?.users.length > 1 ? 's' : '' }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(group)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(groupAndUsers.group)"></v-btn>
                   </template>
                </v-list-item>
             </div>

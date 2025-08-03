@@ -97,6 +97,7 @@ const routes = [
                      {
                         path: '',
                         props: route => ({
+                           signedinUid: route.params.signedinUid,
                            user_uid: route.params.signedinUid,
                            document_uid: route.params.document_uid,
                            editable: true,
@@ -150,6 +151,7 @@ const routes = [
                                  {
                                     path: '',
                                     props: route => ({
+                                       signedinUid: route.params.signedinUid,
                                        user_uid: route.params.user_uid,
                                        document_uid: route.params.document_uid,
                                        editable: false,
