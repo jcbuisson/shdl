@@ -7,7 +7,7 @@
          <v-select
             v-model="selectedTest"
             @update:modelValue="() => selectedTest && initTest()"
-            :items="editable ? sortedTestList : userTestList"
+            :items="isTeacher ? testList : sortedTestList"
             item-title="name"
             :item-value="test => test"
             label="Choisir un test"
@@ -88,22 +88,16 @@
 
 <script setup>
 import { watch, onUnmounted, computed, ref } from 'vue'
-import { interval, of, from, map, timer } from 'rxjs'
-import { withLatestFrom, startWith, switchMap } from 'rxjs/operators'
 import { useIntervalFn } from '@vueuse/core'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useGroupSlot } from '/src/use/useGroupSlot'
 
-import { guardCombineLatest, userSlots$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } from '/src/lib/businessObservables'
+import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } from '/src/lib/businessObservables'
 
 const { module$ } = useSHDLModule()
-const { getObservable: userGroupRelations$ } = useUserGroupRelation()
-const { getObservable: groupSlots$ } = useGroupSlot()
 const { getObservable: tests$ } = useSHDLTest()
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
@@ -124,6 +118,7 @@ const currentTime = ref((new Date()).toISOString())
 useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { immediate: true }) // useIntervalFn automatically takes care of cleaning on dispose
 
 const userSlots = useObservable(userSlots$(props.user_uid))
+const isTeacher = useObservable(isTeacher$(props.signedinUid))
 
 const testList = useObservable(tests$())
 const userTestList = useObservable(userSHDLTests$(props.user_uid))

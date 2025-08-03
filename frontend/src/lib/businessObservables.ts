@@ -2,6 +2,7 @@ import { Observable, from, map, of, merge, combineLatest, throwError } from 'rxj
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 
 // import { useUser } from '/src/use/useUser'
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroup } from '/src/use/useGroup'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
@@ -16,6 +17,7 @@ import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
 import { SHDLError } from '/src/lib/shdl/SHDLError.ts'
 
 // const { getObservable: users$ } = useUser()
+const { getObservable: userTabRelations$ } = useUserTabRelation()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
 const { getObservable: groups$ } = useGroup()
 const { getObservable: userSlotExcuses$ } = useUserSlotExcuse()
@@ -42,6 +44,12 @@ export function userGroups$(user_uid: string) {
       switchMap(relations =>
          guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
       ),
+   )
+}
+
+export function isTeacher$(user_uid: string) {
+   return userTabRelations$({ user_uid }).pipe(
+      map(relations => relations.some(relation => relation.tab === 'followup'))
    )
 }
 
