@@ -102,8 +102,7 @@
 import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
-import { firstValueFrom, map } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { map } from 'rxjs'
 
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
@@ -114,7 +113,6 @@ import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { tabs } from '/src/use/useTabs'
 
-import 'jcb-upload'
 import { app } from '/src/client-app.js'
 
 const { getObservable: users$, update: updateUser } = useUser()
@@ -162,7 +160,6 @@ watch(() => props.user_uid, async (user_uid) => {
 
    if (userTabRelationSubscription) userTabRelationSubscription.unsubscribe()
    userTabRelationSubscription = userTabRelation$({ user_uid }).pipe(
-      tap(relations => console.log('userTabRelation', user_uid, relations)),
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
    ).subscribe(tabList => {
       userTabs.value = tabList

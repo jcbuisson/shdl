@@ -89,7 +89,6 @@ import { tabs } from '/src/use/useTabs'
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
-import 'jcb-upload'
 
 const { getObservable: users$, create: createUser } = useUser()
 const { getObservable: groups$ } = useGroup()

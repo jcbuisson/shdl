@@ -43,13 +43,9 @@ const { addOrUpdateModule } = useSHDLModule()
 
 
 const props = defineProps({
-   document_uid: {
-      type: String,
-   },
-   editable: {
-      type: Boolean,
-      default: true
-   },
+   signedinUid: String,
+   user_uid: String,
+   document_uid: String,
 })
 
 const currentEditorView = shallowRef()
@@ -88,10 +84,11 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       // restore state
       currentEditorView.value.setState(doc.state)
    } else {
-      console.log('create new doc')
+      const editable = props.signedinUid === props.user_uid
+      console.log('editable', editable)
       const newDoc = {
          content: '',
-         extensions: [myLang, EditorView.editable.of(props.editable)],
+         extensions: [myLang, EditorView.editable.of(editable)],
       }
       uid2docDict[uid] = newDoc
       selectedCodeMirrorDoc.value = newDoc

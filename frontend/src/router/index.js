@@ -100,7 +100,6 @@ const routes = [
                            signedinUid: route.params.signedinUid,
                            user_uid: route.params.signedinUid,
                            document_uid: route.params.document_uid,
-                           editable: true,
                         }),
                         components: {
                            editor: () => import('/src/components/EditSHDLDocument.vue'),
@@ -154,7 +153,6 @@ const routes = [
                                        signedinUid: route.params.signedinUid,
                                        user_uid: route.params.user_uid,
                                        document_uid: route.params.document_uid,
-                                       editable: false,
                                     }),
                                     components: {
                                        editor: () => import('/src/components/EditSHDLDocument.vue'),

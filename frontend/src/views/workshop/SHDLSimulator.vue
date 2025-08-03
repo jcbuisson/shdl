@@ -107,7 +107,6 @@ const props = defineProps({
    signedinUid: String,
    user_uid: String,
    document_uid: String,
-   editable: Boolean,
 })
 
 const module = ref()
@@ -146,7 +145,7 @@ watch(() => props.document_uid, async (document_uid) => {
       next: module_ => {
          console.log('next simu', module_)
          selectedTest.value = null
-         if (module_.structure) {
+         if (module_?.structure) {
             module.value = module_
             previousValues.value = module_.equipotentials.map(_ => false)
             currentValues.value = module_.equipotentials.map(_ => false)

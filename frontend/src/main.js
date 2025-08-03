@@ -11,6 +11,8 @@ import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 import 'typeface-roboto/index.css'
 
+import 'jcb-upload'
+
 const vuetify = createVuetify({
    components,
    directives,
