@@ -1,4 +1,5 @@
 <template>
+   {{ userTestEvents }}
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -94,14 +95,17 @@ import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilitie
 import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
 
-import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } from '/src/lib/businessObservables'
+import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
 
 const { module$ } = useSHDLModule()
 const { getObservable: tests$ } = useSHDLTest()
+const { create: createUserTestEvent } = useUserSHDLTestEvent()
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
 import { useObservable } from '@vueuse/rxjs'
+
 
 const props = defineProps({
    signedinUid: String,
@@ -136,6 +140,8 @@ const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.
 
 
 const selectedTest = ref()
+
+const userTestEvents = useObservable(userSHDLTestsEvents$(props.user_uid))
 
 let subscription
 
@@ -623,10 +629,9 @@ const testCurrentLine = computed(() => {
    return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${currentStatement}`
 })
 
-function runTest() {
-   console.log("runTest")
+async function runTest() {
    while (testStatusCode.value < 2) {
-      stepTest()
+      await stepTest()
    }
 }
 
@@ -636,7 +641,7 @@ function initTest() {
    testCurrentLineNo.value = 0
 }
 
-function stepTest() {
+async function stepTest() {
    if (testStatusCode.value >= 2) return // should not happen
 
    // execute current line
@@ -651,6 +656,13 @@ function stepTest() {
    if (error) {
       testStatusCode.value = 3
       testStatusText.value = error
+      // store failed test event
+      await createUserTestEvent({
+         user_uid: props.user_uid,
+         shdl_test_uid: selectedTest.value.uid,
+         date: new Date(),
+         success: false,
+      })
    } else {
       // next line or end with success
       if (testCurrentLineNo.value < testStatementList.value.length - 1) {
@@ -658,6 +670,16 @@ function stepTest() {
       } else {
          testStatusCode.value = 2
          testStatusText.value = "SUCCÈS !"
+         // store success test event (if there not previous one)
+         const previousSuccessfullTest = userTestEvents.value.find(testEvent => testEvent.shdl_test_uid === selectedTest.value.uid && testEvent.success)
+         if (!previousSuccessfullTest) {
+            await createUserTestEvent({
+               user_uid: props.user_uid,
+               shdl_test_uid: selectedTest.value.uid,
+               date: new Date(),
+               success: true,
+            })
+         }
       }
    }
 }

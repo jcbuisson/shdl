@@ -110,6 +110,7 @@ export function userSHDLTestsEvents$(user_uid: string) {
             )
          )
       ),
+      map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []))]),
    )
 }
 
