@@ -142,7 +142,7 @@ const onChangeDebounced = useDebounceFn(onChange, 500)
 function handleSHDLDocumentChange(doc) {
    if (subscription2) subscription2.unsubscribe()
    // observe SHDL module and its submodules recursively from `doc` root and return an unordered list of module structures
-   subscription2 = shdlDocumentParsing$(doc.name).subscribe({
+   subscription2 = shdlDocumentParsing$(props.user_uid, doc.name).subscribe({
       next: syntaxStructureList => {
          console.log('next edit', syntaxStructureList)
          // transform the list of syntaxic structures into a map of modules

@@ -657,12 +657,14 @@ async function stepTest() {
       testStatusCode.value = 3
       testStatusText.value = error
       // store failed test event
-      await createUserTestEvent({
-         user_uid: props.user_uid,
-         shdl_test_uid: selectedTest.value.uid,
-         date: new Date(),
-         success: false,
-      })
+      if (!isTeacher.value) {
+         await createUserTestEvent({
+            user_uid: props.user_uid,
+            shdl_test_uid: selectedTest.value.uid,
+            date: new Date(),
+            success: false,
+         })
+      }
    } else {
       // next line or end with success
       if (testCurrentLineNo.value < testStatementList.value.length - 1) {
@@ -671,14 +673,16 @@ async function stepTest() {
          testStatusCode.value = 2
          testStatusText.value = "SUCCÈS !"
          // store success test event (if there not previous one)
-         const previousSuccessfullTest = userTestEvents.value.find(testEvent => testEvent.shdl_test_uid === selectedTest.value.uid && testEvent.success)
-         if (!previousSuccessfullTest) {
-            await createUserTestEvent({
-               user_uid: props.user_uid,
-               shdl_test_uid: selectedTest.value.uid,
-               date: new Date(),
-               success: true,
-            })
+         if (!isTeacher.value) {
+            const previousSuccessfullTest = userTestEvents.value.find(testEvent => testEvent.shdl_test_uid === selectedTest.value.uid && testEvent.success)
+            if (!previousSuccessfullTest) {
+               await createUserTestEvent({
+                  user_uid: props.user_uid,
+                  shdl_test_uid: selectedTest.value.uid,
+                  date: new Date(),
+                  success: true,
+               })
+            }
          }
       }
    }

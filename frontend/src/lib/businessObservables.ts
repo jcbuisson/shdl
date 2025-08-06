@@ -148,8 +148,8 @@ export function userGrade$(user_uid: string) {
 
 // Perform the syntactic parsing of an SHDL module `name` and all its submodules
 // Emit a list of their structures, the first element being the structure of the root module
-export function shdlDocumentParsing$(name, checked=[]) {
-   return userDocument$({ name }).pipe(
+export function shdlDocumentParsing$(user_uid, name, checked=[]) {
+   return userDocument$({ user_uid, name }).pipe(
       // parse root document
       map(documents => {
          const document = documents[0]
@@ -178,7 +178,7 @@ export function shdlDocumentParsing$(name, checked=[]) {
                throw new SHDLError(`circularity issue with module '${submoduleName}'`, document.uid, submoduleName, null)
             }
             try {
-               observableList.push(shdlDocumentParsing$(submoduleName, checked))
+               observableList.push(shdlDocumentParsing$(user_uid, submoduleName, checked))
                checked.push(submoduleName)
             } catch(err) {
                throw new SHDLError(err.message, document.uid, submoduleName, err.location)

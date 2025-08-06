@@ -5,7 +5,7 @@ import { liveQuery } from "dexie"
 
 export function useSHDLModule() {
 
-   const db = new Dexie("SHDLModules")
+   const db = new Dexie(import.meta.env.VITE_APP_SHDL_MODULE_IDB)
 
    db.version(1).stores({
       modules: "document_uid, name, is_valid",
