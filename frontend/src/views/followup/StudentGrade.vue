@@ -6,10 +6,29 @@
       </template>
 
       <!-- test results -->
-      <div>Tests : {{ tests.map(test => test.name) }}</div>
+      <!-- <div>Tests : {{ tests.map(test => test.name) }}</div> -->
+       <h3>Tests</h3>
+      <v-table density="compact">
+         <thead>
+            <tr>
+               <th class="text-left">Nom</th>
+               <th class="text-left">Réussite</th>
+               <th class="text-left">Date réussite</th>
+               <th class="text-left">Autonomie</th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr v-for="test in tests" :key="test.uid">
+               <td>{{ test.name }}</td>
+               <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
+               <!-- <td>{{ format(testEvent(test.uid)?.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td> -->
+               <td>{{ testEventDate(test.uid) }}</td>
+            </tr>
+         </tbody>
+      </v-table>
 
       <!-- test events -->
-      <div>Test events : {{ testEvents }}</div>
+      <!-- <div>Test events : {{ testEvents }}</div> -->
 
       <!-- final grade -->
       <div>Note finale : {{ grade }}</div>
@@ -18,6 +37,8 @@
 
 <script setup lang="ts">
 import { ref, onUnmounted, computed, watch } from 'vue'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
 
@@ -64,5 +85,14 @@ onUnmounted(() => {
    for (const subscription of subscriptions) {
       subscription.unsubscribe()
    }
+})
+
+const isTestSuccessful = computed(() => (shdl_test_uid) => {
+   return testEvents.value.some(testEvent => testEvent.success && testEvent.shdl_test_uid === shdl_test_uid)
+})
+
+const testEventDate = computed(() => (shdl_test_uid) => {
+   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
+   return testEvent ? format(testEvent.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : ''
 })
 </script>
