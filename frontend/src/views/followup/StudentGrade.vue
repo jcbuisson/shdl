@@ -4,10 +4,11 @@
       <template v-for="group in userGroups" :key="group.uid">
          <StudentGroupAttendance :user_uid="user_uid" :group="group"/>
       </template>
+      <h4>Note présence : {{ attendanceGrade ? attendanceGrade + ' / 20' : '' }}</h4>
 
       <!-- test results -->
       <!-- <div>Tests : {{ tests.map(test => test.name) }}</div> -->
-       <h3>Tests</h3>
+      <h3 class="my-2">Tests</h3>
       <v-table density="compact">
          <thead>
             <tr>
@@ -36,9 +37,7 @@
             </tr>
          </tbody>
       </v-table>
-
-      <!-- test events -->
-      <!-- <div>Test events : {{ testEvents }}</div> -->
+      <!-- <h4>Note tests : {{ userTestGrade ? userTestGrade + ' / 20' : '' }}</h4> -->
 
       <!-- final grade -->
       <div>Note finale : {{ grade }}</div>
@@ -51,7 +50,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
-import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
+import { userGroups$, userSHDLTests$, userSHDLTestsEvents$, userAttendanceGrade$, /*userTestGrade$,*/ userGrade$ } from '/src/lib/businessObservables'
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
 const { update: updateUserTestEvent } = useUserSHDLTestEvent()
@@ -63,6 +62,8 @@ const props = defineProps({
 })
 
 const userGroups = ref([])
+const attendanceGrade = ref(-1)
+// const testGrade = ref(-1)
 const grade = ref(-1)
 const tests = ref()
 const testEvents = ref()
@@ -76,6 +77,14 @@ watch(
       subscriptions.push(groups$.subscribe(list => {
          userGroups.value = list
       }))
+
+      subscriptions.push(userAttendanceGrade$(props.user_uid).subscribe(grade_ => {
+         attendanceGrade.value = grade_
+      }))
+
+      // subscriptions.push(userTestGrade$(props.user_uid).subscribe(grade_ => {
+      //    testGrade.value = grade_
+      // }))
 
       subscriptions.push(userGrade$(props.user_uid).subscribe(grade_ => {
          grade.value = grade_

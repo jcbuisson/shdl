@@ -114,9 +114,17 @@ export function userSHDLTestsEvents$(user_uid: string) {
    )
 }
 
-
 // emit value in 0..20 or -1
 export function userGrade$(user_uid: string) {
+   return userAttendanceGrade$(user_uid)
+}
+
+export function userTestGrade$(user_uid: string) {
+   return from(20)
+}
+
+// emit value in 0..20 or -1
+export function userAttendanceGrade$(user_uid: string) {
    return guardCombineLatest([
       userSlots$(user_uid),
       userEvents$(user_uid),
