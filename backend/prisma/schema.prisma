@@ -121,7 +121,7 @@ model user_shdltest_event {
    shdl_test_uid           String
    date                    DateTime
    success                 Boolean
-   autonomy                Float      @default(1)
+   autonomy                Int        @default(100)
 
    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    shdl_test shdl_test @relation(fields: [shdl_test_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)

@@ -14,15 +14,25 @@
                <th class="text-left">Nom</th>
                <th class="text-left">Réussite</th>
                <th class="text-left">Date réussite</th>
-               <th class="text-left">Autonomie</th>
+               <th class="text-left">Autonomie (%)</th>
             </tr>
          </thead>
          <tbody>
             <tr v-for="test in tests" :key="test.uid">
                <td>{{ test.name }}</td>
                <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
-               <!-- <td>{{ format(testEvent(test.uid)?.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td> -->
                <td>{{ testEventDate(test.uid) }}</td>
+               <td>
+                  <v-slider v-if="isTestSuccessful(test.uid)"
+                     show-ticks="always"
+                     :tticks="{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%'}"
+                     thumb-label
+                     step="25"
+                     tick-size="4"
+                     :model-value="testEventAutonomy(test.uid)"
+                     @end="value => onAutonomyChange(test.uid, value)"
+                  ></v-slider>
+               </td>
             </tr>
          </tbody>
       </v-table>
@@ -40,10 +50,11 @@ import { ref, onUnmounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
 import { userGroups$, userGrade$, userSHDLTests$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
-
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
+const { update: updateUserTestEvent } = useUserSHDLTestEvent()
 
 const props = defineProps({
    user_uid: {
@@ -88,11 +99,28 @@ onUnmounted(() => {
 })
 
 const isTestSuccessful = computed(() => (shdl_test_uid) => {
+   if (!testEvents.value) return false
    return testEvents.value.some(testEvent => testEvent.success && testEvent.shdl_test_uid === shdl_test_uid)
 })
 
 const testEventDate = computed(() => (shdl_test_uid) => {
+   if (!testEvents.value) return ''
    const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
    return testEvent ? format(testEvent.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : ''
 })
+
+const testEventAutonomy = computed(() => (shdl_test_uid) => {
+   if (!testEvents.value) return 0
+   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
+   return testEvent?.autonomy
+})
+
+async function onAutonomyChange(shdl_test_uid, value) {
+   console.log('shdl_test_uid, value', shdl_test_uid, value)
+   if (!testEvents.value) return
+   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
+   await updateUserTestEvent(testEvent.uid, {
+      autonomy: value
+   })
+}
 </script>
