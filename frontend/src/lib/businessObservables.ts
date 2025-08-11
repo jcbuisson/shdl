@@ -116,11 +116,31 @@ export function userSHDLTestsEvents$(user_uid: string) {
 
 // emit value in 0..20 or -1
 export function userGrade$(user_uid: string) {
-   return userAttendanceGrade$(user_uid)
+   // return userAttendanceGrade$(user_uid)
+   return guardCombineLatest([
+      userAttendanceGrade$(user_uid),
+      userTestGrade$(user_uid),
+   ]).pipe(
+      map(([attendanceGrade, testGrade]) => {
+         return Math.round((attendanceGrade + testGrade) / 2)
+      })
+   )
 }
 
 export function userTestGrade$(user_uid: string) {
-   return from(20)
+   return guardCombineLatest([
+      userSHDLTests$(user_uid),
+      userSHDLTestsEvents$(user_uid),
+   ]).pipe(
+      map(([tests, testEvents]) => {
+         let successCount = 0
+         for (const test of tests) {
+            const success = testEvents.some(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
+            if (success) successCount += 1
+         }
+         return Math.round(successCount * 20 / tests.length)
+      })
+   )
 }
 
 // emit value in 0..20 or -1
