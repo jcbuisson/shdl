@@ -1,4 +1,4 @@
-import { termArity, signalCompoundArity, sumOfTermsCompoundArity, argumentArity, parameterArity } from '/src/lib/shdl/shdlUtilities'
+import { termArity, signalCompoundArity, sumOfTermsCompoundArity, argumentArity, parameterArity, sumOfTermsArity } from '/src/lib/shdl/shdlUtilities'
 
 
 export function checkSyntax(moduleName, moduleMap) {
@@ -121,6 +121,72 @@ export function checkSyntax(moduleName, moduleMap) {
                   location: term.location
                }
             }
+         }
+      }
+   }
+
+   ////////////////////////////////               MEMORY POINT             ////////////////////////////////.
+
+   function checkMemoryPoint(memoryPoint) {
+      // check that vector indexes are in decreasing order in left part
+      let err = checkSignalCompoundIndexOrdering(memoryPoint.q)
+      if (err) return err
+      // check right-hand sum-of-terms compound: decreasing vector indexes, same arity for all terms in sum-of-terms
+      err = checkSumOfTermsCompound(memoryPoint.d)
+      if (err) return err
+      // check that arity is the same on both sides
+      let leftArity = signalCompoundArity(memoryPoint.q)
+      let rightArity = sumOfTermsCompoundArity(memoryPoint.d)
+      if (leftArity !== rightArity) {
+         return {
+            message: `left side of memory point assignment has an arity of ${leftArity} whereas right side has an arity of ${rightArity}`,
+            location: memoryPoint.q.location,
+         }
+      }
+      // check that arity of 'rst' is 1
+      let rstArity = sumOfTermsArity(memoryPoint.rst)
+      if (rstArity !== 1) {
+         return {
+            message: `the signal ${memoryPoint.rst.name} must be a scalar, whereas it has an arity of ${rstArity}`,
+            location: memoryPoint.rst.location,
+         }
+      }
+      // check that arity of 'clk' is 1
+      let clkArity = sumOfTermsArity(memoryPoint.clk)
+      if (clkArity !== 1) {
+         return {
+            message: `the clock signal ${memoryPoint.rst.name} must be a scalar, whereas it has an arity of ${clkArity}`,
+            location: memoryPoint.rst.location,
+         }
+      }
+      if (memoryPoint.en) {
+         // check that arity of 'en' is 1
+         let enArity = sumOfTermsArity(memoryPoint.en)
+         if (enArity !== 1) {
+            return {
+               message: `the clock signal ${memoryPoint.rst.name} must be a scalar, whereas it has an arity of ${clkArity}`,
+               location: memoryPoint.rst.location,
+            }
+         }
+      }
+   }
+
+   ////////////////////////////////               TRI-STATE ASSIGMENTS             ////////////////////////////////.
+
+   function checkTriState(assignment) {
+      // check that vector indexes are in decreasing order in left signal compound
+      let err = checkSignalCompoundIndexOrdering(assignment.leftCompound)
+      if (err) return err
+      // check right-hand sum-of-terms compound: decreasing vector indexes, same arity for all terms in sum-of-terms
+      err = checkSumOfTermsCompound(assignment.rightCompound)
+      if (err) return err
+      // check that arity is the same on both sides
+      let leftArity = signalCompoundArity(assignment.leftCompound)
+      let rightArity = sumOfTermsCompoundArity(assignment.rightCompound)
+      if (leftArity !== rightArity) {
+         return {
+            message: `left side of tri-state assignment has an arity of ${leftArity} whereas right side has an arity of ${rightArity}`,
+            location: assignment.leftCompound.location,
          }
       }
    }

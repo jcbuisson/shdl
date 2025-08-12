@@ -1,5 +1,5 @@
 <template>
-   {{ userTestEvents }}
+   <!-- {{ userTestEvents }} -->
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -36,13 +36,12 @@
       </div>
 
       <!-- Fills remaining vertical space -->
-      <div class="d-flex flex-column flex-grow-1 overflow-auto">
-
+      <div class="overflow-auto">
          <v-list density="compact">
             <template v-for="signalGroup in parameterGroups">
                <v-list-item>
                   <template v-slot:prepend>
-                     <v-icon :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
+                     <v-icon size="small" :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
                         {{ inputOutputIcon(signalGroup) }}
                      </v-icon>
                   </template>
@@ -52,7 +51,7 @@
                   <template v-slot:append>
                      <div>
                         <template v-for="index in signalGroup.equipotentialIndexes">
-                           <v-icon @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
+                           <v-icon size="small" @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
                         </template>
                      </div>
                   </template>
@@ -61,12 +60,12 @@
          </v-list>
 
          <template v-if="otherGroups.length > 0">
-            <v-divider/>
+            <v-divider :thickness="3"/>
             <v-list density="compact">
                <template v-for="signalGroup in otherGroups">
                   <v-list-item>
                   <template v-slot:prepend>
-                     <v-icon></v-icon>
+                     <v-icon size="small"></v-icon>
                   </template>
                      <v-list-item-title>
                         {{ signalGroup.name }}
@@ -74,7 +73,7 @@
                      <template v-slot:append>
                         <div>
                            <template v-for="index in signalGroup.equipotentialIndexes">
-                              <v-icon disabled>{{ checkIcon(index, false) }}</v-icon>
+                              <v-icon size="small" disabled>{{ checkIcon(index, false) }}</v-icon>
                            </template>
                         </div>
                      </template>

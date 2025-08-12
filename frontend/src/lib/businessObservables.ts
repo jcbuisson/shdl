@@ -133,12 +133,13 @@ export function userTestGrade$(user_uid: string) {
       userSHDLTestsEvents$(user_uid),
    ]).pipe(
       map(([tests, testEvents]) => {
-         let successCount = 0
+         let totalWeight = 0
+         let successWeight = 0
          for (const test of tests) {
-            const success = testEvents.some(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
-            if (success) successCount += 1
+            const testEvent = testEvents.find(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
+            if (testEvent) successWeight += test*weight * testEvent.autonomy / 100
          }
-         return Math.round(successCount * 20 / tests.length)
+         return Math.round(successWeight * 20 / totalWeight)
       })
    )
 }

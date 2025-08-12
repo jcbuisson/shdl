@@ -1,6 +1,8 @@
 <template>
-   {{ xxx }}
    <div class="pa-2">
+      <!-- final grade -->
+      <h2 v-if="grade">Note finale : {{ grade }}</h2>
+
       <!-- attendance -->
       <template v-for="group in userGroups" :key="group.uid">
          <StudentGroupAttendance :user_uid="user_uid" :group="group"/>
@@ -14,6 +16,7 @@
          <thead>
             <tr>
                <th class="text-left">Nom</th>
+               <th class="text-left">Coefficient</th>
                <th class="text-left">Réussite</th>
                <th class="text-left">Date réussite</th>
                <th class="text-left">Autonomie (%)</th>
@@ -22,6 +25,7 @@
          <tbody>
             <tr v-for="test in userTests" :key="test.uid">
                <td>{{ test.name }}</td>
+               <td>{{ test.weight }}</td>
                <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
                <td>{{ testEventDate(test.uid) }}</td>
                <td>
@@ -39,9 +43,6 @@
          </tbody>
       </v-table>
       <h4>Note tests : {{ testGrade ? testGrade + ' / 20' : '' }}</h4>
-
-      <!-- final grade -->
-      <h2 v-if="grade">Note finale : {{ grade }}</h2>
    </div>
 </template>
 
