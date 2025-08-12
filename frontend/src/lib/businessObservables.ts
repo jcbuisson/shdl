@@ -137,7 +137,7 @@ export function userTestGrade$(user_uid: string) {
          let successWeight = 0
          for (const test of tests) {
             const testEvent = testEvents.find(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
-            if (testEvent) successWeight += test*weight * testEvent.autonomy / 100
+            if (testEvent) successWeight += test.weight * testEvent.autonomy / 100
          }
          return Math.round(successWeight * 20 / totalWeight)
       })
