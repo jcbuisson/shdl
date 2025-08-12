@@ -103,6 +103,7 @@ import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
+import { v7 as uuidv7 } from 'uuid'
 
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
@@ -232,7 +233,8 @@ let avatarPath
 async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
-   avatarPath = `avatar-${props.user_uid}.${extension}`
+   const uid = uuidv7()
+   avatarPath = `avatar-${uid}.${extension}`
 }
 
 async function onUploadChunk(ev) {
@@ -254,8 +256,13 @@ async function onUploadChunk(ev) {
 }
 
 async function onUploadEnd(ev) {
+   // store path in user record
    await updateUser(props.user_uid, { pict: `/static/upload/avatars/${avatarPath}` })
    displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   // remove previous file
+   if (user.value.pict) {
+      await app.service('file-upload').deleteFile('UPLOAD_AVATARS_PATH', user.value.pict)
+   }
 }
 
 //////////////////////        AVATAR DISPLAY        //////////////////////

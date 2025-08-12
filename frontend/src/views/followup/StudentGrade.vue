@@ -2,12 +2,14 @@
    <div class="pa-2">
       <!-- final grade -->
       <h2 v-if="grade">Note finale : {{ grade }}</h2>
+      <v-divider :thickness="3"/>
 
       <!-- attendance -->
       <template v-for="group in userGroups" :key="group.uid">
          <StudentGroupAttendance :user_uid="user_uid" :group="group"/>
       </template>
-      <h4>Note présence : {{ attendanceGrade ? attendanceGrade + ' / 20' : '' }}</h4>
+      <h4>Note présence : {{ attendanceGrade + ' / 20' }}</h4>
+      <v-divider :thickness="3"/>
 
       <!-- test results -->
       <!-- <div>Tests : {{ userTests.map(test => test.name) }}</div> -->
@@ -42,7 +44,8 @@
             </tr>
          </tbody>
       </v-table>
-      <h4>Note tests : {{ testGrade ? testGrade + ' / 20' : '' }}</h4>
+      <h4>Note tests : {{ testGrade + ' / 20' }}</h4>
+      <v-divider :thickness="3"/>
    </div>
 </template>
 
