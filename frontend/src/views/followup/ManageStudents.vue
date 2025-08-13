@@ -29,7 +29,7 @@
                <v-list-item three-line v-for="(ugg, index) in filteredUserAndGroupAndGradeList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(ugg.user)">
-                        <v-img :src="ugg?.user.pict"></v-img>
+                        <v-img :src="userPictPath(ugg.user)"></v-img>
                      </v-avatar>
                   </template>
                   <v-list-item-title>{{ ugg?.user.lastname }}</v-list-item-title>
@@ -60,7 +60,7 @@
 
    <v-dialog v-model="avatarDialog" width="auto">
       <v-img :width="800" aspect-ratio="16/9" cover 
-         :src="selectedUser?.pict"
+         :src="userPictPath(selectedUser)"
       ></v-img>
    </v-dialog>
 </template>
@@ -84,7 +84,7 @@ import { setStudentManagerSplitWidth, studentManagerSplitWidth } from "/src/use/
 import router from '/src/router'
 
 import { userGrade$ } from '/src/lib/businessObservables'
-import { guardCombineLatest } from '/src/lib/businessObservables'
+import { guardCombineLatest, students$ } from '/src/lib/businessObservables'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
@@ -109,7 +109,7 @@ function onGroupChange(uid) {
    groupFilter.value = uid
 }
 
-const userAndGroups$ = users$({}).pipe(
+const userAndGroups$ = students$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -198,4 +198,10 @@ const avatarDialog = ref(false)
 function onAvatarClick() {
    avatarDialog.value = true
 }
+
+const userPictPath = computed(() => (user) => {
+   if (user?.pict) {
+      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
+   }
+})
 </script>
