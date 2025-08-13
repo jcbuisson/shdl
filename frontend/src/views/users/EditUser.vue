@@ -18,7 +18,7 @@
                <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
                      <v-avatar size="80" @click="onAvatarClick(user)">
-                        <v-img :src="user?.pict"></v-img>
+                        <v-img :src="userPictPath"></v-img>
                      </v-avatar>
                      <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-start="onUploadStart" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
                         Cliquez ici ou glissez-déposez une photo
@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, computed } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
@@ -256,13 +256,13 @@ async function onUploadChunk(ev) {
 }
 
 async function onUploadEnd(ev) {
-   // store path in user record
-   await updateUser(props.user_uid, { pict: `/static/upload/avatars/${avatarPath}` })
-   displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    // remove previous file
    if (user.value.pict) {
       await app.service('file-upload').deleteFile('UPLOAD_AVATARS_PATH', user.value.pict)
    }
+   // store path in user record
+   await updateUser(props.user_uid, { pict: avatarPath })
+   displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
 }
 
 //////////////////////        AVATAR DISPLAY        //////////////////////
@@ -273,6 +273,14 @@ function onAvatarClick() {
    avatarDialog.value = true
 }
 
+const userPictPath = computed(() => {
+   if (user?.value?.pict) {
+      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.value.pict
+   }
+})
+
+
+//////////////////////        FORGOTTEN PASSWORD        //////////////////////
 
 async function validateEmail() {
    try {
