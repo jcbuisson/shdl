@@ -1,5 +1,5 @@
 <template>
-   <!-- {{ userManagerSplitWidth }} -->
+   {{ studentList }}
    <SplitPanel :leftWidth="userManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -27,22 +27,22 @@
 
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(userAndGroups, index) in filteredUserAndGroupList" :key="index" :value="userAndGroups?.user" @click="selectUser(userAndGroups.user)" :active="selectedUser?.uid === userAndGroups?.user.uid">
+               <v-list-item three-line v-for="(studentAndGroups, index) in filteredUserAndGroupList" :key="index" :value="studentAndGroups?.user" @click="selectUser(studentAndGroups.user)" :active="selectedUser?.uid === studentAndGroups?.user.uid">
                   <template v-slot:prepend>
-                     <v-avatar @click="onAvatarClick(userAndGroups.user)">
-                        <v-img :src="userAndGroups?.user.pict"></v-img>
+                     <v-avatar @click="onAvatarClick(studentAndGroups.user)">
+                        <v-img :src="userPictPath(studentAndGroups.user)"></v-img>
                      </v-avatar>
                   </template>
-                  <v-list-item-title>{{ userAndGroups?.user.lastname }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ userAndGroups?.user.firstname }}</v-list-item-subtitle>
+                  <v-list-item-title>{{ studentAndGroups?.user.lastname }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ studentAndGroups?.user.firstname }}</v-list-item-subtitle>
                   <v-list-item-subtitle>
-                     <template v-for="group in userAndGroups.groups">
+                     <template v-for="group in studentAndGroups.groups">
                         <v-chip size="x-small">{{ group?.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(userAndGroups.user)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteUser(studentAndGroups.user)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -57,7 +57,7 @@
 
    <v-dialog v-model="avatarDialog" width="auto">
       <v-img :width="800" aspect-ratio="16/9" cover 
-         :src="selectedUser?.pict"
+         :src="userPictPath(selectedUser)"
       ></v-img>
    </v-dialog>
 </template>
@@ -79,7 +79,7 @@ import { displaySnackbar } from '/src/use/useSnackbar'
 import { extendExpiration } from "/src/use/useAuthentication"
 import { setUserManagerSplitWidth, userManagerSplitWidth } from "/src/use/useAppState"
 
-import { guardCombineLatest } from '/src/lib/businessObservables'
+import { guardCombineLatest, students$ } from '/src/lib/businessObservables'
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -101,7 +101,9 @@ const userGroups = ref([])
 const nameFilter = ref('')
 const groupFilter = ref('')
 
-const userAndGroups$ = users$({}).pipe(
+const studentList = useObservable(students$())
+
+const studentAndGroups$ = students$({}).pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -115,16 +117,16 @@ const userAndGroups$ = users$({}).pipe(
       )
    ),
 )
-const userAndGroupsList = useObservable(userAndGroups$)
+const studentAndGroupsList = useObservable(studentAndGroups$)
 
 function onGroupChange(uid) {
    groupFilter.value = uid
 }
 
 const filteredUserAndGroupList = computed(() => {
-   if (!userAndGroupsList.value) return []
+   if (!studentAndGroupsList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
-   return userAndGroupsList.value.filter(ug => {
+   return studentAndGroupsList.value.filter(ug => {
       if (nameFilter_.length === 0) return true
       if (ug.user.firstname.toLowerCase().indexOf(nameFilter_) > -1) return true
       if (ug.user.lastname.toLowerCase().indexOf(nameFilter_) > -1) return true
@@ -154,13 +156,13 @@ async function addUser() {
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/users\/([a-z0-9]+)/
 
-watch(() => [route.path, userAndGroupsList.value], async () => {
-   if (!userAndGroupsList.value) return
+watch(() => [route.path, studentAndGroupsList.value], async () => {
+   if (!studentAndGroupsList.value) return
    selectedUser.value = null
    const match = route.path.match(routeRegex)
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]
-   const user = userAndGroupsList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
+   const user = studentAndGroupsList.value.map(studentAndGroups => studentAndGroups.user).find(user => user.uid === user_uid)
    selectUser(user)
 }, { immediate: true })
 
@@ -199,4 +201,10 @@ const avatarDialog = ref(false)
 function onAvatarClick() {
    avatarDialog.value = true
 }
+
+const userPictPath = computed(() => (user) => {
+   if (user?.pict) {
+      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
+   }
+})
 </script>

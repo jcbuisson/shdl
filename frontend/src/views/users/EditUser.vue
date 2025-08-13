@@ -18,7 +18,7 @@
                <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
                      <v-avatar size="80" @click="onAvatarClick(user)">
-                        <v-img :src="userPictPath"></v-img>
+                        <v-img :src="userPictPath(user)"></v-img>
                      </v-avatar>
                      <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-start="onUploadStart" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
                         Cliquez ici ou glissez-déposez une photo
@@ -93,7 +93,7 @@
    <!-- avatar modal display-->
    <v-dialog v-model="avatarDialog" width="auto">
       <v-img :width="800" aspect-ratio="16/9" cover 
-         :src="user?.pict"
+         :src="userPictPath(user)"
       ></v-img>
    </v-dialog>
 </template>
@@ -273,9 +273,9 @@ function onAvatarClick() {
    avatarDialog.value = true
 }
 
-const userPictPath = computed(() => {
-   if (user?.value?.pict) {
-      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.value.pict
+const userPictPath = computed(() => (user) => {
+   if (user?.pict) {
+      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
    }
 })
 

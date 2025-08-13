@@ -1,7 +1,7 @@
 import { Observable, from, map, of, merge, combineLatest, throwError } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
+import { mergeMap, switchMap, scan, tap, catchError, filter } from 'rxjs/operators'
 
-// import { useUser } from '/src/use/useUser'
+import { useUser } from '/src/use/useUser'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroup } from '/src/use/useGroup'
@@ -16,7 +16,7 @@ import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
 import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
 import { SHDLError } from '/src/lib/shdl/SHDLError.ts'
 
-// const { getObservable: users$ } = useUser()
+const { getObservable: users$ } = useUser()
 const { getObservable: userTabRelations$ } = useUserTabRelation()
 const { getObservable: userGroupRelations$ } = useUserGroupRelation()
 const { getObservable: groups$ } = useGroup()
@@ -52,6 +52,31 @@ export function isTeacher$(user_uid: string) {
       map(relations => relations.some(relation => relation.tab === 'followup'))
    )
 }
+
+export function teachers$() {
+   return userTabRelations$({ tab: 'followup' }).pipe(
+      map(relations => relations.map(relation => relation.user_uid)),
+      switchMap(userUidList =>
+         guardCombineLatest(userUidList.map(uid => users$({ uid })))
+      ),
+      map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+   )
+}
+
+export function students$() {
+   return users$({}).pipe(
+      switchMap(users =>
+         guardCombineLatest(users.map(user => userTabRelations$({ user_uid: user.uid })))
+      ),
+      map(listOfList => listOfList.filter(relations => !relations.some(relation => relation.tab === 'followup'))),
+      map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+      switchMap(relations =>
+         guardCombineLatest(relations.map(relation => users$({ uid: relation.user_uid })))
+      ),
+      map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+   )
+}
+
 
 export function userSlots$(user_uid: string) {
    return userGroupRelations$({ user_uid }).pipe(
