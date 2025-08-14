@@ -140,11 +140,10 @@ export function userSHDLTestsEvents$(user_uid: string) {
 }
 
 // emit value in 0..20 or -1
-export function userGrade$(user_uid: string) {
-   // return userAttendanceGrade$(user_uid)
+export function userGrade$(user_uid: string, now) {
    return guardCombineLatest([
-      userAttendanceGrade$(user_uid),
-      userTestGrade$(user_uid),
+      userAttendanceGrade$(user_uid, now),
+      userTestGrade$(user_uid, now),
    ]).pipe(
       map(([attendanceGrade, testGrade]) => {
          return Math.round((attendanceGrade + testGrade) / 2)
@@ -152,7 +151,7 @@ export function userGrade$(user_uid: string) {
    )
 }
 
-export function userTestGrade$(user_uid: string) {
+export function userTestGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userSHDLTests$(user_uid),
       userSHDLTestsEvents$(user_uid),
@@ -171,18 +170,17 @@ export function userTestGrade$(user_uid: string) {
 }
 
 // emit value in 0..20 or -1
-export function userAttendanceGrade$(user_uid: string) {
+export function userAttendanceGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userSlots$(user_uid),
       userEvents$(user_uid),
       userSlotExcuses$({ user_uid }),
    ]).pipe(
       map(([slots, events, excuses]) => {
-         const now = new Date()
          const excuseSlotUids = excuses.map(excuse => excuse.group_slot_uid)
          const pastUnexcusedSlots = slots.filter(slot => new Date(slot.start) <= now && !excuseSlotUids.includes(slot.uid))
          if (pastUnexcusedSlots.length === 0) {
-            return -1
+            return 20 // max grade by vacuity
          }
          const activeCount = pastUnexcusedSlots.reduce((accu, slot) => {
             const slotStart = new Date(slot.start)

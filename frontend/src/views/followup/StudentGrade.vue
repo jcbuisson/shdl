@@ -72,7 +72,6 @@ const testGrade = ref(-1)
 const grade = ref(-1)
 const userTests = ref()
 const testEvents = ref()
-const xxx = ref()
 
 const subscriptions = []
 
@@ -85,15 +84,17 @@ watch(
          userGroups.value = list
       }))
 
-      subscriptions.push(userAttendanceGrade$(props.user_uid).subscribe(grade_ => {
+      const now = new Date()
+
+      subscriptions.push(userAttendanceGrade$(props.user_uid, now).subscribe(grade_ => {
          attendanceGrade.value = grade_
       }))
 
-      subscriptions.push(userTestGrade$(props.user_uid).subscribe(grade_ => {
+      subscriptions.push(userTestGrade$(props.user_uid, now).subscribe(grade_ => {
          testGrade.value = grade_
       }))
 
-      subscriptions.push(userGrade$(props.user_uid).subscribe(grade_ => {
+      subscriptions.push(userGrade$(props.user_uid, now).subscribe(grade_ => {
          grade.value = grade_
       }))
 
@@ -104,12 +105,6 @@ watch(
       subscriptions.push(userSHDLTestsEvents$(props.user_uid).subscribe(testEvents_ => {
          testEvents.value = testEvents_
       }))
-
-      subscriptions.push(userTestGrade$(props.user_uid).subscribe(x => {
-         xxx.value = x
-      }))
-
-      
    },
    { immediate: true } // so that it's called on component mount
 )

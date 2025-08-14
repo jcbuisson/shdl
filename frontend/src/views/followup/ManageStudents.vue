@@ -109,7 +109,7 @@ function onGroupChange(uid) {
    groupFilter.value = uid
 }
 
-const userAndGroups$ = students$({}).pipe(
+const userAndGroups$ = students$().pipe(
    switchMap(users => 
       guardCombineLatest(
          users.map(user =>
@@ -124,10 +124,12 @@ const userAndGroups$ = students$({}).pipe(
    ),
 )
 
-const grade$ = users$({}).pipe(
+const now = new Date()
+
+const grade$ = students$().pipe(
    switchMap(users => 
       guardCombineLatest(
-         users.map(user => userGrade$(user.uid)
+         users.map(user => userGrade$(user.uid, now)
       )
    ),
 ))
