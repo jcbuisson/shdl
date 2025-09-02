@@ -1,5 +1,7 @@
 <template>
-   <div ref="chartContainer"></div>
+   <div ref="chartContainer">
+   </div>
+      <div ref="tooltip" class="tooltip"></div>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +53,7 @@ const props = defineProps({
 })
 
 const chartContainer = ref(null)
+const tooltip = ref(null)
 const margin = { top: 20, right: 20, bottom: 50, left: 40 }
 
 let svg, xScale, yScale, xAxis, yAxis, slotsGroup, eventsGroup
@@ -233,8 +236,8 @@ function drawBars(xScale, events) {
       .attr('width', d => Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start))))
       .attr('height', d => yScale(0) - yScale(d.value))
       .attr('fill', d => d.color)
-      // .on('mouseover', (event, d) => showTooltip(event, d))
-      // .on('mousemove', (event, d) => showTooltip(event, d))
+      .on('mouseover', (event, d) => showTooltip(event, d))
+      .on('mousemove', (event, d) => showTooltip(event, d))
       // .on('mouseout', hideTooltip)
       // .on('click', (event, d) => displayData(d))
   
@@ -257,8 +260,8 @@ function drawSlots(xScale, slots, zoomScale) {
       .attr('width', d => Math.max(1, xScale(new Date(d.end)) - xScale(new Date(d.start))))
       .attr('height', d => yScale(0) - yScale(d.value))
       .attr('fill', d => d.color)
-      // .on('mouseover', (event, d) => showTooltip(event, d))
-      // .on('mousemove', (event, d) => showTooltip(event, d))
+      .on('mouseover', (event, d) => showTooltip(event, d))
+      .on('mousemove', (event, d) => showTooltip(event, d))
       // .on('mouseout', hideTooltip)
       // .on('click', (event, d) => displayData(d))
 
@@ -279,4 +282,24 @@ function drawSlots(xScale, slots, zoomScale) {
 
    slotLabels.exit().remove()
 }
+
+function showTooltip(event, d) {
+   tooltip.value.textContent = d.name
+   tooltip.value.style.left = `${event.clientX + 10}px`;
+   tooltip.value.style.top = `${event.clientY + 10}px`;
+   tooltip.value.style.display = 'block';
+}
 </script>
+
+<style scoped>
+.tooltip {
+   position: absolute;
+   top: 10px;
+   left: 10px;
+   background: rgba(0, 0, 0, 0.7);
+   color: white;
+   padding: 8px;
+   border-radius: 5px;
+   display: none;
+}
+</style>

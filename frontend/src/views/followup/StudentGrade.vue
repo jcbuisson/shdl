@@ -20,16 +20,18 @@
                <th class="text-left">Nom</th>
                <th class="text-left">Coefficient</th>
                <th class="text-left">Réussite</th>
-               <th class="text-left">Date réussite</th>
-               <th class="text-left">Autonomie (%)</th>
+               <!-- <th class="text-left">Date réussite</th> -->
+               <th class="text-left">Note (%)</th>
             </tr>
          </thead>
          <tbody>
             <tr v-for="test in userTests" :key="test.uid">
                <td>{{ test.name }}</td>
                <td>{{ test.weight }}</td>
-               <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
-               <td>{{ testEventDate(test.uid) }}</td>
+               <!-- <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
+               <td>{{ testEventDate(test.uid) }}</td> -->
+               <td v-if="isTestSuccessful(test.uid)">{{ testEventDate(test.uid) }}</td>
+               <td v-else><v-icon>mdi-close</v-icon></td>
                <td>
                   <v-slider v-if="isTestSuccessful(test.uid)"
                      show-ticks="always"
