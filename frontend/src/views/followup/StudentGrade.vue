@@ -8,7 +8,7 @@
       <template v-for="group in userGroups" :key="group.uid">
          <StudentGroupAttendance :user_uid="user_uid" :group="group"/>
       </template>
-      <h4>Note présence : {{ attendanceGrade + ' / 20' }}</h4>
+      <h4>Taux de présence : {{ attendanceGrade + ' %' }}</h4>
       <v-divider :thickness="3"/>
 
       <!-- test results -->
@@ -20,7 +20,6 @@
                <th class="text-left">Nom</th>
                <th class="text-left">Coefficient</th>
                <th class="text-left">Réussite</th>
-               <!-- <th class="text-left">Date réussite</th> -->
                <th class="text-left">Note (%)</th>
             </tr>
          </thead>
@@ -28,19 +27,17 @@
             <tr v-for="test in userTests" :key="test.uid">
                <td>{{ test.name }}</td>
                <td>{{ test.weight }}</td>
-               <!-- <td><v-icon>{{ isTestSuccessful(test.uid) ? 'mdi-check' : 'mdi-close' }}</v-icon></td>
-               <td>{{ testEventDate(test.uid) }}</td> -->
-               <td v-if="isTestSuccessful(test.uid)">{{ testEventDate(test.uid) }}</td>
+               <td v-if="testSuccessDate(test.uid)">{{ testSuccessDate(test.uid) }}</td>
                <td v-else><v-icon>mdi-close</v-icon></td>
                <td>
-                  <v-slider v-if="isTestSuccessful(test.uid)"
+                  <v-slider
                      show-ticks="always"
                      :tticks="{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%'}"
                      thumb-label
                      step="25"
                      tick-size="4"
-                     :model-value="testEventAutonomy(test.uid)"
-                     @end="value => onAutonomyChange(test.uid, value)"
+                     :model-value="testEvaluation(test.uid)"
+                     @end="value => onEvaluationChange(test.uid, value)"
                   ></v-slider>
                </td>
             </tr>
@@ -56,11 +53,11 @@ import { ref, onUnmounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
-import { userGroups$, userSHDLTests$, userSHDLTestsEvents$, userAttendanceGrade$, userTestGrade$, userGrade$ } from '/src/lib/businessObservables'
+import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
+import { userGroups$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } from '/src/lib/businessObservables'
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
-const { update: updateUserTestEvent } = useUserSHDLTestEvent()
+const { update: updateUserTestEvent } = useUserSHDLTestRelation()
 
 const props = defineProps({
    user_uid: {
@@ -73,7 +70,7 @@ const attendanceGrade = ref(-1)
 const testGrade = ref(-1)
 const grade = ref(-1)
 const userTests = ref()
-const testEvents = ref()
+const testRelations = ref()
 
 const subscriptions = []
 
@@ -104,8 +101,8 @@ watch(
          userTests.value = tests
       }))
 
-      subscriptions.push(userSHDLTestsEvents$(props.user_uid).subscribe(testEvents_ => {
-         testEvents.value = testEvents_
+      subscriptions.push(userSHDLTestsRelations$(props.user_uid).subscribe(testRelations_ => {
+         testRelations.value = testRelations_
       }))
    },
    { immediate: true } // so that it's called on component mount
@@ -117,28 +114,23 @@ onUnmounted(() => {
    }
 })
 
-const isTestSuccessful = computed(() => (shdl_test_uid) => {
-   if (!testEvents.value) return false
-   return testEvents.value.some(testEvent => testEvent.success && testEvent.shdl_test_uid === shdl_test_uid)
+const testSuccessDate = computed(() => (shdl_test_uid) => {
+   if (!testRelations.value) return ''
+   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
+   return testRelation ? format(testRelation.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : ''
 })
 
-const testEventDate = computed(() => (shdl_test_uid) => {
-   if (!testEvents.value) return ''
-   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
-   return testEvent ? format(testEvent.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : ''
+const testEvaluation = computed(() => (shdl_test_uid) => {
+   if (!testRelations.value) return 0
+   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
+   return testRelation?.evaluation
 })
 
-const testEventAutonomy = computed(() => (shdl_test_uid) => {
-   if (!testEvents.value) return 0
-   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
-   return testEvent?.autonomy
-})
-
-async function onAutonomyChange(shdl_test_uid, value) {
+async function onEvaluationChange(shdl_test_uid, value) {
    // console.log('shdl_test_uid, value', shdl_test_uid, value)
-   if (!testEvents.value) return
-   const testEvent = testEvents.value.find(testEvent => testEvent.shdl_test_uid === shdl_test_uid)
-   await updateUserTestEvent(testEvent.uid, {
+   if (!testRelations.value) return
+   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
+   await updateUserTestEvent(testRelation.uid, {
       autonomy: value
    })
 }

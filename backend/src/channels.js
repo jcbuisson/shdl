@@ -41,7 +41,7 @@ export default function(app) {
         return context.methodName.startsWith('find') ? [] : ['authenticated']
     })
 
-    app.service('user_shdltest_event').publish(async (context) => {
+    app.service('user_shdltest_relation').publish(async (context) => {
         return context.methodName.startsWith('find') ? [] : ['authenticated']
     })
 

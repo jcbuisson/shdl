@@ -1,19 +1,19 @@
 
-import hooks from './user_shdltest_event.hooks.js'
+import hooks from './user_shdltest_relation.hooks.js'
 
 export default function (app) {
 
    const prisma = app.get('prisma')
 
-   app.createService('user_shdltest_event', {
+   app.createService('user_shdltest_relation', {
 
-      findUnique: prisma.user_shdltest_event.findUnique,
+      findUnique: prisma.user_shdltest_relation.findUnique,
 
-      findMany: prisma.user_shdltest_event.findMany,
+      findMany: prisma.user_shdltest_relation.findMany,
       
       createWithMeta: async (uid, data, created_at) => {
          const [value, meta] = await prisma.$transaction([
-            prisma.user_shdltest_event.create({ data: { uid, ...data } }),
+            prisma.user_shdltest_relation.create({ data: { uid, ...data } }),
             prisma.metadata.create({ data: { uid, created_at } })
          ])
          return [value, meta]
@@ -21,7 +21,7 @@ export default function (app) {
       
       updateWithMeta: async (uid, data, updated_at) => {
          const [value, meta] = await prisma.$transaction([
-            prisma.user_shdltest_event.update({ where: { uid }, data }),
+            prisma.user_shdltest_relation.update({ where: { uid }, data }),
             prisma.metadata.update({ where: { uid }, data: { updated_at } })
          ])
          return [value, meta]
@@ -29,12 +29,12 @@ export default function (app) {
       
       deleteWithMeta: async (uid, deleted_at) => {
          const [value, meta] = await prisma.$transaction([
-            prisma.user_shdltest_event.delete({ where: { uid } }),
+            prisma.user_shdltest_relation.delete({ where: { uid } }),
             prisma.metadata.update({ where: { uid }, data: { deleted_at } })
          ])
          return [value, meta]
       },
    })
 
-   app.service('user_shdltest_event').hooks(hooks)
+   app.service('user_shdltest_relation').hooks(hooks)
 }

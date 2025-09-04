@@ -11,7 +11,7 @@ import { useUser } from '/src/use/useUser'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
+import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 
@@ -26,7 +26,7 @@ const { reset: resetUseUser, putUser } = useUser()
 const { reset: resetUseUserDocument } = useUserDocument()
 const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent()
 const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
-const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestEvent()
+const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestRelation()
 const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse()
 const { reset: resetUseUserTabRelation } = useUserTabRelation()
 

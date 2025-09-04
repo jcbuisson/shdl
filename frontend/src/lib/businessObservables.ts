@@ -11,7 +11,7 @@ import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
-import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
+import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 
 import { peg$parse as shdlPegParse } from '/src/lib/shdl/shdlPegParser'
 import { SHDLError } from '/src/lib/shdl/SHDLError.ts'
@@ -26,7 +26,7 @@ const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
 const { getObservable: groupSlots$ } = useGroupSlot()
 const { getObservable: shdlTests$ } = useSHDLTest()
 const { getObservable: groupSlotSHDLTestRelation$ } = useGroupSlotSHDLTestRelation()
-const { getObservable: userSHDLTestEvents$ } = useUserSHDLTestEvent()
+const { getObservable: userSHDLTestRelations$ } = useUserSHDLTestRelation()
 
 
 export function guardCombineLatest(observables) {
@@ -126,12 +126,12 @@ export function userGroupSlotSHDLTestRelation$(user_uid: string) {
    )
 }
 
-export function userSHDLTestsEvents$(user_uid: string) {
+export function userSHDLTestsRelations$(user_uid: string) {
    return userSHDLTests$(user_uid).pipe(
       switchMap(testList =>
          guardCombineLatest(
             testList.map(test =>
-               userSHDLTestEvents$({ user_uid, shdl_test_uid: test.uid })
+               userSHDLTestRelations$({ user_uid, shdl_test_uid: test.uid })
             )
          )
       ),
@@ -154,22 +154,22 @@ export function userGrade$(user_uid: string, now) {
 export function userTestGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userSHDLTests$(user_uid),
-      userSHDLTestsEvents$(user_uid),
+      userSHDLTestsRelations$(user_uid),
    ]).pipe(
-      map(([tests, testEvents]) => {
+      map(([tests, testRelation]) => {
          let totalWeight = 0
-         let successWeight = 0
+         let testsWeight = 0
          for (const test of tests) {
-            const successfulTestEvent = testEvents.find(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
-            if (successfulTestEvent) successWeight += test.weight * successfulTestEvent.autonomy / 100
+            const successfulTestEvent = testRelation.find(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
+            if (successfulTestEvent) testsWeight += test.weight * successfulTestEvent.autonomy / 100
             totalWeight += test.weight
          }
-         return Math.round(successWeight * 20 / totalWeight)
+         return Math.round(testsWeight * 20 / totalWeight)
       })
    )
 }
 
-// emit value in 0..20 or -1
+// emit value in 0..100 or -1
 export function userAttendanceGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userSlots$(user_uid),
@@ -180,7 +180,7 @@ export function userAttendanceGrade$(user_uid: string, now) {
          const excuseSlotUids = excuses.map(excuse => excuse.group_slot_uid)
          const pastUnexcusedSlots = slots.filter(slot => new Date(slot.start) <= now && !excuseSlotUids.includes(slot.uid))
          if (pastUnexcusedSlots.length === 0) {
-            return 20 // max grade by vacuity
+            return 100 // max grade by vacuity
          }
          const activeCount = pastUnexcusedSlots.reduce((accu, slot) => {
             const slotStart = new Date(slot.start)
@@ -194,7 +194,7 @@ export function userAttendanceGrade$(user_uid: string, now) {
                return accu
             }
          }, 0)
-         return Math.floor(activeCount * 20 / pastUnexcusedSlots.length)
+         return Math.floor(activeCount * 100 / pastUnexcusedSlots.length)
       })
    )
 }

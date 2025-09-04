@@ -1,5 +1,5 @@
 <template>
-   <!-- {{ userTestEvents }} -->
+   <!-- {{ userTestRelations }} -->
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="!!module">
 
@@ -94,13 +94,13 @@ import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilitie
 import { strToBin } from '/src/lib/binutils.js'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
-import { useUserSHDLTestEvent } from '/src/use/useUserSHDLTestEvent'
+import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 
-import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsEvents$ } from '/src/lib/businessObservables'
+import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$ } from '/src/lib/businessObservables'
 
 const { module$ } = useSHDLModule()
 const { getObservable: tests$ } = useSHDLTest()
-const { create: createUserTestEvent } = useUserSHDLTestEvent()
+const { create: createUserTestRelation } = useUserSHDLTestRelation()
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
 import { useObservable } from '@vueuse/rxjs'
@@ -140,7 +140,7 @@ const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.
 
 const selectedTest = ref()
 
-const userTestEvents = useObservable(userSHDLTestsEvents$(props.user_uid))
+const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
 
 let subscription
 
@@ -657,11 +657,11 @@ async function stepTest() {
       testStatusText.value = error
       // store failed test event
       if (!isTeacher.value) {
-         await createUserTestEvent({
+         await createUserTestRelation({
             user_uid: props.user_uid,
             shdl_test_uid: selectedTest.value.uid,
-            date: new Date(),
-            success: false,
+            success_date: new Date(),
+            evaluation: 100,
          })
       }
    } else {
@@ -673,13 +673,12 @@ async function stepTest() {
          testStatusText.value = "SUCCÈS !"
          // store success test event (if there not previous one)
          if (!isTeacher.value) {
-            const previousSuccessfullTest = userTestEvents.value.find(testEvent => testEvent.shdl_test_uid === selectedTest.value.uid && testEvent.success)
+            const previousSuccessfullTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid && testRelation.success)
             if (!previousSuccessfullTest) {
-               await createUserTestEvent({
+               await createUserTestRelation({
                   user_uid: props.user_uid,
                   shdl_test_uid: selectedTest.value.uid,
-                  date: new Date(),
-                  success: true,
+                  evaluation: 0,
                })
             }
          }

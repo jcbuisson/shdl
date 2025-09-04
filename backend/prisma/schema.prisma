@@ -40,8 +40,7 @@ model user {
    user_tab_relations      user_tab_relation[]
    user_group_relations    user_group_relation[]
    user_slot_excuses       user_slot_excuse[]
-   // user_shdltest_relation  user_shdltest_relation[]
-   user_shdltest_event     user_shdltest_event[]
+   user_shdltest_relation  user_shdltest_relation[]
 }
 
 model user_tab_relation {
@@ -101,8 +100,7 @@ model shdl_test {
    memory_contents         String?    // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
 
    groupslot_shdltest_relations groupslot_shdltest_relation[]
-   // user_shdltest_relation user_shdltest_relation[]
-   user_shdltest_event     user_shdltest_event[]
+   user_shdltest_relation user_shdltest_relation[]
 }
 
 model groupslot_shdltest_relation {
@@ -115,30 +113,19 @@ model groupslot_shdltest_relation {
    @@unique([group_slot_uid, shdl_test_uid])
 }
 
-model user_shdltest_event {
+model user_shdltest_relation {
    uid                     String     @unique
    user_uid                String
    shdl_test_uid           String
-   date                    DateTime
-   success                 Boolean
-   autonomy                Int        @default(100)
+   first_try_date          DateTime?
+   last_try_date           DateTime?
+   success_date            DateTime?
+   evaluation              Int        @default(100)
 
    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
    shdl_test shdl_test @relation(fields: [shdl_test_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
+   @@unique([user_uid, shdl_test_uid])
 }
-
-// model user_shdltest_relation {
-//    uid                     String     @unique
-//    user_uid                String
-//    shdl_test_uid           String
-//    first_try_date          DateTime?
-//    last_try_date           DateTime?
-//    success_date            DateTime?
-
-//    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
-//    shdl_test shdl_test @relation(fields: [shdl_test_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
-//    @@unique([user_uid, shdl_test_uid])
-// }
 
 model user_document {
    uid                     String     @unique
