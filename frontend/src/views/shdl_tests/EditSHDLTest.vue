@@ -14,10 +14,10 @@
                </v-col>
                <v-col cols="12" md="2">
                   <v-text-field
-                  type="number"
+                     type="number"
                      label="Coefficient"
                      :modelValue="test?.weight"
-                     @input="(e) => onFieldInputDebounced('weight', e.target.value)"
+                     @input="(e) => onFieldInputDebounced('weight', parseInt(e.target.value))"
                      variant="underlined"
                   ></v-text-field>
                </v-col>
