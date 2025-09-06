@@ -157,15 +157,15 @@ export function userTestGrade$(user_uid: string) {
       userSHDLTests$(user_uid),
       userSHDLTestsRelations$(user_uid),
    ]).pipe(
-      map(([tests, testRelation]) => {
+      map(([tests, testRelations]) => {
          let totalWeight = 0
          let testsWeight = 0
          for (const test of tests) {
-            const successfulTestEvent = testRelation.find(testEvent => testEvent.success_date && testEvent.shdl_test_uid === test.uid)
-            if (successfulTestEvent) testsWeight += test.weight * successfulTestEvent.evaluation / 100
+            const testRelation = testRelations.find(testRelation => testRelation.shdl_test_uid === test.uid)
+            testsWeight += test.weight * testRelation.evaluation
             totalWeight += test.weight
          }
-         return Math.round(testsWeight * 100 / totalWeight)
+         return Math.round(testsWeight / totalWeight)
       })
    )
 }
