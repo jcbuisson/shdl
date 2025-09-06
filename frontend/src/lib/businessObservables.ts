@@ -139,14 +139,15 @@ export function userSHDLTestsRelations$(user_uid: string) {
    )
 }
 
-// emit value in 0..100
+// emit value in 0..20
 export function userGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userAttendanceGrade$(user_uid, now),
       userTestGrade$(user_uid, now),
    ]).pipe(
       map(([attendanceGrade, testGrade]) => {
-         return Math.round((attendanceGrade + testGrade) / 2)
+         const percentage = (attendanceGrade + testGrade) / 2
+         return Math.round(percentage * 20 / 100)
       })
    )
 }
@@ -162,7 +163,9 @@ export function userTestGrade$(user_uid: string) {
          let testsWeight = 0
          for (const test of tests) {
             const testRelation = testRelations.find(testRelation => testRelation.shdl_test_uid === test.uid)
-            testsWeight += test.weight * testRelation.evaluation
+            if (testRelation) {
+               testsWeight += test.weight * testRelation.evaluation
+            }
             totalWeight += test.weight
          }
          return Math.round(testsWeight / totalWeight)

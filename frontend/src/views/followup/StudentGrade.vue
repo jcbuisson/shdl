@@ -1,7 +1,7 @@
 <template>
    <div class="pa-2">
       <!-- final grade -->
-      <h2 v-if="grade">Note finale : {{ Math.round(grade * 20/100) }}</h2>
+      <h2 v-if="grade">Note finale : {{ grade }}</h2>
       <v-divider :thickness="3"/>
 
       <!-- attendance -->
