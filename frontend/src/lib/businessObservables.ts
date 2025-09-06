@@ -139,7 +139,7 @@ export function userSHDLTestsRelations$(user_uid: string) {
    )
 }
 
-// emit value in 0..20 or -1
+// emit value in 0..100
 export function userGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userAttendanceGrade$(user_uid, now),
@@ -151,6 +151,7 @@ export function userGrade$(user_uid: string, now) {
    )
 }
 
+// emit value in 0..100
 export function userTestGrade$(user_uid: string) {
    return guardCombineLatest([
       userSHDLTests$(user_uid),
@@ -169,7 +170,7 @@ export function userTestGrade$(user_uid: string) {
    )
 }
 
-// emit value in 0..100 or -1
+// emit value in 0..100
 export function userAttendanceGrade$(user_uid: string, now) {
    return guardCombineLatest([
       userSlots$(user_uid),

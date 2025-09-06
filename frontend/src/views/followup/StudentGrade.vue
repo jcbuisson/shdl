@@ -1,7 +1,7 @@
 <template>
    <div class="pa-2">
       <!-- final grade -->
-      <h2 v-if="grade">Note finale : {{ grade }}</h2>
+      <h2 v-if="grade">Note finale : {{ Math.round(grade * 20/100) }}</h2>
       <v-divider :thickness="3"/>
 
       <!-- attendance -->
@@ -57,7 +57,7 @@ import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { userGroups$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } from '/src/lib/businessObservables'
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
-const { update: updateUserTestEvent } = useUserSHDLTestRelation()
+const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation()
 
 const props = defineProps({
    user_uid: {
@@ -117,7 +117,7 @@ onUnmounted(() => {
 const testSuccessDate = computed(() => (shdl_test_uid) => {
    if (!testRelations.value) return null
    const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
-   return testRelation ? format(testRelation.success_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
+   return testRelation?.success_date ? format(testRelation.success_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
 })
 
 const testEvaluation = computed(() => (shdl_test_uid) => {
@@ -126,12 +126,20 @@ const testEvaluation = computed(() => (shdl_test_uid) => {
    return testRelation?.evaluation
 })
 
-async function onEvaluationChange(shdl_test_uid, value) {
+async function onEvaluationChange(shdl_test_uid, evaluation) {
    // console.log('shdl_test_uid, value', shdl_test_uid, value)
    if (!testRelations.value) return
    const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
-   await updateUserTestEvent(testRelation.uid, {
-      evaluation: value
-   })
+   if (testRelation) {
+      await updateUserTestEvent(testRelation.uid, {
+         evaluation
+      })
+   } else {
+      await createUserTestRelation({
+         user_uid: props.user_uid,
+         shdl_test_uid,
+         evaluation,
+      })
+   }
 }
 </script>
