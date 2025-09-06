@@ -151,7 +151,7 @@ export function userGrade$(user_uid: string, now) {
    )
 }
 
-export function userTestGrade$(user_uid: string, now) {
+export function userTestGrade$(user_uid: string) {
    return guardCombineLatest([
       userSHDLTests$(user_uid),
       userSHDLTestsRelations$(user_uid),
@@ -160,11 +160,11 @@ export function userTestGrade$(user_uid: string, now) {
          let totalWeight = 0
          let testsWeight = 0
          for (const test of tests) {
-            const successfulTestEvent = testRelation.find(testEvent => testEvent.success && testEvent.shdl_test_uid === test.uid)
-            if (successfulTestEvent) testsWeight += test.weight * successfulTestEvent.autonomy / 100
+            const successfulTestEvent = testRelation.find(testEvent => testEvent.success_date && testEvent.shdl_test_uid === test.uid)
+            if (successfulTestEvent) testsWeight += test.weight * successfulTestEvent.evaluation / 100
             totalWeight += test.weight
          }
-         return Math.round(testsWeight * 20 / totalWeight)
+         return Math.round(testsWeight * 100 / totalWeight)
       })
    )
 }

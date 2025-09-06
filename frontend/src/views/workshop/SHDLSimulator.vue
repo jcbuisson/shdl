@@ -655,30 +655,32 @@ async function stepTest() {
    if (error) {
       testStatusCode.value = 3
       testStatusText.value = error
+
       // store failed test event
       if (!isTeacher.value) {
          await createUserTestRelation({
             user_uid: props.user_uid,
             shdl_test_uid: selectedTest.value.uid,
-            success_date: new Date(),
-            evaluation: 100,
+            evaluation: 0,
          })
       }
    } else {
-      // next line or end with success
       if (testCurrentLineNo.value < testStatementList.value.length - 1) {
+         // test is not over yet
          testCurrentLineNo.value += 1
       } else {
+         // test is over: success!
          testStatusCode.value = 2
          testStatusText.value = "SUCCÈS !"
-         // store success test event (if there not previous one)
+         // store success test event (if there is no previous one)
          if (!isTeacher.value) {
-            const previousSuccessfullTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid && testRelation.success)
+            const previousSuccessfullTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid && testRelation.success_date)
             if (!previousSuccessfullTest) {
                await createUserTestRelation({
                   user_uid: props.user_uid,
                   shdl_test_uid: selectedTest.value.uid,
-                  evaluation: 0,
+                  success_date: new Date(),
+                  evaluation: 100,
                })
             }
          }

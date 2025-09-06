@@ -43,7 +43,7 @@
             </tr>
          </tbody>
       </v-table>
-      <h4>Note tests : {{ testGrade + ' / 20' }}</h4>
+      <h4>Évaluation des tests : {{ testGrade + ' %' }}</h4>
       <v-divider :thickness="3"/>
    </div>
 </template>
@@ -89,7 +89,7 @@ watch(
          attendanceGrade.value = grade_
       }))
 
-      subscriptions.push(userTestGrade$(props.user_uid, now).subscribe(grade_ => {
+      subscriptions.push(userTestGrade$(props.user_uid).subscribe(grade_ => {
          testGrade.value = grade_
       }))
 
@@ -115,9 +115,9 @@ onUnmounted(() => {
 })
 
 const testSuccessDate = computed(() => (shdl_test_uid) => {
-   if (!testRelations.value) return ''
+   if (!testRelations.value) return null
    const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
-   return testRelation ? format(testRelation.date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : ''
+   return testRelation ? format(testRelation.success_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
 })
 
 const testEvaluation = computed(() => (shdl_test_uid) => {
@@ -131,7 +131,7 @@ async function onEvaluationChange(shdl_test_uid, value) {
    if (!testRelations.value) return
    const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
    await updateUserTestEvent(testRelation.uid, {
-      autonomy: value
+      evaluation: value
    })
 }
 </script>
