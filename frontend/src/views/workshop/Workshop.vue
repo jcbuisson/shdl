@@ -42,7 +42,6 @@
             <v-row dense>
                <v-col cols="12" md="12">
                   <v-text-field label="Nom" required v-model="data.name"></v-text-field>
-                  <!-- <v-text-field label="Type" required v-model="data.type"></v-text-field> -->
                   <v-select
                      variant="underlined"
                      v-model="data.type"
@@ -71,6 +70,7 @@
             color="primary"
             text="OK"
             variant="tonal"
+            :disabled="!data.type || !data.name"
             @click="addDocumentDialog = false; createDocument()"
           ></v-btn>
         </v-card-actions>
@@ -202,7 +202,7 @@ async function createDocument() {
       text: `module ${data.value.name}()\nend module`,
    })
    const uid = uuidv7()
-   app.service('user_document_event').create({
+   await app.service('user_document_event').create({
       data: {
          uid,
          document_uid: createdDocument.uid,
@@ -210,6 +210,7 @@ async function createDocument() {
          start: new Date(),
       }
    })
+   router.push(`/home/${props.signedinUid}/workshop/shdl/${createdDocument.uid}`)
 }
 
 async function deleteDocument(module) {

@@ -17,8 +17,8 @@
                <td>{{ slot.name }}</td>
                <td>{{ format(slot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
                <td>{{ format(slot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
-               <td><v-icon>{{ activityStatus(slot) }}</v-icon></td>
-               <td><v-checkbox density="compact" hide-details :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
+               <td><v-icon>{{ slotActivityIcon(slot) }}</v-icon></td>
+               <td><v-checkbox :disabled="isActiveDuringSlot(slot)" density="compact" hide-details :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
             </tr>
          </tbody>
       </v-table>
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, computed } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -97,8 +97,7 @@ async function onExcuseClick(slot) {
    }
 }
 
-// return 'mdi-check' (active), 'mdi-close' (inactive), undefined (slot is in future)
-function activityStatus(slot) {
+const isActiveDuringSlot = computed(() => (slot) => {
    if (!userEventList.value) return undefined
    const now = new Date()
    const slotStart = new Date(slot.start)
@@ -107,7 +106,9 @@ function activityStatus(slot) {
    if (userEventList.value.some(event => {
       const eventStart = new Date(event.start)
       return (eventStart >= slotStart && eventStart <= slotEnd)
-   })) return 'mdi-check'
-   return 'mdi-close'
-}
+   })) return true
+   return false
+})
+
+const slotActivityIcon = computed(() => (slot) => isActiveDuringSlot.value(slot) ? 'mdi-check' : 'mdi-close')
 </script>

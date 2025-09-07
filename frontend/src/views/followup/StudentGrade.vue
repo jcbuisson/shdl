@@ -12,7 +12,6 @@
       <v-divider :thickness="3"/>
 
       <!-- test results -->
-      <!-- <div>Tests : {{ userTests.map(test => test.name) }}</div> -->
       <h3 class="my-2">Tests</h3>
       <v-table density="compact">
          <thead>

@@ -86,9 +86,14 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    } else {
       const editable = props.signedinUid === props.user_uid
       console.log('editable', editable)
+      const customTheme = EditorView.theme({
+         "&": {
+            fontSize: "12px",
+         }
+      })
       const newDoc = {
          content: '',
-         extensions: [myLang, EditorView.editable.of(editable)],
+         extensions: [myLang, customTheme, EditorView.editable.of(editable)],
       }
       uid2docDict[uid] = newDoc
       selectedCodeMirrorDoc.value = newDoc
