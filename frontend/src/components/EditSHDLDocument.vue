@@ -57,37 +57,12 @@ const props = defineProps({
 const editorContainer = ref(null)
 let view = null
 
-const code = ref(`function hello() {
-   console.log("Hello from CodeMirror + Vue 3!")
-}`)
-
-
-onMounted(() => {
-   const state = EditorState.create({
-      doc: code.value,
-      extensions: [
-         keymap.of(defaultKeymap),
-         // javascript(),
-         EditorView.updateListener.of((update) => {
-            if (update.changes) {
-               code.value = update.state.doc.toString()
-            }
-         })
-      ]
-   })
-   view = new EditorView({
-      state,
-      parent: editorContainer.value
-   })
-})
 
 onBeforeUnmount(() => {
    if (view) {
       view.destroy()
    }
 })
-
-
 
 
 const currentEditorView = shallowRef()
@@ -101,8 +76,6 @@ const message = ref({})
 let subscription
 let subscription2
 
-const uid2docDict = {}
-const selectedCodeMirrorDoc = ref({})
 const selectedDocument = ref()
 
 let updateUid
@@ -114,14 +87,19 @@ function userDocument$(uid) {
 }
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
+   console.log('new editor')
+
+   if (view) {
+      view.destroy()
+   }
    const state = EditorState.create({
-      doc: code.value,
+      // doc: code.value,
       extensions: [
          keymap.of(defaultKeymap),
          // javascript(),
          EditorView.updateListener.of((update) => {
             if (update.changes) {
-               code.value = update.state.doc.toString()
+               // code.value = update.state.doc.toString()
             }
          })
       ]
@@ -134,8 +112,9 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    // handle document content change
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
+      console.log('xxx', doc)
       forceUpdateCode(doc.text)
-      
+
       if (doc.type === 'shdl') {
          handleSHDLDocumentChange(doc)
       }
