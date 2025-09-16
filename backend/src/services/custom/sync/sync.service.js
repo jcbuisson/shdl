@@ -61,7 +61,11 @@ export default function (app) {
          
             for (const uid of onlyDatabaseIds) {
                const databaseValue = databaseValuesDict[uid]
-               const databaseMetaData = await prisma.metadata.findUnique({ where: { uid }})
+               let databaseMetaData = await prisma.metadata.findUnique({ where: { uid }})
+               if (!databaseMetaData) {
+                  console.log('no metadata - should not happen', modelName, where, uid)
+                  databaseMetaData = { uid, created_at: new Date() }
+               }
                addClient.push([databaseValue, databaseMetaData])
             }
          
