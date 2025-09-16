@@ -22,6 +22,7 @@ export default function(dbName: string, modelName: string, fields) {
    // db.open().then(() => console.log('db ready', dbName, modelName))
 
    const reset = async () => {
+      console.log('reset', dbName, modelName)
       await db.whereList.clear()
       await db.values.clear()
       await db.metadata.clear()
@@ -131,8 +132,11 @@ export default function(dbName: string, modelName: string, fields) {
    }
 
    function addSynchroWhere(where: object) {
-      console.log('addSynchroWhere', dbName, modelName, where)
-      return addSynchroDBWhere(where, db.whereList)
+      // console.log('addSynchroWhere', dbName, modelName, where)
+      // return addSynchroDBWhere(where, db.whereList)
+      const promise = addSynchroDBWhere(where, db.whereList)
+      promise.then(isNew => console.log('addSynchroWhere', dbName, modelName, where, isNew))
+      return promise
    }
 
    function removeSynchroWhere(where: object) {

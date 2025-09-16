@@ -64,6 +64,7 @@ export const restartApp = async () => {
 
 // throws an error 'wrong-credentials' if wrong email / password
 export async function signin(email, password) {
+   clearCaches()
    const { user, expiresAt } = await app.service('auth').signin(email, password)
    await setExpiresAt(expiresAt)
    await putUser(user)

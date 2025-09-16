@@ -70,15 +70,20 @@ export default function (app) {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
             const uid = uuidv7()
-            const user = await prisma.user.create({
-               data: { uid, email: payload.email, password, firstname, lastname }
-            })
+            const data = { uid, email: payload.email, password, firstname, lastname }
+            const created_at = new Date()
+            const [user, _] = await app.service('user').createWithMeta(uid, data, created_at)
+            // const user = await prisma.user.create({
+            //    data: { uid, email: payload.email, password, firstname, lastname }
+            // })
             // give user tab 'workshop'
             for (const tab of ['workshop']) {
                const uid = uuidv7()
-               await prisma.user_tab_relation.create({
-                  data: { uid, user_uid: user.uid, tab }
-               })
+               const data = { uid, user_uid: user.uid, tab }
+               await app.service('user_tab_relation').createWithMeta(uid, data, created_at)
+               // await prisma.user_tab_relation.create({
+               //    data: { uid, user_uid: user.uid, tab }
+               // })
             }
             return user
          } catch(err) {

@@ -5,8 +5,8 @@ const mutex = new Mutex()
 
 // ex: where = { uid: 'azer' }
 export async function synchronize(app, modelName, idbValues, idbMetadata, where, cutoffDate) {
-   
    await mutex.acquire()
+   console.log('synchronize', modelName, where)
 
    try {
       const requestPredicate = wherePredicate(where)
@@ -27,7 +27,7 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
       
       // call sync service on `where` perimeter
       const { toAdd, toUpdate, toDelete, addDatabase, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientMetadataDict)
-      console.log('synchronize', modelName, where, toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
+      console.log('->sync', modelName, where, toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
 
       // 1- add missing elements in cache
       for (const [value, metaData] of toAdd) {
