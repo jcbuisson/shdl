@@ -1,7 +1,7 @@
 <template>
-   <!-- {{ userTestRelations }} -->
+   {{ equipotentials }}
    <!-- makes the layout a vertical stack filling the full height -->
-   <v-card class="d-flex flex-column fill-height" v-if="!!module">
+   <v-card class="d-flex flex-column fill-height" v-if="module && structure && equipotentials.length > 0">
 
       <!-- Test selector (does not grow) -->
       <div class="px-2">
@@ -164,6 +164,7 @@ watch(() => props.document_uid, async (document_uid) => {
          }
       },
       error: err => {
+         module.value = null
          console.log('err33', err)
       },
    })

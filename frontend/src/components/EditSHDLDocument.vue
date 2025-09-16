@@ -9,7 +9,7 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <codemirror
+         <!-- <codemirror
             v-if="selectedCodeMirrorDoc"
             v-model="selectedCodeMirrorDoc.content"
             :extensions="selectedCodeMirrorDoc.extensions"
@@ -17,17 +17,23 @@
             class="fill-height"
             @change="onChangeDebounced($event)"
             @ready="handleEditorReady"
-         />
+         /> -->
+         <div ref="editorContainer" class="fill-height" />
       </div>
    </v-card>
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onUnmounted } from 'vue'
+import { ref, shallowRef, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
+
+import { keymap } from '@codemirror/view'
+import { EditorState } from '@codemirror/state'
+import { defaultKeymap } from '@codemirror/commands'
+
 
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
@@ -47,6 +53,42 @@ const props = defineProps({
    user_uid: String,
    document_uid: String,
 })
+
+const editorContainer = ref(null)
+let view = null
+
+const code = ref(`function hello() {
+   console.log("Hello from CodeMirror + Vue 3!")
+}`)
+
+
+onMounted(() => {
+   const state = EditorState.create({
+      doc: code.value,
+      extensions: [
+         keymap.of(defaultKeymap),
+         // javascript(),
+         EditorView.updateListener.of((update) => {
+            if (update.changes) {
+               code.value = update.state.doc.toString()
+            }
+         })
+      ]
+   })
+   view = new EditorView({
+      state,
+      parent: editorContainer.value
+   })
+})
+
+onBeforeUnmount(() => {
+   if (view) {
+      view.destroy()
+   }
+})
+
+
+
 
 const currentEditorView = shallowRef()
 const handleEditorReady = (payload) => {
@@ -72,43 +114,28 @@ function userDocument$(uid) {
 }
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
-   updateUid = undefined
-   if (previous_uid) {
-      const previousDoc = uid2docDict[previous_uid]
-      // preserve state
-      previousDoc.state = currentEditorView.value?.state
-   }
-   const doc = uid2docDict[uid]
-   if (doc) {
-      selectedCodeMirrorDoc.value = doc
-      // restore state
-
-
-      ///////      PROVOQUE LE BUG DANS L'ÉDITEUR??     ///////
-      // currentEditorView.value.setState(doc.state)
-
-   } else {
-      const editable = props.signedinUid === props.user_uid
-      console.log('editable', editable)
-      const customTheme = EditorView.theme({
-         "&": {
-            fontSize: "12px",
-         }
-      })
-      const newDoc = {
-         content: '',
-         extensions: [myLang, customTheme, EditorView.editable.of(editable)],
-      }
-      uid2docDict[uid] = newDoc
-      selectedCodeMirrorDoc.value = newDoc
-   }
+   const state = EditorState.create({
+      doc: code.value,
+      extensions: [
+         keymap.of(defaultKeymap),
+         // javascript(),
+         EditorView.updateListener.of((update) => {
+            if (update.changes) {
+               code.value = update.state.doc.toString()
+            }
+         })
+      ]
+   })
+   view = new EditorView({
+      state,
+      parent: editorContainer.value
+   })
 
    // handle document content change
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
-      selectedCodeMirrorDoc.value.content = doc.text
-      selectedDocument.value = doc
-
+      forceUpdateCode(doc.text)
+      
       if (doc.type === 'shdl') {
          handleSHDLDocumentChange(doc)
       }
@@ -121,7 +148,17 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
+function forceUpdateCode(newValue) {
+   const pos = view.state.selection.main.head
+   view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: newValue },
+      selection: { anchor: pos },
+   })
+}
+
 const onChange = async (text) => {
+   forceUpdateCode(text)
+
    if (selectedDocument.value.type === 'shdl') {
       handleSHDLDocumentChange(selectedDocument.value)
    }
