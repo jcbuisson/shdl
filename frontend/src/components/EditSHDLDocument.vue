@@ -82,7 +82,11 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    if (doc) {
       selectedCodeMirrorDoc.value = doc
       // restore state
-      currentEditorView.value.setState(doc.state)
+
+
+      ///////      PROVOQUE LE BUG DANS L'ÉDITEUR??     ///////
+      // currentEditorView.value.setState(doc.state)
+
    } else {
       const editable = props.signedinUid === props.user_uid
       console.log('editable', editable)
