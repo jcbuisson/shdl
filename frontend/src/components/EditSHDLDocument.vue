@@ -77,13 +77,8 @@ function userDocument$(uid) {
 }
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
-   // handle document content change
-   if (subscription) subscription.unsubscribe()
 
-   subscription = userDocument$(uid).subscribe(async doc => {
-      currentDocument.value = doc
-      console.log('xxx', doc)
-      
+         
       if (view) {
          view.destroy()
       }
@@ -94,7 +89,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
          }
       })
       const state = EditorState.create({
-         doc: doc.text,
+         // doc: "Hello",
          extensions: [
             keymap.of(defaultKeymap),
             myLang,
@@ -111,6 +106,14 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
          state,
          parent: editorContainer.value
       })
+
+   if (subscription) subscription.unsubscribe()
+   subscription = userDocument$(uid).subscribe(async doc => {
+      // handle document content change
+      currentDocument.value = doc
+      console.log('xxx', doc)
+
+      forceUpdateCode(doc.text)
 
       if (doc.type === 'shdl') {
          analyzeSHDLDocument(doc)
