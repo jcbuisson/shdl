@@ -3,7 +3,7 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <div v-if="selectedDocument?.type !== 'text'" :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+      <div v-if="currentDocument?.type !== 'text'" :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
          <h5>{{ message.text }}</h5>
       </div>
 
@@ -66,7 +66,7 @@ const message = ref({})
 let subscription
 let subscription2
 
-const selectedDocument = ref()
+const currentDocument = ref()
 
 let updateUid
 
@@ -76,16 +76,12 @@ function userDocument$(uid) {
    )
 }
 
-function onTextChange(text) {
-   console.log('text change', text)
-}
-const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
-
 watch(() => props.document_uid, async (uid, previous_uid) => {
    // handle document content change
    if (subscription) subscription.unsubscribe()
 
    subscription = userDocument$(uid).subscribe(async doc => {
+      currentDocument.value = doc
       console.log('xxx', doc)
       
       if (view) {
@@ -136,16 +132,20 @@ function forceUpdateCode(newValue) {
    })
 }
 
-const onChange = async (text) => {
+async function onTextChange(text) {
+
+   if (currentDocument.value.text === text) return
+
+   // change editor content
    forceUpdateCode(text)
 
-   if (selectedDocument.value.type === 'shdl') {
-      analyzeSHDLDocument(selectedDocument.value)
+   if (currentDocument.value.type === 'shdl') {
+      analyzeSHDLDocument(currentDocument.value)
    }
    // save document
    await updateUserDocument(props.document_uid, {
       text,
-      update_count: selectedDocument.value.update_count + 1,
+      update_count: currentDocument.value.update_count + 1,
    })
    // create or update document event
    if (updateUid) {
@@ -162,7 +162,7 @@ const onChange = async (text) => {
       updateUid = updateEvent.uid
    }
 }
-const onChangeDebounced = useDebounceFn(onChange, 500)
+const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
 
 // analyze SHDL module and extract its equipotentials
 function analyzeSHDLDocument(doc) {
