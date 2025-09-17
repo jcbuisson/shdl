@@ -9,23 +9,13 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <!-- <codemirror
-            v-if="selectedCodeMirrorDoc"
-            v-model="selectedCodeMirrorDoc.content"
-            :extensions="selectedCodeMirrorDoc.extensions"
-            placeholder="Start coding here..."
-            class="fill-height"
-            @change="onChangeDebounced($event)"
-            @ready="handleEditorReady"
-         /> -->
          <div ref="editorContainer" class="fill-height" />
       </div>
    </v-card>
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
-// import { Codemirror } from 'vue-codemirror'
+import { ref, shallowRef, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
@@ -86,6 +76,11 @@ function userDocument$(uid) {
    )
 }
 
+function onTextChange(text) {
+   console.log('text change', text)
+}
+const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
+
 watch(() => props.document_uid, async (uid, previous_uid) => {
    console.log('new editor')
 
@@ -104,9 +99,10 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
          keymap.of(defaultKeymap),
          myLang,
          customTheme,
+         EditorView.editable.of(editable),
          EditorView.updateListener.of((update) => {
             if (update.changes) {
-               // code.value = update.state.doc.toString()
+               onTextChangeDebounced(update.state.doc.toString())
             }
          })
       ]
