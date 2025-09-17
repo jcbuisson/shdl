@@ -83,11 +83,13 @@ export default function (app) {
             for (const uid of databaseAndClientIds) {
                const databaseValue = databaseValuesDict[uid]
                const clientMetaData = clientMetadataDict[uid]
+                  || { uid, created_at: new Date() } // should not happen
                if (clientMetaData.deleted_at) {
                   deleteDatabase.push(uid)
                   deleteClient.push([uid, clientMetaData.deleted_at])
                } else {
                   const databaseMetaData = await prisma.metadata.findUnique({ where: { uid }})
+                     || { uid, created_at: new Date() } // should not happen
                   const clientUpdatedAt = new Date(clientMetaData.updated_at || clientMetaData.created_at)
                   const databaseUpdatedAt = new Date(databaseMetaData.updated_at || databaseMetaData.created_at)
                   const dateDifference = clientUpdatedAt - databaseUpdatedAt

@@ -1,5 +1,5 @@
 <template>
-   {{ equipotentials }}
+   <!-- {{ equipotentials }} -->
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height" v-if="module && structure && equipotentials.length > 0">
 
