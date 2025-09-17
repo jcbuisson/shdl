@@ -54,13 +54,6 @@ onBeforeUnmount(() => {
    }
 })
 
-
-const currentEditorView = shallowRef()
-const handleEditorReady = (payload) => {
-   console.log('ready', payload)
-   currentEditorView.value = payload.view
-}
-
 const message = ref({})
 
 let subscription
@@ -77,61 +70,60 @@ function userDocument$(uid) {
 }
 
 onMounted(() => {
-      const editable = props.signedinUid === props.user_uid
-      const customTheme = EditorView.theme({
-         "&": {
-            fontSize: "13px",
-         }
-      })
-      const state = EditorState.create({
-         // doc: "Hello",
-         extensions: [
-            keymap.of(defaultKeymap),
-            myLang,
-            customTheme,
-            EditorView.editable.of(editable),
-            EditorView.updateListener.of((update) => {
-               if (update.changes) {
-                  onTextChangeDebounced(update.state.doc.toString())
-               }
-            })
-         ]
-      })
-      view = new EditorView({
-         state,
-         parent: editorContainer.value
-      })
+   const editable = props.signedinUid === props.user_uid
+   const customTheme = EditorView.theme({
+      "&": {
+         fontSize: "13px",
+      }
+   })
+   const state = EditorState.create({
+      // doc: "Hello",
+      extensions: [
+         keymap.of(defaultKeymap),
+         myLang,
+         customTheme,
+         EditorView.editable.of(editable),
+         EditorView.updateListener.of((update) => {
+            if (update.changes) {
+               onTextChangeDebounced(update.state.doc.toString())
+            }
+         })
+      ]
+   })
+   view = new EditorView({
+      state,
+      parent: editorContainer.value
+   })
 })
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
-
-      if (view) {
-         view.destroy()
+   if (view) {
+      view.destroy()
+   }
+   const editable = props.signedinUid === props.user_uid
+   const customTheme = EditorView.theme({
+      "&": {
+         fontSize: "13px",
       }
-      const editable = props.signedinUid === props.user_uid
-      const customTheme = EditorView.theme({
-         "&": {
-            fontSize: "13px",
-         }
-      })
-      const state = EditorState.create({
-         // doc: "Hello",
-         extensions: [
-            keymap.of(defaultKeymap),
-            myLang,
-            customTheme,
-            EditorView.editable.of(editable),
-            EditorView.updateListener.of((update) => {
-               if (update.changes) {
-                  onTextChangeDebounced(update.state.doc.toString())
-               }
-            })
-         ]
-      })
-      view = new EditorView({
-         state,
-         parent: editorContainer.value
-      })
+   })
+   const state = EditorState.create({
+      // doc: "Hello",
+      extensions: [
+         keymap.of(defaultKeymap),
+         myLang,
+         customTheme,
+         EditorView.editable.of(editable),
+         EditorView.updateListener.of((update) => {
+            if (update.changes) {
+               onTextChangeDebounced(update.state.doc.toString())
+            }
+         })
+      ]
+   })
+   view = new EditorView({
+      state,
+      parent: editorContainer.value
+   })
 
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
@@ -162,7 +154,6 @@ function forceUpdateCode(newValue) {
 }
 
 async function onTextChange(text) {
-
    if (currentDocument.value.text === text) return
 
    // change editor content
