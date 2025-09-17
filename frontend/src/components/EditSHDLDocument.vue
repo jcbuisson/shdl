@@ -82,44 +82,42 @@ function onTextChange(text) {
 const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
-   console.log('new editor')
-
-   if (view) {
-      view.destroy()
-   }
-   const editable = props.signedinUid === props.user_uid
-   const customTheme = EditorView.theme({
-      "&": {
-         fontSize: "13px",
-      }
-   })
-   const state = EditorState.create({
-      // doc: code.value,
-      extensions: [
-         keymap.of(defaultKeymap),
-         myLang,
-         customTheme,
-         EditorView.editable.of(editable),
-         EditorView.updateListener.of((update) => {
-            if (update.changes) {
-               onTextChangeDebounced(update.state.doc.toString())
-            }
-         })
-      ]
-   })
-   view = new EditorView({
-      state,
-      parent: editorContainer.value
-   })
-
    // handle document content change
    if (subscription) subscription.unsubscribe()
+
    subscription = userDocument$(uid).subscribe(async doc => {
       console.log('xxx', doc)
-      forceUpdateCode(doc.text)
+      
+      if (view) {
+         view.destroy()
+      }
+      const editable = props.signedinUid === props.user_uid
+      const customTheme = EditorView.theme({
+         "&": {
+            fontSize: "13px",
+         }
+      })
+      const state = EditorState.create({
+         doc: doc.text,
+         extensions: [
+            keymap.of(defaultKeymap),
+            myLang,
+            customTheme,
+            EditorView.editable.of(editable),
+            EditorView.updateListener.of((update) => {
+               if (update.changes) {
+                  onTextChangeDebounced(update.state.doc.toString())
+               }
+            })
+         ]
+      })
+      view = new EditorView({
+         state,
+         parent: editorContainer.value
+      })
 
       if (doc.type === 'shdl') {
-         handleSHDLDocumentChange(doc)
+         analyzeSHDLDocument(doc)
       }
    })
 
@@ -142,7 +140,7 @@ const onChange = async (text) => {
    forceUpdateCode(text)
 
    if (selectedDocument.value.type === 'shdl') {
-      handleSHDLDocumentChange(selectedDocument.value)
+      analyzeSHDLDocument(selectedDocument.value)
    }
    // save document
    await updateUserDocument(props.document_uid, {
@@ -167,7 +165,7 @@ const onChange = async (text) => {
 const onChangeDebounced = useDebounceFn(onChange, 500)
 
 // analyze SHDL module and extract its equipotentials
-function handleSHDLDocumentChange(doc) {
+function analyzeSHDLDocument(doc) {
    if (subscription2) subscription2.unsubscribe()
    // observe SHDL module and its submodules recursively from `doc` root and return an unordered list of module structures
    subscription2 = shdlDocumentParsing$(props.user_uid, doc.name).subscribe({
