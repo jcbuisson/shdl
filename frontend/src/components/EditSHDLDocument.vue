@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, shallowRef, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
@@ -76,9 +76,35 @@ function userDocument$(uid) {
    )
 }
 
+onMounted(() => {
+      const editable = props.signedinUid === props.user_uid
+      const customTheme = EditorView.theme({
+         "&": {
+            fontSize: "13px",
+         }
+      })
+      const state = EditorState.create({
+         // doc: "Hello",
+         extensions: [
+            keymap.of(defaultKeymap),
+            myLang,
+            customTheme,
+            EditorView.editable.of(editable),
+            EditorView.updateListener.of((update) => {
+               if (update.changes) {
+                  onTextChangeDebounced(update.state.doc.toString())
+               }
+            })
+         ]
+      })
+      view = new EditorView({
+         state,
+         parent: editorContainer.value
+      })
+})
+
 watch(() => props.document_uid, async (uid, previous_uid) => {
 
-         
       if (view) {
          view.destroy()
       }
