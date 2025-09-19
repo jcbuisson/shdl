@@ -20,7 +20,7 @@ import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
-import { keymap } from '@codemirror/view'
+import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { defaultKeymap } from '@codemirror/commands'
 
@@ -80,6 +80,7 @@ onMounted(() => {
       // doc: "Hello",
       extensions: [
          keymap.of(defaultKeymap),
+         lineNumbers(),
          myLang,
          customTheme,
          EditorView.editable.of(editable),
@@ -225,7 +226,8 @@ function analyzeSHDLDocument(doc) {
       },
 
       error: err => {
-         console.log('err22', err.documentUID, err.moduleName, err.location, err.message)
+         console.log('err22', err)
+         console.log('loc', err.getModuleName)
          displayErrorMessageSHDL(err, doc.name)
          addOrUpdateModule({
             document_uid: err.documentUID,

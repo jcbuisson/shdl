@@ -14,6 +14,14 @@ export class SHDLError extends Error {
       this.location = location
    }
 
+   get getModuleName() {
+      return this.moduleName
+   }
+
+   get getLocation() {
+      return this.location
+   }
+
    toString() {
       return `name=${this.name}, documentUID=${this.documentUID}, moduleName=${this.moduleName}, location=${this.location}, message=${this.message}`
    }

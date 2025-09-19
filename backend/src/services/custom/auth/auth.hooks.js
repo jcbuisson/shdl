@@ -5,16 +5,21 @@ import { protect } from '#root/src/common-server.mjs'
 import { extendExpiration, checkExpiration } from '#root/src/hooks.mjs'
 
 
+
 async function afterSignin(context) {
    // set socket.data.user
    context.socket.data.user = Object.assign({}, context.result)
-   console.log('socket.data.user set by afterAuthentication')
    // set socket.data.expiresAt
    const now = new Date()
    context.socket.data.expiresAt = new Date(now.getTime() + config.SESSION_EXPIRE_DELAY)
    console.log('socket.data.expiresAt set by afterAuthentication', context.socket.data.expiresAt)
    // add socket to "authenticated" channel
    context.app.joinChannel('authenticated', context.socket)
+   // check if user is teacher and add its socket to the 'teachers' room if so
+   const prisma = context.app.get('prisma')
+   const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
+   if (followupRelations.length > 0) context.app.joinChannel('teachers', context.socket)
+   console.log('socket.rooms', context.socket.rooms)
    context.result = {
       user: context.socket.data.user,
       expiresAt: context.socket.data.expiresAt
