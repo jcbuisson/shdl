@@ -22,7 +22,7 @@ import { map } from 'rxjs'
 
 import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
-import { defaultKeymap } from '@codemirror/commands'
+import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 
 
 import { myLang } from '/src/lib/mylang.js'
@@ -79,7 +79,10 @@ onMounted(() => {
    const state = EditorState.create({
       // doc: "Hello",
       extensions: [
-         keymap.of(defaultKeymap),
+         keymap.of([
+            indentWithTab, // makes Tab insert indentation
+            ...defaultKeymap
+         ]),
          lineNumbers(),
          myLang,
          customTheme,
@@ -110,7 +113,10 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    const state = EditorState.create({
       // doc: "Hello",
       extensions: [
-         keymap.of(defaultKeymap),
+         keymap.of([
+            indentWithTab, // makes Tab insert indentation
+            ...defaultKeymap
+         ]),
          lineNumbers(),
          myLang,
          customTheme,
