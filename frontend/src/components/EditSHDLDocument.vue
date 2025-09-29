@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
@@ -111,6 +111,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       // doc: "Hello",
       extensions: [
          keymap.of(defaultKeymap),
+         lineNumbers(),
          myLang,
          customTheme,
          EditorView.editable.of(editable),

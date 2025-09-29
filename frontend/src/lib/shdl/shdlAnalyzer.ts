@@ -8,15 +8,37 @@ let uuid = 0
 
 // return error and the module list (module and submodules) with their errors in order for SHDL editor to update their status
 export function checkModuleMap(moduleMap) {
-   const moduleList = Object.values(moduleMap)
-   // order modules by dependance, leaves first and root at the end
-   const orderedModuleList = moduleList.sort((m1, m2) => {
-      if (m1.submoduleNames.includes(m2.name)) return 1
-      if (m2.submoduleNames.includes(m1.name)) return -1
-      return 0
-   })
+   let moduleList = Object.values(moduleMap)
+   
+   // re-order moduleList, deepest modules first
+   // start with leaves
+   let orderedModuleNames = moduleList.filter(module => (module.submoduleNames.length === 0)).map(module => module.name)
+   moduleList = moduleList.filter(module => (orderedModuleNames.indexOf(module.name) === -1))
+   // append to the end of orderedModuleNames the modules of moduleList for which all submodules are already in orderedModuleNames
+   while (moduleList.length > 0) {
+      moduleList.forEach(module => {
+         if (module.submoduleNames.every(name => orderedModuleNames.indexOf(name) !== -1)) {
+            orderedModuleNames.push(module.name)
+         }
+      })
+      let l = moduleList.length
+      moduleList = moduleList.filter(module => (orderedModuleNames.indexOf(module.name) === -1))
+      if (moduleList.length === l) {
+         // should never happen
+         console.log("*** error when ordering modules")
+         break
+      }
+   }
+   moduleList = orderedModuleNames.map(moduleName => moduleMap[moduleName])
+
+   // // order modules by dependance, leaves first and root at the end
+   // const orderedModuleList = moduleList.sort((m1, m2) => {
+   //    if (m1.submoduleNames.includes(m2.name)) return 1
+   //    if (m2.submoduleNames.includes(m1.name)) return -1
+   //    return 0
+   // })
    // check syntax in all modules and stop in case of error
-   for (const module of orderedModuleList) {
+   for (const module of moduleList) {
       const syntaxError = checkSyntax(module.name, moduleMap)
       if (syntaxError) {
          const err = {
@@ -29,7 +51,7 @@ export function checkModuleMap(moduleMap) {
    }
    // Extract the type and nature of each equipotential, starting with deepest submodules
    // They are stored in module.equipotentials, which is both an array (iterable) and a map: name -> equipotential index
-   for (const module of orderedModuleList) {
+   for (const module of moduleList) {
       // collect equipotentials of `module`
       const instanceError = collectEquipotentials(module.name)
       if (instanceError) {
