@@ -70,7 +70,7 @@ ne permettre le copier/coller qu’au sein d’un même module ?
 - ajouter une partie présentation bien référencée et un lien vers GitHub
 
 
-Guillaume
+## Guillaume
 
 - j'aimerais bien que la liste des modules soit scrollable indépendamment de la fenêtre ; si je veux check un autre module qui est en bas pendant que j'écris mon module, je dois scroller tout, cliquer sur le module et remonter (c'est vivable mais bon ça pourrait être un peu mieux)
 - certains mots-clefs ne sont pas colorés (on, reset, enabled, when) ; typiquement ça m'a posé problème parce que j'oublie régulièrement si c'est "enable" ou "enabled"

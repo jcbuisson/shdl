@@ -218,7 +218,7 @@ export function shdlDocumentParsing$(user_uid, name, checked=[]) {
             const structure = shdlPegParse(document.text)
             return { document, structure }
          } catch(err) {
-            throw new SHDLError(err.message, document.uid, name, null)
+            throw new SHDLError(err.message, document.uid, name, err.location)
          }
       }),
       // extract its structure and its submodule names
