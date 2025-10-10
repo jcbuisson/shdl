@@ -209,9 +209,9 @@ function analyzeSHDLDocument(doc) {
          const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
             const moduleName = syntaxStructure.name
             const module = {
-               document_uid: doc.uid,
-               document_name: doc.name,
                name: moduleName,
+               document_uid: syntaxStructure.document_uid,
+               document_name: syntaxStructure.document_name,
                structure: syntaxStructure,
                equipotentials: [],
                submoduleNames: syntaxStructure.instances.filter(instance => instance.type === 'module_instance').map(instance => instance.name),
@@ -233,10 +233,10 @@ function analyzeSHDLDocument(doc) {
          // display status
          const rootModule = moduleList[moduleList.length - 1]
          if (err) {
-            rootModule.is_valid = false
+            // rootModule.is_valid = false
             displayErrorMessageSHDL(err, rootModule.name)
          } else {
-            rootModule.is_valid = true
+            // rootModule.is_valid = true
             displayOKMessageSHDL(rootModule)
          }
       },

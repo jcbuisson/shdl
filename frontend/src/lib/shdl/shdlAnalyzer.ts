@@ -45,6 +45,7 @@ export async function checkModuleMap(moduleMap) {
       const syntaxError = checkSyntax(module.name, moduleMap)
       if (syntaxError) {
          // await addOrUpdateModule(module)
+         module.is_valid = false
          const err = {
             moduleName: module.name,
             message: syntaxError.message,
@@ -65,6 +66,7 @@ export async function checkModuleMap(moduleMap) {
             location: instanceError.location,
          }
          // stop immediately, do not try other modules
+         module.is_valid = false
          return { err, moduleList }
       }
       // check or set the type of all equipotentials and parameters
@@ -76,12 +78,15 @@ export async function checkModuleMap(moduleMap) {
             location: typeError.location,
          }
          // stop immediately, do not try other modules
+         module.is_valid = false
          return { err, moduleList }
       }
       // add usedBy attributes
       addUsedBy(module)
       // add isUnused attributes
       addUnused(module)
+      // module is valid
+      module.is_valid = true
    }
    return { err: null, moduleList: moduleList }
 

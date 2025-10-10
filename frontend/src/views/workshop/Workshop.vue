@@ -1,4 +1,5 @@
-<template>{{ modulesNI }}
+<template>
+   <!-- {{ modulesNI }} -->
    <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
