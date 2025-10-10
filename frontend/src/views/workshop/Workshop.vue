@@ -1,4 +1,4 @@
-<template>
+<template>{{ modulesNI }}
    <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -13,7 +13,10 @@
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
-                  <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
+                  <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList" :key="index"
+                        :value="document"
+                        @click="selectDocument(document)"
+                        :active="selectedDocument?.uid === document?.uid">
                      <template v-slot:prepend>
                         <v-btn :color="documentColor(document)"
                            :icon="documentIcon(document)" variant="text"
@@ -145,7 +148,7 @@ const shdlDocumentStatus = computed(() => (doc) => {
    if (doc.type !== 'shdl') return
    const module = moduleList.value.find(module => module.document_uid === doc.uid)
    if (!module) return
-   return !!module.structure
+   return module?.is_valid
 })
 
 const documentIcon = computed(() => (document) => {
@@ -172,6 +175,15 @@ const documentColor = computed(() => (document) => {
 
 const moduleList = useObservable(modules$())
 
+const modulesNI = computed(() => moduleList.value
+   ? moduleList.value.map(module =>
+      ({
+         name: module.name,
+         is_valid: module.is_valid,
+         document_uid: module.document_uid,
+         document_name: module.document_name,
+      }))
+   : '')
 
 const addDocumentDialog = ref(false)
 const data = ref({})

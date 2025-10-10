@@ -91,22 +91,28 @@ const routes = [
                      // check that document's owner is signed-in user
                      checks: ['same_document_user'],
                   },
-                  props: true,
-                  component: () => import('/src/views/workshop/ManageSHDLDocument.vue'),
-                  children: [
-                     {
-                        path: '',
-                        props: route => ({
-                           signedinUid: route.params.signedinUid,
-                           user_uid: route.params.signedinUid,
-                           document_uid: route.params.document_uid,
-                        }),
-                        components: {
-                           editor: () => import('/src/components/EditSHDLDocument.vue'),
-                           simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
-                        }
-                     },
-                  ],     
+                  // props: true,
+                  // component: () => import('/src/views/workshop/ManageSHDLDocument.vue'),
+                  component: () => import('/src/views/workshop/ManageSHDLDocument2.vue'),
+                  props: route => ({
+                     signedinUid: route.params.signedinUid,
+                     user_uid: route.params.signedinUid,
+                     document_uid: route.params.document_uid,
+                  }),
+                  // children: [
+                  //    {
+                  //       path: '',
+                  //       props: route => ({
+                  //          signedinUid: route.params.signedinUid,
+                  //          user_uid: route.params.signedinUid,
+                  //          document_uid: route.params.document_uid,
+                  //       }),
+                  //       components: {
+                  //          editor: () => import('/src/components/EditSHDLDocument.vue'),
+                  //          simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
+                  //       }
+                  //    },
+                  // ],     
                },
                {
                   path: 'text/:document_uid',

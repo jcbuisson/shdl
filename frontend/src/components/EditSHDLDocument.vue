@@ -3,7 +3,10 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <div v-if="currentDocument?.type !== 'text'" :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }" style="color: white; height: 48px; padding: 10px;" class="d-flex align-center">
+      <div v-if="currentDocument?.type === 'shdl'"
+            class="d-flex align-center"
+            :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }"
+            style="color: white; height: 48px; padding: 10px;">
          <h5>{{ message.text }}</h5>
       </div>
 
@@ -19,6 +22,7 @@ import { ref, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
+import { useObservable } from "@vueuse/rxjs"
 
 import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
@@ -62,6 +66,8 @@ let subscription2
 const currentDocument = ref()
 
 let updateUid
+
+const documentsOfUser = useObservable(userDocuments$({ user_uid: props.user_uid }))
 
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
@@ -197,13 +203,14 @@ function analyzeSHDLDocument(doc) {
    if (subscription2) subscription2.unsubscribe()
    // observe SHDL module and its submodules recursively from `doc` root and return an unordered list of module structures
    subscription2 = shdlDocumentParsing$(props.user_uid, doc.name).subscribe({
-      next: syntaxStructureList => {
+      next: async (syntaxStructureList) => {
          console.log('next edit', syntaxStructureList)
          // transform the list of syntaxic structures into a map of modules
          const moduleMap = syntaxStructureList.reduce((accu, syntaxStructure) => {
             const moduleName = syntaxStructure.name
             const module = {
                document_uid: doc.uid,
+               document_name: doc.name,
                name: moduleName,
                structure: syntaxStructure,
                equipotentials: [],
@@ -215,19 +222,21 @@ function analyzeSHDLDocument(doc) {
 
          // analyze the map of modules
          // return the main error and an ordered list of modules, leaves first and root last
-         const { err, moduleList } = checkModuleMap(moduleMap)
+         const { err, moduleList } = await checkModuleMap(moduleMap)
          console.log('err', err)
          console.log('moduleList', moduleList)
 
-         // save modules in Indexedb (asynchronous)
+         // save modules in Indexedb (no need to await)
          for (const module of moduleList) {
             addOrUpdateModule(module)
          }
          // display status
          const rootModule = moduleList[moduleList.length - 1]
          if (err) {
+            rootModule.is_valid = false
             displayErrorMessageSHDL(err, rootModule.name)
          } else {
+            rootModule.is_valid = true
             displayOKMessageSHDL(rootModule)
          }
       },
@@ -238,8 +247,7 @@ function analyzeSHDLDocument(doc) {
          displayErrorMessageSHDL(err, doc.name)
          addOrUpdateModule({
             document_uid: err.documentUID,
-            name: err.moduleName,
-            structure: null,
+            is_valid: false,
          })
       },
    })
