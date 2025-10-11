@@ -18,15 +18,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
-import { useObservable } from "@vueuse/rxjs"
 
 import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
-import { defaultKeymap, indentWithTab } from '@codemirror/commands'
+import { defaultKeymap, indentWithTab, history, historyKeymap } from '@codemirror/commands'
 
 import router from '/src/router'
 
@@ -52,7 +51,6 @@ const props = defineProps({
 const editorContainer = ref(null)
 let view = null
 
-
 onBeforeUnmount(() => {
    if (view) {
       view.destroy()
@@ -68,44 +66,11 @@ const currentDocument = ref()
 
 let updateUid
 
-// const documentsOfUser = useObservable(userDocuments$({ user_uid: props.user_uid }))
-
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
       map(documents => documents.length > 0 ? documents[0] : null)
    )
 }
-
-onMounted(() => {
-   const editable = props.signedinUid === props.user_uid
-   const customTheme = EditorView.theme({
-      "&": {
-         fontSize: "13px",
-      }
-   })
-   const state = EditorState.create({
-      // doc: "Hello",
-      extensions: [
-         keymap.of([
-            indentWithTab, // makes Tab insert indentation
-            ...defaultKeymap
-         ]),
-         lineNumbers(),
-         myLang,
-         customTheme,
-         EditorView.editable.of(editable),
-         EditorView.updateListener.of((update) => {
-            if (update.changes) {
-               onTextChangeDebounced(update.state.doc.toString())
-            }
-         })
-      ]
-   })
-   view = new EditorView({
-      state,
-      parent: editorContainer.value
-   })
-})
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
    if (view) {
@@ -120,13 +85,17 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    const state = EditorState.create({
       // doc: "Hello",
       extensions: [
-         keymap.of([
-            indentWithTab, // makes Tab insert indentation
-            ...defaultKeymap
-         ]),
          lineNumbers(),
+         indentUnit.of("   "),
+         history(), // adds undo/redo support
+         keymap.of([
+            indentWithTab,
+            ...defaultKeymap,
+            ...historyKeymap // enables Cmd+Z / Cmd+Shift+Z
+         ]),
          myLang,
          customTheme,
+
          EditorView.editable.of(editable),
          EditorView.updateListener.of((update) => {
             if (update.changes) {
@@ -146,7 +115,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       currentDocument.value = doc
       console.log('xxx', doc)
 
-      forceUpdateCode(doc.text)
+      setEditorDoc(doc.text)
 
       if (doc.type === 'shdl') {
          analyzeSHDLDocument(doc)
@@ -160,19 +129,23 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
-function forceUpdateCode(newValue) {
-   const pos = view.state.selection.main.head
+// safe programmatic update that preserves history (thank you ChatGPT)
+function setEditorDoc(newText) {
+   if (!view) return;
+   const current = view.state.doc.toString();
+   if (current === newText) return;
+
    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: newValue },
-      selection: { anchor: pos },
-   })
+      changes: { from: 0, to: view.state.doc.length, insert: newText },
+      userEvent: "input"
+   });
 }
 
 async function onTextChange(text) {
    if (currentDocument.value.text === text) return
 
    // change editor content
-   forceUpdateCode(text)
+   setEditorDoc(text)
 
    if (currentDocument.value.type === 'shdl') {
       analyzeSHDLDocument(currentDocument.value)
