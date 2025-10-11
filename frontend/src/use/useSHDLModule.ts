@@ -9,7 +9,8 @@ export function useSHDLModule() {
    const db = new Dexie(import.meta.env.VITE_APP_SHDL_MODULE_IDB)
 
    db.version(1).stores({
-      modules: "document_uid",
+      // Indexed by document_uid and name
+      modules: "document_uid, name",
    })
 
    const reset = async () => {

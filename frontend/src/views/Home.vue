@@ -1,5 +1,5 @@
 <template>
-   {{ userTabs }}
+   <!-- {{ userTabs }} -->
    <v-app class="h-screen overflow-hidden">
       <!-- makes the layout a vertical stack filling the full screen -->
       <div class="d-flex flex-column fill-height">

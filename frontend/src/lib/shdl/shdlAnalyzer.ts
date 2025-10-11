@@ -2,12 +2,9 @@ import { checkSyntax } from '/src/lib/shdl/shdlSyntax'
 import { addUsedBy, addUnused, argumentArity, argumentsArity, argumentAt, argumentAtIndex, parameterArity, parameterNameAtIndex, parametersNameAtIndex, replaceAliases,
    getOriginalEquipotentialIndex, signalCompoundArity, signalCompoundAtIndex, sumoftermsCompoundAtIndex,
    createEquipotential, addEquipotential, simplifyFormula, updateFormulaIndexes } from '/src/lib/shdl/shdlUtilities'
-// import { useSHDLModule } from '/src/use/useSHDLModule'
 
-// const { addOrUpdateModule } = useSHDLModule()
 
 let uuid = 0
-
 
 // return error and the module list (module and submodules) with their errors in order for SHDL editor to update their status
 export async function checkModuleMap(moduleMap) {
@@ -34,17 +31,10 @@ export async function checkModuleMap(moduleMap) {
    }
    moduleList = orderedModuleNames.map(moduleName => moduleMap[moduleName])
 
-   // // order modules by dependance, leaves first and root at the end
-   // const orderedModuleList = moduleList.sort((m1, m2) => {
-   //    if (m1.submoduleNames.includes(m2.name)) return 1
-   //    if (m2.submoduleNames.includes(m1.name)) return -1
-   //    return 0
-   // })
    // check syntax in all modules and stop in case of error
    for (const module of moduleList) {
       const syntaxError = checkSyntax(module.name, moduleMap)
       if (syntaxError) {
-         // await addOrUpdateModule(module)
          module.is_valid = false
          const err = {
             moduleName: module.name,

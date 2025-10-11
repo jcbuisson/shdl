@@ -28,6 +28,7 @@ import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
 
+import router from '/src/router'
 
 import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
@@ -236,13 +237,17 @@ function analyzeSHDLDocument(doc) {
             if (module.name === module.document_name) continue
             await updateUserDocument(module.document_uid, { name: module.name })
          }
+         
+         const rootModule = moduleList.at(-1)
 
-         // display status
-         const rootModule = moduleList[moduleList.length - 1]
          if (err) {
+            // display error
             displayErrorMessageSHDL(err, rootModule.name)
          } else {
+            // display success
             displayOKMessageSHDL(rootModule)
+            // add simulator
+            router.push(`/home/${props.signedinUid}/workshop/shdl/${doc.uid}`)
          }
       },
 

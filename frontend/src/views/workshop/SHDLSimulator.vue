@@ -1,7 +1,10 @@
 <template>
-   <!-- {{ equipotentials }} -->
+   <!-- <div>module {{ module?.name }} {{ module?.is_valid }}</div>
+   <div>document_uid {{ document_uid }}</div> -->
+
    <!-- makes the layout a vertical stack filling the full height -->
-   <v-card class="d-flex flex-column fill-height" v-if="module && structure && equipotentials.length > 0">
+   <v-card class="d-flex flex-column fill-height"
+      v-if="module?.is_valid">
 
       <!-- Test selector (does not grow) -->
       <div class="px-2">
