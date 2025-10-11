@@ -107,21 +107,6 @@ const routes = [
                         }
                      },
                   ],
-
-                  // component: () => import('/src/views/workshop/ManageSHDLDocument2.vue'),
-                  // props: route => ({
-                  //    signedinUid: route.params.signedinUid,
-                  //    user_uid: route.params.signedinUid,
-                  //    document_uid: route.params.document_uid,
-                  // }),
-                  // children: [
-                  //    {
-                  //       path: 'simulator',
-                  //       props: true,
-                  //       component: () => import('/src/views/workshop/SHDLSimulator.vue'),
-                  //    },
-                  // ],
-
                },
                {
                   path: 'text/:document_uid',

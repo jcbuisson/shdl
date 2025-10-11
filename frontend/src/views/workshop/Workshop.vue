@@ -1,5 +1,4 @@
 <template>
-   <!-- {{ modulesNI }} -->
    <SplitPanel :leftWidth="workshopSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
@@ -92,19 +91,18 @@ import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
 import { useUserDocument } from '/src/use/useUserDocument'
+import { useSHDLModule } from '/src/use/useSHDLModule'
 
 import router from '/src/router'
 import { app } from '/src/client-app.js'
 import { setWorkshopSplitWidth, workshopSplitWidth } from "/src/use/useAppState"
 
-
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
-import { useSHDLModule } from '/src/use/useSHDLModule'
 
-const { modules$ } = useSHDLModule()
+const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
+const { modules$, addOrUpdateModule } = useSHDLModule()
 
 
 const props = defineProps({
@@ -176,16 +174,6 @@ const documentColor = computed(() => (document) => {
 
 const moduleList = useObservable(modules$())
 
-const modulesNI = computed(() => moduleList.value
-   ? moduleList.value.map(module =>
-      ({
-         name: module.name,
-         is_valid: module.is_valid,
-         document_uid: module.document_uid,
-         document_name: module.document_name,
-      }))
-   : '')
-
 const addDocumentDialog = ref(false)
 const data = ref({})
 
@@ -199,6 +187,11 @@ const selectedDocument = ref(null)
 function selectDocument(document) {
    selectedDocument.value = document
    if (document.type === 'shdl') {
+      const module = moduleList.value.find(module => module.document_uid === document.uid)
+      addOrUpdateModule({
+         document_uid: document.uid,
+         is_valid: null,
+      })
       router.push(`/home/${props.signedinUid}/workshop/shdl/${document.uid}`)
    } else if (document.type === 'text') {
       router.push(`/home/${props.signedinUid}/workshop/text/${document.uid}`)
