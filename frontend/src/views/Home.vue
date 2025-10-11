@@ -1,4 +1,5 @@
 <template>
+   {{ userTabs }}
    <v-app class="h-screen overflow-hidden">
       <!-- makes the layout a vertical stack filling the full screen -->
       <div class="d-flex flex-column fill-height">
@@ -55,7 +56,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
 import { app, isConnected, connect, disconnect } from '/src/client-app.js'
@@ -153,4 +154,12 @@ onUnmounted(() => {
 async function logout() {
    await restartApp()
 }
+
+watch(
+   () => props.signedinUid,
+   async (signedinUid) => {
+   },
+   { immediate: true } // so that it's called on component mount
+)
+
 </script>

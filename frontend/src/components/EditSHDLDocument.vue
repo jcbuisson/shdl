@@ -67,7 +67,7 @@ const currentDocument = ref()
 
 let updateUid
 
-const documentsOfUser = useObservable(userDocuments$({ user_uid: props.user_uid }))
+// const documentsOfUser = useObservable(userDocuments$({ user_uid: props.user_uid }))
 
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
@@ -230,13 +230,18 @@ function analyzeSHDLDocument(doc) {
          for (const module of moduleList) {
             addOrUpdateModule(module)
          }
+         // for valid modules, rename document if it's not module's name
+         for (const module of moduleList) {
+            if (!module.is_valid) continue
+            if (module.name === module.document_name) continue
+            await updateUserDocument(module.document_uid, { name: module.name })
+         }
+
          // display status
          const rootModule = moduleList[moduleList.length - 1]
          if (err) {
-            // rootModule.is_valid = false
             displayErrorMessageSHDL(err, rootModule.name)
          } else {
-            // rootModule.is_valid = true
             displayOKMessageSHDL(rootModule)
          }
       },
