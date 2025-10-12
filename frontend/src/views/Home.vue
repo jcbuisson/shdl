@@ -1,5 +1,4 @@
 <template>
-   <!-- {{ userTabs }} -->
    <v-app class="h-screen overflow-hidden">
       <!-- makes the layout a vertical stack filling the full screen -->
       <div class="d-flex flex-column fill-height">
@@ -112,12 +111,15 @@ app.addConnectListener(async () => {
    await synchronizeAllUserDocumentEvent()
 })
 
-const userTabs$ = userTabRelation$({ user_uid: props.signedinUid }).pipe(
-   map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
-)
-const debouncedUserTabs$ = userTabs$.pipe(
-   debounceTime(300) // wait until no new value for 300ms
-)
+const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
+   .pipe(
+      map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
+   )
+
+const debouncedUserTabs$ = userTabs$
+   .pipe(
+      debounceTime(300) // wait until no new value for 500ms
+   )
 
 const userTabs = useObservable(userTabs$)
 
@@ -131,15 +133,18 @@ const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 const route = useRoute()
 const routeTabUid = ref()
 let interval
+let subscription
 
 onMounted(async () => {
    const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
    if (tabFromRoute) {
+      // if route mentions a tab, use it
       routeTabUid.value = tabFromRoute.uid
    } else {
-      const userTabList = await firstValueFrom(debouncedUserTabs$)
-      router.push(`/home/${props.signedinUid}/${userTabList[0].uid}`)
-      // router.push(`/home/${props.signedinUid}`)
+      // otherwise, use first tab from user tabs coming out of userTabs$ (with 300ms debounce)
+      subscription = debouncedUserTabs$.subscribe(([firstTab, ...otheTabs]) => {
+         router.push(`/home/${props.signedinUid}/${firstTab.uid}`)
+      })
    }
 
    interval = setInterval(() => {
@@ -149,6 +154,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
    clearInterval(interval)
+   subscription.unsubscribe()
 })
 
 async function logout() {

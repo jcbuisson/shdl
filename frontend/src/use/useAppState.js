@@ -1,72 +1,60 @@
 import { computed } from 'vue'
-import Dexie from "dexie"
-import { liveQuery } from "dexie"
-import { useObservable } from "@vueuse/rxjs"
 
+import { useSessionStorage } from '@vueuse/core'
 
-export const db = new Dexie("appstateDatabaseSHDL")
-
-db.version(1).stores({
-   keyval: "key",
-})
+function initialState() {
+   return {
+      expiresAt: null,
+      'user-manager-split-width': null,
+      'student-manager-workshop-split-width': null,
+   }
+}
+const state = useSessionStorage('appState', initialState())
 
 export const resetUseAppState = async () => {
-   await db.keyval.clear()
+   state.value = initialState()
 }
 
 /////////////////       expiresAt       /////////////////
 
-export async function setExpiresAt(date) {
-   await db.keyval.put({ key: 'expiresAt', date })
+export function setExpiresAt(date) {
+   state.value.expiresAt = date
 }
 
-const expiresAtRecord = useObservable(liveQuery(() => db.keyval.get('expiresAt')))
-
 export const expiresAt = computed(() => {
-   if (!expiresAtRecord.value) return null
-   return expiresAtRecord.value.date
+   return state.value.expiresAt
 })
 
 
 /////////////////       user-manager split width       /////////////////
 
-export async function setUserManagerSplitWidth(value) {
-   db.keyval.put({ key: 'user-manager-split-width', value })
+export function setUserManagerSplitWidth(value) {
+   state.value['user-manager-split-width'] = value
 }
 
-const kvUserManagerSplitWidth = useObservable(liveQuery(() => db.keyval.get('user-manager-split-width')))
-export const userManagerSplitWidth = computed(() => kvUserManagerSplitWidth?.value?.value)
+export const userManagerSplitWidth = computed(() => state.value['user-manager-split-width'])
 
 
 
 /////////////////       student-manager split width       /////////////////
 
-export async function setStudentManagerSplitWidth(value) {
-   db.keyval.put({ key: 'student-manager-split-width', value })
+export function setStudentManagerSplitWidth(value) {
+   state.value['student-manager-split-width'] = value
 }
+export const studentManagerSplitWidth = computed(() => state.value['student-manager-split-width'])
 
-const kvStudentManagerSplitWidth = useObservable(liveQuery(() => db.keyval.get('student-manager-split-width')))
-export const studentManagerSplitWidth = computed(() => kvStudentManagerSplitWidth?.value?.value)
-
-
-export async function setStudentManagerWorkshopSplitWidth(value) {
-   db.keyval.put({ key: 'student-manager-workshop-split-width', value })
+export function setStudentManagerWorkshopSplitWidth(value) {
+   state.value['student-manager-workshop-split-width'] = value
 }
-
-const kvStudentManagerWorkshopSplitWidth = useObservable(liveQuery(() => db.keyval.get('student-manager-workshop-split-width')))
-export const studentManagerWorkshopSplitWidth = computed(() => kvStudentManagerWorkshopSplitWidth?.value?.value)
-
+export const studentManagerWorkshopSplitWidth = computed(() => state.value['student-manager-workshop-split-width'])
 
 
 /////////////////       workshop split width       /////////////////
 
-export async function setWorkshopSplitWidth(value) {
-   db.keyval.put({ key: 'workshop-split-width', value })
+export function setWorkshopSplitWidth(value) {
+   state.value['workshop-split-width'] = value
 }
-
-const kvWorkshopSplitWidth = useObservable(liveQuery(() => db.keyval.get('workshop-split-width')))
-export const workshopSplitWidth = computed(() => kvWorkshopSplitWidth?.value?.value)
-
+export const workshopSplitWidth = computed(() => state.value['workshop-split-width'])
 
 
 // /////////////////       activity graph date min & max       /////////////////

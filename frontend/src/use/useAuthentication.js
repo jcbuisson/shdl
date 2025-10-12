@@ -66,7 +66,7 @@ export const restartApp = async () => {
 export async function signin(email, password) {
    clearCaches()
    const { user, expiresAt } = await app.service('auth').signin(email, password)
-   await setExpiresAt(expiresAt)
+   setExpiresAt(expiresAt)
    await putUser(user)
    return user
 }

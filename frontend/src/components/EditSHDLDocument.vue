@@ -19,14 +19,18 @@
 
 <script setup>
 import { ref, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
-import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 import { useObservable } from "@vueuse/rxjs"
 
+import { EditorView } from 'codemirror'
 import { keymap, lineNumbers } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { defaultKeymap, indentWithTab } from '@codemirror/commands'
+import { basicSetup } from "codemirror"; // This package includes history()
+// import { history, historyKeymap } from "@codemirror/commands";
+import { indentUnit } from "@codemirror/language";
+
 
 import router from '/src/router'
 
@@ -76,38 +80,7 @@ function userDocument$(uid) {
    )
 }
 
-onMounted(() => {
-   const editable = props.signedinUid === props.user_uid
-   const customTheme = EditorView.theme({
-      "&": {
-         fontSize: "13px",
-      }
-   })
-   const state = EditorState.create({
-      // doc: "Hello",
-      extensions: [
-         keymap.of([
-            indentWithTab, // makes Tab insert indentation
-            ...defaultKeymap
-         ]),
-         lineNumbers(),
-         myLang,
-         customTheme,
-         EditorView.editable.of(editable),
-         EditorView.updateListener.of((update) => {
-            if (update.changes) {
-               onTextChangeDebounced(update.state.doc.toString())
-            }
-         })
-      ]
-   })
-   view = new EditorView({
-      state,
-      parent: editorContainer.value
-   })
-})
-
-watch(() => props.document_uid, async (uid, previous_uid) => {
+function initEditor() {
    if (view) {
       view.destroy()
    }
@@ -139,6 +112,14 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
       state,
       parent: editorContainer.value
    })
+}
+
+onMounted(() => {
+   initEditor()
+})
+
+watch(() => props.document_uid, async (uid, previous_uid) => {
+   initEditor()
 
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
