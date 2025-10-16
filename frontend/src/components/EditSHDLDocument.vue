@@ -12,29 +12,37 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <div ref="editorContainer" class="fill-height" />
+         <div ref="editorContainer" class="fill-height" v-if="currentDocument">
+            <v-ace-editor
+               v-model:value="currentDocument.text"
+               @update:value="onTextChangeDebounced"
+               lang="json" 
+               theme="chrome" 
+               style="height: 100%; width: 100%;"
+               :options="{
+                  enableBasicAutocompletion: true,
+                  enableLiveAutocompletion: true,
+                  fontSize: 14,
+                  tabSize: 3, 
+                  useSoftTabs: true,
+               }"
+            />
+         </div>
       </div>
    </v-card>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onUnmounted, onBeforeUnmount } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
-import { useObservable } from "@vueuse/rxjs"
 
-import { EditorView } from 'codemirror'
-import { keymap, lineNumbers } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
-import { defaultKeymap, indentWithTab } from '@codemirror/commands'
-import { basicSetup } from "codemirror"; // This package includes history()
-// import { history, historyKeymap } from "@codemirror/commands";
-import { indentUnit } from "@codemirror/language";
-
+import { VAceEditor } from 'vue3-ace-editor';
+import 'ace-builds/src-noconflict/mode-json'; // Example: JSON language mode
+import 'ace-builds/src-noconflict/theme-chrome'; // Example: Chrome theme
 
 import router from '/src/router'
 
-import { myLang } from '/src/lib/mylang.js'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
@@ -56,7 +64,6 @@ const props = defineProps({
 const editorContainer = ref(null)
 let view = null
 
-
 onBeforeUnmount(() => {
    if (view) {
       view.destroy()
@@ -72,62 +79,17 @@ const currentDocument = ref()
 
 let updateUid
 
-// const documentsOfUser = useObservable(userDocuments$({ user_uid: props.user_uid }))
-
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
       map(documents => documents.length > 0 ? documents[0] : null)
    )
 }
 
-function initEditor() {
-   if (view) {
-      view.destroy()
-   }
-   const editable = props.signedinUid === props.user_uid
-   const customTheme = EditorView.theme({
-      "&": {
-         fontSize: "13px",
-      }
-   })
-   const state = EditorState.create({
-      // doc: "Hello",
-      extensions: [
-         keymap.of([
-            indentWithTab, // makes Tab insert indentation
-            ...defaultKeymap
-         ]),
-         lineNumbers(),
-         myLang,
-         customTheme,
-         EditorView.editable.of(editable),
-         EditorView.updateListener.of((update) => {
-            if (update.changes) {
-               onTextChangeDebounced(update.state.doc.toString())
-            }
-         })
-      ]
-   })
-   view = new EditorView({
-      state,
-      parent: editorContainer.value
-   })
-}
-
-onMounted(() => {
-   initEditor()
-})
-
 watch(() => props.document_uid, async (uid, previous_uid) => {
-   initEditor()
-
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
       // handle document content change
       currentDocument.value = doc
-      console.log('xxx', doc)
-
-      forceUpdateCode(doc.text)
 
       if (doc.type === 'shdl') {
          analyzeSHDLDocument(doc)
@@ -141,20 +103,7 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
-function forceUpdateCode(newValue) {
-   const pos = view.state.selection.main.head
-   view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: newValue },
-      selection: { anchor: pos },
-   })
-}
-
 async function onTextChange(text) {
-   if (currentDocument.value.text === text) return
-
-   // change editor content
-   forceUpdateCode(text)
-
    if (currentDocument.value.type === 'shdl') {
       analyzeSHDLDocument(currentDocument.value)
    }

@@ -141,7 +141,7 @@ onMounted(async () => {
       // if route mentions a tab, use it
       routeTabUid.value = tabFromRoute.uid
    } else {
-      // otherwise, use first tab from user tabs coming out of userTabs$ (with 300ms debounce)
+      // otherwise, use first tab from values coming out of userTabs$ (with 300ms debounce)
       subscription = debouncedUserTabs$.subscribe(([firstTab, ...otheTabs]) => {
          router.push(`/home/${props.signedinUid}/${firstTab.uid}`)
       })
