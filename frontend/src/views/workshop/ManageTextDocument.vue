@@ -3,23 +3,28 @@
    <v-card class="d-flex flex-column fill-height">
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <codemirror
-            v-if="selectedCodeMirrorDoc"
-            v-model="selectedCodeMirrorDoc.content"
-            :extensions="selectedCodeMirrorDoc.extensions"
-            placeholder="Start coding here..."
-            class="fill-height"
-            @change="onChangeDebounced($event)"
-            @ready="handleEditorReady"
-         />
+         <div ref="editorContainer" class="fill-height" v-if="currentDocument">
+            <v-ace-editor
+               v-model:value="onChangeDebounced.text"
+               @update:value="onChangeDebounced"
+               lang="json" 
+               theme="chrome" 
+               style="height: 100%; width: 100%;"
+               :options="{
+                  enableBasicAutocompletion: true,
+                  enableLiveAutocompletion: true,
+                  fontSize: 14,
+                  tabSize: 3, 
+                  useSoftTabs: true,
+               }"
+            />
+         </div>
       </div>
    </v-card>
 </template>
 
 <script setup>
 import { ref, shallowRef, watch, onUnmounted } from 'vue'
-import { Codemirror } from 'vue-codemirror'
-import { EditorView } from 'codemirror'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
