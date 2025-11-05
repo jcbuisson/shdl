@@ -12,7 +12,7 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <div ref="editorContainer" class="fill-height" v-if="currentDocument">
+         <div class="fill-height" v-if="currentDocument">
             <v-ace-editor
                v-model:value="currentDocument.text"
                @update:value="onTextChangeDebounced"
@@ -61,7 +61,6 @@ const props = defineProps({
    document_uid: String,
 })
 
-const editorContainer = ref(null)
 let view = null
 
 onBeforeUnmount(() => {

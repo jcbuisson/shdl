@@ -131,16 +131,19 @@ export default function(dbName: string, modelName: string, fields) {
       return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
    }
 
+   let count = 0;
+   
    function addSynchroWhere(where: object) {
       // console.log('addSynchroWhere', dbName, modelName, where)
       // return addSynchroDBWhere(where, db.whereList)
       const promise = addSynchroDBWhere(where, db.whereList)
-      promise.then(isNew => console.log('addSynchroWhere', dbName, modelName, where, isNew))
+      promise.then(isNew => isNew && count++ && console.log(`addSynchroWhere (${count})`, dbName, modelName, where, isNew))
       return promise
    }
 
    function removeSynchroWhere(where: object) {
       console.log('removeSynchroWhere', dbName, modelName, where)
+      count -= 1
       return removeSynchroDBWhere(where, db.whereList)
    }
 

@@ -629,12 +629,18 @@ const testStatementList = ref()
 
 const testCurrentLine = computed(() => {
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
-   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${currentStatement}`
+   const truncatedStatement = currentStatement.slice(0, 20) + (currentStatement.length>20?'...':'')
+   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${truncatedStatement}`
 })
+
+function delay(ms) {
+   return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function runTest() {
    while (testStatusCode.value < 2) {
-      await stepTest()
+      await stepTest();
+      await delay(50);
    }
 }
 

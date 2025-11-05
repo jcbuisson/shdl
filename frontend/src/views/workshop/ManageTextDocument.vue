@@ -13,7 +13,7 @@
                :options="{
                   enableBasicAutocompletion: true,
                   enableLiveAutocompletion: true,
-                  fontSize: 14,
+                  fontSize: 13,
                   tabSize: 3, 
                   useSoftTabs: true,
                }"

@@ -4,9 +4,9 @@
 
       <!-- Toolbar (does not grow) -->
       <v-tabs slider-color="indigo" v-model="tab">
-         <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
+         <!-- <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
             Activité
-         </v-tab>
+         </v-tab> -->
          <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/workshop` }" router value='workshop'>
             Documents
          </v-tab>
