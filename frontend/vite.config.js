@@ -4,6 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+   // Enable worker support
+   worker: {
+      format: 'es', // Use ES module format for workers
+      plugins: () => []
+   },
+
    plugins: [
       vue({
          template: {

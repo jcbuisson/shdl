@@ -8,6 +8,25 @@ import { tryOnScopeDispose } from '@vueuse/core'
 import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import { app, isConnected, disconnectedDate } from '/src/client-app.js'
 
+// ============================================================
+// WORKER-BASED SYNC (Optional - uncomment to enable)
+// ============================================================
+// import { synchronizeWithWorker, initWorkerDatabase } from '/src/lib/synchronizeWorker'
+//
+// To migrate to worker-based sync:
+// 1. Uncomment the import above
+// 2. In getObservable(), replace synchronize() with synchronizeWithWorker()
+// 3. In synchronizeAll(), replace synchronizeModelWhereList() with worker version
+// 4. Call initWorkerDatabase() once when useModel is first created
+//
+// Example:
+// const USE_WORKER_SYNC = true
+//
+// if (USE_WORKER_SYNC) {
+//   initWorkerDatabase(dbName, modelName, fields)
+// }
+// ============================================================
+
 
 export default function(dbName: string, modelName: string, fields) {
 
@@ -124,7 +143,11 @@ export default function(dbName: string, modelName: string, fields) {
    function getObservable(where = {}) {
       addSynchroWhere(where).then((isNew: boolean) => {
          if (isNew && isConnected.value) {
+            // Current: Main thread sync
             synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
+
+            // Worker-based sync (uncomment to enable):
+            // synchronizeWithWorker(app, modelName, dbName, where, disconnectedDate.value)
          }
       })
       const predicate = wherePredicate(where)
