@@ -121,15 +121,14 @@ export default function(dbName: string, modelName: string, fields) {
 
    /////////////          REAL-TIME OBSERVABLE          /////////////
 
-   const myWorker = new Worker(new URL("worker.js", import.meta.url));
+   const myWorker = new Worker(new URL("worker.js", import.meta.url), { type: 'module' });
 
    function getObservable(where = {}) {
       addSynchroWhere(where).then((isNew: boolean) => {
          if (isNew && isConnected.value) {
             synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate.value)
 
-            myWorker.postMessage({ a: 1, b: 2 });
-            myWorker.postMessage({ a: 11, b: 22 });
+            myWorker.postMessage({ modelName });
             
             myWorker.onmessage = (e) => {
                console.log("Message received from worker", e.data);
