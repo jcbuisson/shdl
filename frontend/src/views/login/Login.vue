@@ -62,7 +62,12 @@ import { ref, computed } from 'vue'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 import router from '/src/router'
-import { signin, signup } from "/src/use/useAuthentication"
+import { useAuthentication } from "/src/use/useAuthentication"
+
+import useExpressXClient from '/src/use/useExpressXClient';
+
+const { app } = useExpressXClient();
+const { signin, signup } = useAuthentication(app)
 
 const props = defineProps({
    // 'connection' or 'sign-up'

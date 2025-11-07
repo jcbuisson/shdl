@@ -13,19 +13,23 @@ import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 
 import { mergeMap, switchMap, scan, tap, catchError } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useGroupSlot } from '/src/use/useGroupSlot'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
 // import { setActivityGraphDateMin, activityGraphDateMin, setActivityGraphDateMax, activityGraphDateMax } from "/src/use/useAppState"
 
-const { getObservable: userDocument$ } = useUserDocument()
-const { getObservable: userDocumentEvent$ } = useUserDocumentEvent()
-const { getObservable: groupSlot$ } = useGroupSlot()
-const { getObservable: userGroupRelation$ } = useUserGroupRelation()
+const { app } = useExpressXClient();
+const { getObservable: userDocument$ } = useUserDocument(app)
+const { getObservable: userDocumentEvent$ } = useUserDocumentEvent(app)
+const { getObservable: groupSlot$ } = useGroupSlot(app)
+const { getObservable: userGroupRelation$ } = useUserGroupRelation(app)
+const { guardCombineLatest } = useBusinessObservables(app)
 
-import { guardCombineLatest } from '/src/lib/businessObservables'
 
 const TYPE2COLOR = { 'create': 'green', 'update': 'blue', 'delete': 'red' }
 

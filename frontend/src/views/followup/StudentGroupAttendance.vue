@@ -30,13 +30,16 @@ import { ref, watch, onUnmounted, computed } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
-const { getObservable: groupSlots$ } = useGroupSlot()
-const { getObservable: userSlotExcuses$, create: createUserSlotExcuse, remove: removeUserSlotExcuse } = useUserSlotExcuse()
-
-import { userEvents$ } from '/src/lib/businessObservables'
+const { app } = useExpressXClient();
+const { getObservable: groupSlots$ } = useGroupSlot(app)
+const { getObservable: userSlotExcuses$, create: createUserSlotExcuse, remove: removeUserSlotExcuse } = useUserSlotExcuse(app)
+const { userEvents$ } = useBusinessObservables(app)
 
 
 const props = defineProps({

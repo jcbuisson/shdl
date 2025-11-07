@@ -59,7 +59,8 @@ import { importSPKI, jwtVerify } from "jose"
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 import router from '/src/router'
-import { app } from '/src/client-app.js'
+import useExpressXClient from '/src/use/useExpressXClient';
+const { app } = useExpressXClient();
 
 
 const props = defineProps({

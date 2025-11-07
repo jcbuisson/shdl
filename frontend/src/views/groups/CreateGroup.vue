@@ -23,13 +23,17 @@
 <script setup>
 import { ref } from 'vue'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useGroup } from '/src/use/useGroup'
-import { extendExpiration } from "/src/use/useAuthentication"
+import { useAuthentication } from "/src/use/useAuthentication"
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { create: createGroup } = useGroup()
+const { app } = useExpressXClient();
+const { create: createGroup } = useGroup(app)
+const { extendExpiration } = useAuthentication(app)
 
 const props = defineProps({
    signedinUid: {

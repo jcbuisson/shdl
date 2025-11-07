@@ -1,10 +1,11 @@
 
-import useModel from '/src/use/useModel'
+import { useModel } from '/src/use/useModel.ts';
 
 
-export function useUserGroupRelation() {
+export function useUserGroupRelation(app) {
+   const { createModel } = useModel(app);
 
-   const model = useModel(import.meta.env.VITE_APP_USER_GROUP_RELATION_IDB, 'user_group_relation', ['user_uid', 'group_uid'])
+   const model = createModel(import.meta.env.VITE_APP_USER_GROUP_RELATION_IDB, 'user_group_relation', ['user_uid', 'group_uid'])
 
 
    /////////////          UTILITY          /////////////

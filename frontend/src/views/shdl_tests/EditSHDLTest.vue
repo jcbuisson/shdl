@@ -51,10 +51,13 @@ import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: tests$, update: updateTest } = useSHDLTest()
+const { app } = useExpressXClient();
+const { getObservable: tests$, update: updateTest } = useSHDLTest(app);
 
 
 const props = defineProps({

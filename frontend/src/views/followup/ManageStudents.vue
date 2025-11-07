@@ -73,24 +73,28 @@ import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFr
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useAuthentication } from "/src/use/useAuthentication"
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
 import { selectedUser } from '/src/use/useSelectedUser'
-import { extendExpiration } from "/src/use/useAuthentication"
 import { setStudentManagerSplitWidth, studentManagerSplitWidth } from "/src/use/useAppState"
 
 import router from '/src/router'
 
-import { userGrade$ } from '/src/lib/businessObservables'
-import { guardCombineLatest, students$ } from '/src/lib/businessObservables'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { getObservable: users$ } = useUser()
-const { getObservable: groups$ } = useGroup()
-const { getObservable: userGroupRelations$ } = useUserGroupRelation()
+const { app } = useExpressXClient();
+const { getObservable: users$ } = useUser(app)
+const { getObservable: groups$ } = useGroup(app)
+const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
+const { extendExpiration } = useAuthentication(app)
+const { userGrade$, guardCombineLatest, students$ } = useBusinessObservables(app)
 
 
 const props = defineProps({

@@ -43,14 +43,18 @@ import 'ace-builds/src-noconflict/theme-chrome'; // Example: Chrome theme
 
 import router from '/src/router'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
-import { shdlDocumentParsing$ } from '/src/lib/businessObservables'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import { checkModuleMap } from '/src/lib/shdl/shdlAnalyzer'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 
-const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
-const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
+const { app } = useExpressXClient();
+const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
+const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
+const { shdlDocumentParsing$ } = useBusinessObservables(app)
 
 const { addOrUpdateModule } = useSHDLModule()
 

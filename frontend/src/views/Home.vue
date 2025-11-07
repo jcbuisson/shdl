@@ -8,8 +8,7 @@
 
             <template v-slot:append>
                <div class="d-flex ga-2">
-                  <!-- <v-btn size="small" @click="clearCaches">Clear</v-btn>
-                  <OnlineButton :isOnline="isConnected" @connect="connect" @disconnect="disconnect" /> -->
+                  <!-- <OnlineButton :isOnline="isConnected" @connect="connect" @disconnect="disconnect" /> -->
                   <GithubLink
                      url="https://github.com/jcbuisson/shdl"
                      svgPath="M12 2A10 10 0 0 0 2 12..."
@@ -58,11 +57,11 @@
 import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import { useRoute} from 'vue-router'
 
-import { app, isConnected, connect, disconnect } from '/src/client-app.js'
+import useExpressXClient from '/src/use/useExpressXClient';
 
 import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
-import { restartApp, clearCaches } from "/src/use/useAuthentication"
+import { useAuthentication } from "/src/use/useAuthentication"
 import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useGroupSlot } from '/src/use/useGroupSlot'
@@ -80,13 +79,15 @@ import GithubLink from '/src/components/GithubLink.vue'
 import OnlineButton from '/src/components/OnlineButton.vue'
 
 
-const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser()
-const { synchronizeAll: synchronizeAllGroup } = useGroup()
-const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot()
-const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation()
-const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation()
-const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument()
-const { synchronizeAll: synchronizeAllUserDocumentEvent } = useUserDocumentEvent()
+const { app, connectedDate } = useExpressXClient();
+const { restartApp } = useAuthentication(app);
+const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser(app)
+const { synchronizeAll: synchronizeAllGroup } = useGroup(app)
+const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot(app)
+const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation(app)
+const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation(app)
+const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument(app)
+const { synchronizeAll: synchronizeAllUserDocumentEvent } = useUserDocumentEvent(app)
 
 
 const props = defineProps({
@@ -97,19 +98,19 @@ const props = defineProps({
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
-// synchronize when connection starts or restarts
-// (placed here because of import circularity issues)
-app.addConnectListener(async () => {
-   console.log(">>>>>>>>>>>>>>>> SYNC ALL")
-   // order matters
-   await synchronizeAllUser()
-   await synchronizeAllGroup()
-   await synchronizeAllGroupSlot()
-   await synchronizeAllUserTabRelation()
-   await synchronizeAllUserGroupRelation()
-   await synchronizeAllUserDocument()
-   await synchronizeAllUserDocumentEvent()
-})
+// // synchronize when connection starts or restarts
+// // (placed here because of import circularity issues)
+// app.addConnectListener(async () => {
+//    console.log(">>>>>>>>>>>>>>>> SYNC ALL")
+//    // order matters
+//    await synchronizeAllUser()
+//    await synchronizeAllGroup()
+//    await synchronizeAllGroupSlot()
+//    await synchronizeAllUserTabRelation()
+//    await synchronizeAllUserGroupRelation()
+//    await synchronizeAllUserDocument()
+//    await synchronizeAllUserDocumentEvent()
+// })
 
 const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
    .pipe(
@@ -154,7 +155,7 @@ onMounted(async () => {
    // }, 500)
 
    interval = setInterval(() => {
-      if (isConnected.value) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
+      if (app.isConnected()) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
    }, 30000)
 })
 

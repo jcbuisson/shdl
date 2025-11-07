@@ -1,12 +1,17 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { extendExpiration } from "/src/use/useAuthentication"
+import useExpressXClient from '/src/use/useExpressXClient';
+
+import { useAuthentication } from "/src/use/useAuthentication"
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
 
-const { findWhere: findUserTabRelations } = useUserTabRelation()
-const { findByUID: findUserDocumentByUID } = useUserDocument()
+const { app } = useExpressXClient();
+const { extendExpiration } = useAuthentication(app)
+
+const { findWhere: findUserTabRelations } = useUserTabRelation(app)
+const { findByUID: findUserDocumentByUID } = useUserDocument(app)
 
 
 const routes = [

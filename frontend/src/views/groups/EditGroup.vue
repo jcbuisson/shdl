@@ -24,12 +24,15 @@ import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useGroup } from '/src/use/useGroup'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 import GroupSlots from '/src/views/groups/GroupSlots.vue'
 
-const { getObservable: groups$, update: updateGroup } = useGroup()
+const { app } = useExpressXClient();
+const { getObservable: groups$, update: updateGroup } = useGroup(app)
 
 
 const props = defineProps({

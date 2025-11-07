@@ -12,4 +12,16 @@
 <script setup>
 import ReloadPrompt from '/src/components/ReloadPrompt.vue'
 import { snackbar } from '/src/use/useSnackbar'
+
+// const myWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });
+// myWorker.onmessage = (e) => {
+//    console.log("Message received from worker", e.data);
+// };
+// myWorker.postMessage({
+//    code: 'signin'
+// });
+// setInterval(() => {
+//    myWorker.postMessage({ a: 1, b: 2 });
+// }, 2000);
+
 </script>
