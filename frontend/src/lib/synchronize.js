@@ -8,6 +8,7 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
    await mutex.acquire()
    console.log('synchronize', modelName, where)
 
+   let toAdd = []
    try {
       const requestPredicate = wherePredicate(where)
 
@@ -24,17 +25,24 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
             clientMetadataDict[value.uid] = {}
          }
       }
-      
+
       // call sync service on `where` perimeter
-      const { toAdd, toUpdate, toDelete, addDatabase, updateDatabase } = await app.service('sync').go(modelName, where, cutoffDate, clientMetadataDict)
+      const syncResult = await app.service('sync').go(modelName, where, cutoffDate, clientMetadataDict)
+      toAdd = syncResult.toAdd
+      const { toUpdate, toDelete, addDatabase, updateDatabase } = syncResult
       console.log('->sync', modelName, where, toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
 
-      // 1- add missing elements in cache
-      for (const [value, metaData] of toAdd) {
-         await idbValues.add(value)
-         await idbMetadata.add(metaData)
+      // 1- add missing elements in indexedDB cache
+      // Use a single transaction for all adds to ensure atomicity
+      if (toAdd.length > 0) {
+         await idbValues.db.transaction('rw', [idbValues, idbMetadata], async () => {
+            for (const [value, metaData] of toAdd) {
+               await idbValues.add(value)
+               await idbMetadata.add(metaData)
+            }
+         })
       }
-      // 2- delete elements from cache
+      // 2- delete elements from indexedDB cache
       for (const [uid, deleted_at] of toDelete) {
          await idbValues.delete(uid)
          await idbMetadata.update(uid, { deleted_at })
@@ -130,7 +138,7 @@ export function wherePredicate(where) {
 // console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
 
 
-// sortedjson is used in whereDb to have a deterministic representation of an object
+// sortedjson is used in whereDb to have a unique standardized representation of an object
 
 async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
@@ -144,7 +152,7 @@ export async function addSynchroDBWhere(where, whereDb) {
    try {
       const whereList = await getWhereList(whereDb)
       if (!whereList.includes(swhere)) {
-         console.log('where', where, 'sortedjson', stringifyWithSortedKeys(where))
+         console.log('addSynchroDBWhere', where, stringifyWithSortedKeys(where))
          await whereDb.add({ sortedjson: stringifyWithSortedKeys(where) })
          modified = true
       }

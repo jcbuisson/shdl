@@ -52,11 +52,16 @@ import { ref, onUnmounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
-import { userGroups$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } from '/src/lib/businessObservables'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
+
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
-const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation()
+const { app } = useExpressXClient();
+const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation(app)
+const { userGroups$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } = useBusinessObservables(app)
 
 const props = defineProps({
    user_uid: {

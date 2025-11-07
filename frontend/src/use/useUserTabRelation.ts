@@ -1,10 +1,10 @@
 
-import useModel from '/src/use/useModel'
+import { useModel } from '/src/use/useModel.ts';
 
 
-export function useUserTabRelation() {
-
-   const model = useModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
+export function useUserTabRelation(app) {
+   const { createModel } = useModel(app);
+   const model = createModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
 
    
    /////////////          UTILITY          /////////////

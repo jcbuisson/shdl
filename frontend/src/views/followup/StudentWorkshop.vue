@@ -39,6 +39,8 @@ import { ref } from 'vue'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserDocument } from '/src/use/useUserDocument'
 
 import { setStudentManagerWorkshopSplitWidth, studentManagerWorkshopSplitWidth } from "/src/use/useAppState"
@@ -46,7 +48,8 @@ import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { getObservable: documents$ } = useUserDocument()
+const { app } = useExpressXClient();
+const { getObservable: documents$ } = useUserDocument(app)
 
 
 const props = defineProps({

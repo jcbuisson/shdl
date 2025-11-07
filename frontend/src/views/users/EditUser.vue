@@ -105,21 +105,23 @@ import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 import { v7 as uuidv7 } from 'uuid'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useAuthentication } from '/src/use/useAuthentication'
 
-import { extendExpiration } from '/src/use/useAuthentication'
 import { displaySnackbar } from '/src/use/useSnackbar'
 import { tabs } from '/src/use/useTabs'
 
-import { app } from '/src/client-app.js'
-
-const { getObservable: users$, update: updateUser } = useUser()
-const { getObservable: groups$ } = useGroup()
-const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation()
-const { getObservable: userGroupRelations$, groupDifference, create: createUserGroupRelation, remove: removeUserGroupRelation } = useUserGroupRelation()
+const { app } = useExpressXClient();
+const { getObservable: users$, update: updateUser } = useUser(app)
+const { getObservable: groups$ } = useGroup(app)
+const { getObservable: userTabRelation$, tabDifference, create: createUserTabRelation, remove: removeUserTabRelation } = useUserTabRelation(app)
+const { getObservable: userGroupRelations$, groupDifference, create: createUserGroupRelation, remove: removeUserGroupRelation } = useUserGroupRelation(app)
+const { extendExpiration } = useAuthentication(app)
 
 
 const props = defineProps({

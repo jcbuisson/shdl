@@ -1,10 +1,13 @@
 
-import useModel from '/src/use/useModel'
+import { useModel } from '/src/use/useModel.ts';
 
 
-export function useGroupSlotSHDLTestRelation() {
+export function useGroupSlotSHDLTestRelation(app) {
 
-   const model = useModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+   const { createModel } = useModel(app);
+
+   const model = createModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+   
 
    /////////////          UTILITY          /////////////
 

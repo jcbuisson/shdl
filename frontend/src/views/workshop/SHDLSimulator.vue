@@ -95,18 +95,23 @@ import { useIntervalFn } from '@vueuse/core'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
 import { strToBin } from '/src/lib/binutils.js'
+
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
-
-import { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$ } from '/src/lib/businessObservables'
-
-const { module$ } = useSHDLModule()
-const { getObservable: tests$ } = useSHDLTest()
-const { create: createUserTestRelation } = useUserSHDLTestRelation()
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
 import { useObservable } from '@vueuse/rxjs'
+
+const { module$ } = useSHDLModule()
+
+const { app } = useExpressXClient();
+const { getObservable: tests$ } = useSHDLTest(app)
+const { create: createUserTestRelation } = useUserSHDLTestRelation(app)
+const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$ } = useBusinessObservables(app)
 
 
 const props = defineProps({

@@ -39,16 +39,20 @@ import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFr
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useAuthentication } from "/src/use/useAuthentication"
 
 import { displaySnackbar } from '/src/use/useSnackbar'
-import { extendExpiration } from "/src/use/useAuthentication"
 
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 
-const { getObservable: tests$, remove: removeTest } = useSHDLTest()
+const { app } = useExpressXClient();
+const { getObservable: tests$, remove: removeTest } = useSHDLTest(app)
+const { extendExpiration } = useAuthentication(app)
 
 
 const props = defineProps({

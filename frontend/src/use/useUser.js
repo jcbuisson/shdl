@@ -1,9 +1,11 @@
 
-import useModel from '/src/use/useModel'
+import { useModel } from '/src/use/useModel.ts';
 
 
-export function useUser() {
-   const model = useModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
+export function useUser(app) {
+   const { createModel } = useModel(app);
+
+   const model = createModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
 
    // special case of signin: create/update record of user
    const putUser = async (value) => {

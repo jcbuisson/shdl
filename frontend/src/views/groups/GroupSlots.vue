@@ -103,15 +103,18 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot()
-const { getObservable: shdlTests$ } = useSHDLTest()
-const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation()
+const { app } = useExpressXClient();
+const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot(app)
+const { getObservable: shdlTests$ } = useSHDLTest(app)
+const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
 
 
 const props = defineProps({

@@ -82,6 +82,8 @@
 import { ref } from 'vue'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUser, getFullname } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
@@ -90,9 +92,10 @@ import { tabs } from '/src/use/useTabs'
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: users$, create: createUser } = useUser()
-const { getObservable: groups$ } = useGroup()
-const { create: createUserGroupRelation, remove: removeUserGroupRelation, groupDifference } = useUserGroupRelation()
+const { app } = useExpressXClient();
+const { getObservable: users$, create: createUser } = useUser(app)
+const { getObservable: groups$ } = useGroup(app)
+const { create: createUserGroupRelation, remove: removeUserGroupRelation, groupDifference } = useUserGroupRelation(app)
 
 
 const props = defineProps({

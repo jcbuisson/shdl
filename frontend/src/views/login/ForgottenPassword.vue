@@ -32,7 +32,8 @@
 import { ref } from 'vue'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
-import { app } from '/src/client-app.js'
+import useExpressXClient from '/src/use/useExpressXClient';
+const { app } = useExpressXClient();
 
 const emailRules = [
    (v) => !!v || "L'e-mail est obligatoire",

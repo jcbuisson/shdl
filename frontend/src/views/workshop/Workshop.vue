@@ -90,19 +90,20 @@ import { v7 as uuidv7 } from 'uuid'
 import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 
 import router from '/src/router'
-import { app } from '/src/client-app.js'
 import { setWorkshopSplitWidth, workshopSplitWidth } from "/src/use/useAppState"
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-
-const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument()
-const { modules$, addOrUpdateModule } = useSHDLModule()
+const { app } = useExpressXClient();
+const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument(app)
+const { modules$, addOrUpdateModule } = useSHDLModule(app)
 
 
 const props = defineProps({

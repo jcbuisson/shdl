@@ -39,18 +39,23 @@ import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFr
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
+
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { getObservable: user$ } = useUser()
-const { getObservable: groups$, remove: removeGroup } = useGroup()
-const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation()
-import { guardCombineLatest } from '/src/lib/businessObservables'
+const { app } = useExpressXClient();
+const { getObservable: user$ } = useUser(app)
+const { getObservable: groups$, remove: removeGroup } = useGroup(app)
+const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
+const { guardCombineLatest } = useBusinessObservables(app)
 
 
 const props = defineProps({

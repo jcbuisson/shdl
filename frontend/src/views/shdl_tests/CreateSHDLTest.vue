@@ -22,13 +22,17 @@
 <script setup>
 import { ref } from 'vue'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useSHDLTest } from '/src/use/useSHDLTest'
-import { extendExpiration } from "/src/use/useAuthentication"
+import { useAuthentication } from "/src/use/useAuthentication"
 
 import router from '/src/router'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
-const { create: createTest } = useSHDLTest()
+const { app } = useExpressXClient();
+const { create: createTest } = useSHDLTest(app)
+const { extendExpiration } = useAuthentication(app)
 
 const props = defineProps({
    signedinUid: {

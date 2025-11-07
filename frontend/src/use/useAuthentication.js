@@ -1,5 +1,4 @@
 import { useDebounceFn } from '@vueuse/core'
-import { app, isConnected } from '/src/client-app.js'
 
 import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
 import { useGroup } from '/src/use/useGroup'
@@ -17,77 +16,92 @@ import { useUserTabRelation } from '/src/use/useUserTabRelation'
 
 import router from '/src/router'
 
-const { reset: resetUseGroup } = useGroup()
-const { reset: resetUseGroupSlot } = useGroupSlot()
-const { reset: resetUseGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation()
-const { reset: resetSHDLModule } = useSHDLModule()
-const { reset: resetUseSHDLTest } = useSHDLTest()
-const { reset: resetUseUser, putUser } = useUser()
-const { reset: resetUseUserDocument } = useUserDocument()
-const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent()
-const { reset: resetUseUserGroupRelation } = useUserGroupRelation()
-const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestRelation()
-const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse()
-const { reset: resetUseUserTabRelation } = useUserTabRelation()
+
+export function useAuthentication(app) {
+
+   const { reset: resetUseGroup, initWorker: initGroupWorker } = useGroup(app)
+   const { reset: resetUseGroupSlot } = useGroupSlot(app)
+   const { reset: resetUseGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
+   const { reset: resetSHDLModule } = useSHDLModule(app)
+   const { reset: resetUseSHDLTest } = useSHDLTest(app)
+   const { reset: resetUseUser, putUser } = useUser(app)
+   const { reset: resetUseUserDocument } = useUserDocument(app)
+   const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent(app)
+   const { reset: resetUseUserGroupRelation } = useUserGroupRelation(app)
+   const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestRelation(app)
+   const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse(app)
+   const { reset: resetUseUserTabRelation } = useUserTabRelation(app)
 
 
-export async function clearCaches() {
-   console.log('clearCaches')   
-   // resetUseAuthentication()
-   await resetUseAppState()
-   await resetUseGroup()
-   await resetUseGroupSlot()
-   await resetUseGroupSlotSHDLTestRelation
-   await resetSHDLModule()
-   await resetUseSHDLTest()
-   await resetUseUser()
-   await resetUseUserDocument()
-   await resetUseUserDocumentEvent()
-   await resetUseUserGroupRelation()
-   await resetUseUserSHDLTestEvent()
-   await resetUseUserSlotExcuse()
-   await resetUseUserTabRelation()
-}
-
-export const restartApp = async () => {
-   clearCaches()
-   try {
-      // can fail if connection is broken
-      await app.service('auth').signout()
-   } catch(err) {}
-   router.push('/')
-}
-
-
-
-////////////////////////           LOGIN / LOGOUT            ////////////////////////
-
-// throws an error 'wrong-credentials' if wrong email / password
-export async function signin(email, password) {
-   clearCaches()
-   const { user, expiresAt } = await app.service('auth').signin(email, password)
-   setExpiresAt(expiresAt)
-   await putUser(user)
-   return user
-}
-
-export async function signup(email, firstname, lastname) {
-   await app.service('auth').signup(email, firstname, lastname)
-}
-
-export async function signout(user) {
-   clearCaches()
-   try {
-      await app.service('auth').signout()
-   } catch(err) {
-      console.log('logout err', err)
+   async function clearCaches() {
+      console.log('clearCaches')   
+      // resetUseAuthentication()
+      await resetUseAppState()
+      await resetUseGroup()
+      await resetUseGroupSlot()
+      await resetUseGroupSlotSHDLTestRelation()
+      await resetSHDLModule()
+      await resetUseSHDLTest()
+      await resetUseUser()
+      await resetUseUserDocument()
+      await resetUseUserDocumentEvent()
+      await resetUseUserGroupRelation()
+      await resetUseUserSHDLTestEvent()
+      await resetUseUserSlotExcuse()
+      await resetUseUserTabRelation()
    }
-}
 
-export const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
+   const restartApp = async () => {
+      await clearCaches()
+      try {
+         // can fail if connection is broken
+         await app.service('auth').signout()
+      } catch(err) {}
+      router.push('/')
+   }
 
-async function doExtendExpiration() {
-   if (!isConnected.value) return
-   console.log('DO extend expiration')
-   await app.service('auth', { volatile: true }).extendExpiration()
+
+
+   ////////////////////////           LOGIN / LOGOUT            ////////////////////////
+
+   // throws an error 'wrong-credentials' if wrong email / password
+   async function signin(email, password) {
+      await clearCaches()
+      const { user, expiresAt } = await app.service('auth').signin(email, password)
+      setExpiresAt(expiresAt)
+      await putUser(user)
+
+      initGroupWorker(import.meta.env.VITE_APP_GROUP_IDB, 'group', email, password)
+      return user
+   }
+
+   async function signup(email, firstname, lastname) {
+      await app.service('auth').signup(email, firstname, lastname)
+   }
+
+   async function signout(user) {
+      await clearCaches()
+      try {
+         await app.service('auth').signout()
+      } catch(err) {
+         console.log('logout err', err)
+      }
+   }
+
+   const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
+
+   async function doExtendExpiration() {
+      if (!app.isConnected()) return
+      console.log('DO extend expiration')
+      await app.service('auth', { volatile: true }).extendExpiration()
+   }
+
+   return {
+      clearCaches,
+      restartApp,
+      signin,
+      signup,
+      signout,
+      extendExpiration,
+   }
 }

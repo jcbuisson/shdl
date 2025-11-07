@@ -28,11 +28,14 @@ import { ref, shallowRef, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
+import useExpressXClient from '/src/use/useExpressXClient';
+
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument()
-const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent()
+const { app } = useExpressXClient();
+const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
+const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
 
 
 const props = defineProps({

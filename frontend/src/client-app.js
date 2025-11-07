@@ -6,8 +6,9 @@ import expressXClient from '@jcbuisson/express-x-client'
 // import expressXClient from './client.mjs'
 
 import { setExpiresAt } from "/src/use/useAppState"
-import { restartApp } from "/src/use/useAuthentication"
+import { useAuthentication } from "/src/use/useAuthentication"
 
+console.log("CLIENT-APP CLIENT-APP CLIENT-APP CLIENT-APP CLIENT-APP CLIENT-APP CLIENT-APP")
 
 const socketOptions = {
    path: '/shdl-socket-io/',
@@ -20,9 +21,12 @@ const socketOptions = {
 }
 const socket = io(socketOptions)
 
-export const app = expressXClient(socket, { debug: true })
+const app = expressXClient(socket, { debug: true })
+const { restartApp } = useAuthentication(app);
 
-export const cnxid = useSessionStorage('cnxid', '')
+
+const cnxid = useSessionStorage('cnxid', '')
+app.getCnxId = () => cnxid.value;
 
 app.addErrorListener((socket, err) => {
    console.log('CNX ERROR!!!', socket.id, err)
@@ -66,8 +70,10 @@ app.addConnectListener(async (socket) => {
    })
 })
 
-export const connectedDate = ref()
-export const disconnectedDate = ref()
+const connectedDate = ref()
+const disconnectedDate = ref()
+app.getConnectedDate = () => connectedDate.value;
+app.getDisconnectedDate = () => disconnectedDate.value;
 
 app.addConnectListener(async (socket) => {
    console.log('onConnect')
@@ -80,14 +86,16 @@ app.addDisconnectListener(async (socket) => {
    disconnectedDate.value = new Date()
 })
 
-export const isConnected = computed(() => !!connectedDate.value)
+app.isConnected = () => !!connectedDate.value;
 
-export function connect() {
+app.connect = () => {
    console.log('connecting...')
    socket.connect()
 }
 
-export function disconnect() {
+app.disconnect = () => {
    console.log('disconnecting...')
    socket.disconnect()
 }
+
+export default app;
