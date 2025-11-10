@@ -8,6 +8,7 @@ import { tryOnScopeDispose } from '@vueuse/core'
 import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
 import useWorker from '/src/use/useWorker';
 
+
 export function useModel(app) {
 
    function createModel(dbName: string, modelName: string, fields) {

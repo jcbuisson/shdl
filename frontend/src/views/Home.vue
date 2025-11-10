@@ -79,7 +79,7 @@ import GithubLink from '/src/components/GithubLink.vue'
 import OnlineButton from '/src/components/OnlineButton.vue'
 
 
-const { app, connectedDate } = useExpressXClient();
+const { app } = useExpressXClient();
 const { restartApp } = useAuthentication(app);
 const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser(app)
 const { synchronizeAll: synchronizeAllGroup } = useGroup(app)
