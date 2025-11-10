@@ -2,17 +2,19 @@
 import { useModel } from '/src/use/useModel.ts';
 
 
+// Create singleton model instance
+let modelInstance = null
+
 export function useGroupSlotSHDLTestRelation(app) {
-
-   const { createModel } = useModel(app);
-
-   const model = createModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
-   
+   if (!modelInstance) {
+      const { createModel } = useModel(app);
+      modelInstance = createModel(import.meta.env.VITE_APP_GROUPSLOT_SHDLTEST_RELATION_IDB, 'groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+   }
 
    /////////////          UTILITY          /////////////
 
    async function groupDifference(group_slot_uid, newTestUIDs) {
-      const db = model.db
+      const db = modelInstance.db
 
       const toAddTestUIDs = []
       const toRemoveRelationUIDs = []
@@ -39,7 +41,7 @@ export function useGroupSlotSHDLTestRelation(app) {
       return [toAddTestUIDs, toRemoveRelationUIDs]
    }
 
-   return { ...model, groupDifference }
+   return { ...modelInstance, groupDifference }
 
 
 }

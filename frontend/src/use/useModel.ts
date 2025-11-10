@@ -137,20 +137,18 @@ export function useModel(app) {
 
       /////////////          REAL-TIME OBSERVABLE          /////////////
 
-      // const syncWorker = new Worker(new URL("worker.js", import.meta.url), { type: 'module' });
-
       function getObservable(where = {}) {
          addSynchroWhere(where).then((isNew: boolean) => {
             if (isNew && app.isConnected()) {
                
-               synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
+               // synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
 
-               // if (modelName === 'group') {
-               //    if (syncWorker) syncWorker.postMessage(['sync', db.values, db.metadata, where, app.getDisconnectedDate()]);
-               //    synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
-               // } else {
-               //    synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
-               // }
+               if (syncWorker) {
+                  const { sendToWorker } = useWorker(syncWorker);
+                  sendToWorker(['sync', where, app.getDisconnectedDate()]).then(result => {
+                     console.log('result from worker/sync', result);
+                  })
+               }
             }
          })
          const predicate = wherePredicate(where)
@@ -189,6 +187,7 @@ export function useModel(app) {
       return {
          db, reset,
          initWorker,
+         syncWorker,
          create, update, remove,
          findByUID, findWhere,
          getObservable,

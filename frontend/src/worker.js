@@ -1,18 +1,21 @@
-import { io } from "socket.io-client"
-import Dexie from "dexie"
-import expressXClient from '@jcbuisson/express-x-client'
+import { io } from "socket.io-client";
+import Dexie from "dexie";
+import expressXClient from '@jcbuisson/express-x-client';
+
+import { synchronize } from '/src/lib/synchronize.js';
+
 
 const socketOptions = {
    path: '/shdl-socket-io/',
    transports: ["websocket"],
    reconnectionDelay: 1000,
    reconnectionDelayMax: 10000,
-}
-const socket = io(socketOptions)
+};
+const socket = io(socketOptions);
 
-const app = expressXClient(socket, { debug: true })
+const app = expressXClient(socket, { debug: true });
 
-let db;
+let db, modelName;
 
 
 // handle message coming from main script
@@ -22,13 +25,15 @@ self.onmessage = async (event) => {
    let result;
 
    try {
-      // execute task
+      // execute task, described as an array: [code, ...args]
       const [code, ...args] = data;
 
+
       if (code === 'init') {
-         const [dbName, modelName, fields, email, password] = args;
+         const [dbName, modelName_, fields, email, password] = args;
 
          db = new Dexie(dbName);
+         modelName = modelName_;
 
          db.version(1).stores({
             whereList: "sortedjson",
@@ -36,13 +41,16 @@ self.onmessage = async (event) => {
             metadata: "uid, created_at, updated_at, deleted_at",
          });
 
-         const { user, expiresAt } = await app.service('auth').signin(email, password);
+         const { user } = await app.service('auth').signin(email, password);
          console.log('signed in', dbName, modelName, user);
          result = user;
 
+
       } else if (code === 'sync') {
          const [where, disconnectedDate] = args;
-         console.log('syncccc', where, disconnectedDate)
+         console.log('syncccc', where, disconnectedDate);
+         await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate);
+         result = 'oksync';
       }
 
       // Post the result and the original ID back to the main thread

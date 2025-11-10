@@ -1,17 +1,19 @@
 
 import { useModel } from '/src/use/useModel.ts';
 
+// Create singleton model instance
+let modelInstance = null
 
 export function useUserGroupRelation(app) {
-   const { createModel } = useModel(app);
-
-   const model = createModel(import.meta.env.VITE_APP_USER_GROUP_RELATION_IDB, 'user_group_relation', ['user_uid', 'group_uid'])
-
+   if (!modelInstance) {
+      const { createModel } = useModel(app);
+      modelInstance = createModel(import.meta.env.VITE_APP_USER_GROUP_RELATION_IDB, 'user_group_relation', ['user_uid', 'group_uid'])
+   }
 
    /////////////          UTILITY          /////////////
 
    async function groupDifference(user_uid, newGroupUIDs) {
-      const db = model.db
+      const db = modelInstance.db
 
       const toAddGroupUIDs = []
       const toRemoveRelationUIDs = []
@@ -38,6 +40,6 @@ export function useUserGroupRelation(app) {
       return [toAddGroupUIDs, toRemoveRelationUIDs]
    }
 
-   return { ...model, groupDifference }
+   return { ...modelInstance, groupDifference }
 
 }

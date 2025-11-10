@@ -1,20 +1,23 @@
 
 import { useModel } from '/src/use/useModel.ts';
 
+// Create singleton model instance
+let modelInstance = null
 
 export function useUser(app) {
-   const { createModel } = useModel(app);
-
-   const model = createModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
+   if (!modelInstance) {
+      const { createModel } = useModel(app);
+      modelInstance = createModel(import.meta.env.VITE_APP_USER_IDB, 'user', ['email', 'firstname', 'lastname'])
+   }
 
    // special case of signin: create/update record of user
    const putUser = async (value) => {
-      const db = model.db
+      const db = modelInstance.db
       // put: create (if new) or update
       return await db.values.put(value)
    }
 
-   return { ...model, putUser }
+   return { ...modelInstance, putUser }
 }
 
 /////////////          UTILITIES          /////////////

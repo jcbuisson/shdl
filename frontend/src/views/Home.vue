@@ -117,10 +117,10 @@ const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
    )
 
-// const debouncedUserTabs$ = userTabs$
-//    .pipe(
-//       debounceTime(300) // wait until no new value for 500ms
-//    )
+const debouncedUserTabs$ = userTabs$
+   .pipe(
+      debounceTime(300) // wait until no new value for 500ms
+   )
 
 const userTabs = useObservable(userTabs$)
 
@@ -134,7 +134,7 @@ const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 const route = useRoute()
 const routeTabUid = ref()
 let interval
-// let subscription
+let subscription
 
 onMounted(async () => {
    // const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
@@ -148,11 +148,11 @@ onMounted(async () => {
    //    })
    // }
 
-   // // wait for 1/2s and select first tab
-   // setTimeout(() => {
-   //    console.log('tabs', userTabs.value);
-   //    router.push(`/home/${props.signedinUid}/${userTabs.value.at(0).uid}`)
-   // }, 500)
+   // wait for 300ms and select first tab
+   setTimeout(() => {
+      console.log('tabs', userTabs.value);
+      router.push(`/home/${props.signedinUid}/${userTabs.value.at(0).uid}`)
+   }, 300)
 
    interval = setInterval(() => {
       if (app.isConnected()) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
@@ -167,12 +167,4 @@ onUnmounted(() => {
 async function logout() {
    await restartApp()
 }
-
-watch(
-   () => props.signedinUid,
-   async (signedinUid) => {
-   },
-   { immediate: true } // so that it's called on component mount
-)
-
 </script>
