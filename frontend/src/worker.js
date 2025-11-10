@@ -36,10 +36,9 @@ self.onmessage = async (event) => {
             metadata: "uid, created_at, updated_at, deleted_at",
          });
 
-         // const { user, expiresAt } = await app.service('auth').signin(email, password);
-         // console.log('signed in', dbName, modelName, user);
-         // result = user;
-         result = 234;
+         const { user, expiresAt } = await app.service('auth').signin(email, password);
+         console.log('signed in', dbName, modelName, user);
+         result = user;
 
       } else if (code === 'sync') {
          const [where, disconnectedDate] = args;
