@@ -46,9 +46,8 @@ self.onmessage = async (event) => {
          result = user;
 
 
-      } else if (code === 'sync') {
+      } else if (code === 'synchronize') {
          const [where, disconnectedDate] = args;
-         console.log('syncccc', where, disconnectedDate);
          await synchronize(app, modelName, db.values, db.metadata, where, disconnectedDate);
          result = 'oksync';
       }

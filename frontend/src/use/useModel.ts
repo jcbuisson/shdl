@@ -31,15 +31,16 @@ export function useModel(app) {
       }
 
       let syncWorker: Worker;
+      let workerApi: { sendToWorker: (data: any) => Promise<any> };
 
       const initWorker = async (email: string, password: string) => {
          console.log('initWorker', dbName, modelName, fields);
          if (!syncWorker) {
             console.log('new worker', modelName);
             syncWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });
-            const { sendToWorker } = useWorker(syncWorker);
-            
-            const result = await sendToWorker(['init', dbName, modelName, fields, email, password])
+            workerApi = useWorker(syncWorker);
+
+            const result = await workerApi.sendToWorker(['init', dbName, modelName, fields, email, password])
             console.log('result from worker', result)
          }
       }
@@ -140,14 +141,16 @@ export function useModel(app) {
       function getObservable(where = {}) {
          addSynchroWhere(where).then((isNew: boolean) => {
             if (isNew && app.isConnected()) {
-               
+
                // synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
 
-               if (syncWorker) {
-                  const { sendToWorker } = useWorker(syncWorker);
-                  sendToWorker(['sync', where, app.getDisconnectedDate()]).then(result => {
+               if (workerApi) {
+                  workerApi.sendToWorker(['synchronize', where, app.getDisconnectedDate()]).then(result => {
                      console.log('result from worker/sync', result);
                   })
+               } else {
+                  // JCB : que faire ?
+                  console.log('NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER ');
                }
             }
          })
