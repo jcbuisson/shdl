@@ -27,7 +27,7 @@ export default function useExpressXClient() {
    if (!socket) {
       socket = io(socketOptions);
    }
-   const app = expressXClient(socket, { debug: true });
+   const app = expressXClient(socket, { debug: false });
 
    const { restartApp } = useAuthentication(app);
 

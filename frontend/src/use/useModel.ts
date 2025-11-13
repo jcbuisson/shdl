@@ -30,14 +30,15 @@ export function useModel(app) {
          await db.metadata.clear()
       }
 
-      let syncWorker: Worker;
-      let workerApi: { sendToWorker: (data: any) => Promise<any> };
+      // let syncWorker: Worker;
+      // let workerApi: { sendToWorker: (data: any) => Promise<any> };
+      let workerApi;
 
       const initWorker = async (email: string, password: string) => {
          console.log('initWorker', dbName, modelName, fields);
-         if (!syncWorker) {
+         if (!workerApi) {
             console.log('new worker', modelName);
-            syncWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });
+            const syncWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });
             workerApi = useWorker(syncWorker);
 
             const result = await workerApi.sendToWorker(['init', dbName, modelName, fields, email, password])
@@ -149,7 +150,7 @@ export function useModel(app) {
                      console.log('result from worker/sync', result);
                   })
                } else {
-                  // JCB : que faire ?
+                  // JCB : que faire si le worker n'est pas encore initialisé ?
                   console.log('NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER ');
                }
             }
@@ -190,7 +191,6 @@ export function useModel(app) {
       return {
          db, reset,
          initWorker,
-         syncWorker,
          create, update, remove,
          findByUID, findWhere,
          getObservable,

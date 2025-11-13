@@ -20,7 +20,6 @@ let db, modelName;
 
 // handle message coming from main script
 self.onmessage = async (event) => {
-   console.log("Worker received", event.data);
    const { id, data } = event.data;
    let result;
 
@@ -42,7 +41,7 @@ self.onmessage = async (event) => {
          });
 
          const { user } = await app.service('auth').signin(email, password);
-         console.log('signed in', dbName, modelName, user);
+         console.log('worker init signed in', dbName, modelName, user);
          result = user;
 
 

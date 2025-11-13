@@ -72,12 +72,20 @@ export default function (app) {
             const uid = uuidv7()
             const data = { uid, email: payload.email, password, firstname, lastname }
             const created_at = new Date()
-            const [user, _] = await app.service('user').createWithMeta(uid, data, created_at)
+            // const [user, _] = await app.service('user').createWithMeta(uid, data, created_at)
+            const [user, _] = await prisma.$transaction([
+               prisma.user.create({ data: { uid, ...data } }),
+               prisma.metadata.create({ data: { uid, created_at } })
+            ])
             // give user tab 'workshop'
             for (const tab of ['workshop']) {
                const uid = uuidv7()
                const data = { uid, user_uid: user.uid, tab }
-               await app.service('user_tab_relation').createWithMeta(uid, data, created_at)
+               // await app.service('user_tab_relation').createWithMeta(uid, data, created_at)
+               await prisma.$transaction([
+                  prisma.user_tab_relation.create({ data: { uid, ...data } }),
+                  prisma.metadata.create({ data: { uid, created_at } })
+               ])
             }
             return user
          } catch(err) {
