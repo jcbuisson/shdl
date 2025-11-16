@@ -244,7 +244,7 @@ function analyzeSHDLDocument(doc) {
 }
 
 function displayOKMessageSHDL(rootModule) {
-   message.value = { inError: false, text: `Module OK, ${rootModule.equipotentials.length} équipotentielles` }
+   message.value = { inError: false, text: `Module OK, ${rootModule?.equipotentials?.length} équipotentielles` }
 }
 
 function displayErrorMessageSHDL(err, currentModuleName) {

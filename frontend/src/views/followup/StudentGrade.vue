@@ -125,9 +125,9 @@ const testSuccessDate = computed(() => (shdl_test_uid) => {
 })
 
 const testEvaluation = computed(() => (shdl_test_uid) => {
-   if (!testRelations.value) return 0
-   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
-   return testRelation?.evaluation
+   if (!testRelations.value) return 0;
+   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid);
+   return testRelation?.evaluation ?? (testRelation?.success_date ? 100 : 0);
 })
 
 async function onEvaluationChange(shdl_test_uid, evaluation) {

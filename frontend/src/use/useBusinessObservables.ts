@@ -167,7 +167,8 @@ export function useBusinessObservables(app) {
             for (const test of tests) {
                const testRelation = testRelations.find(testRelation => testRelation.shdl_test_uid === test.uid)
                if (testRelation) {
-                  testsWeight += test.weight * testRelation.evaluation
+                  const evaluation = testRelation.evaluation ?? (testRelation?.success_date ? 100 : 0);
+                  testsWeight += test.weight * evaluation
                }
                totalWeight += test.weight
             }

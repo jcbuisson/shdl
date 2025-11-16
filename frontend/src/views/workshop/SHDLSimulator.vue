@@ -672,7 +672,7 @@ async function stepTest() {
       testStatusCode.value = 3
       testStatusText.value = error
 
-      // store failed test event
+      // store failed test result
       if (!isTeacher.value) {
          const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
          if (previousTest) {
@@ -696,13 +696,13 @@ async function stepTest() {
          // test is over: success!
          testStatusCode.value = 2
          testStatusText.value = "SUCCÈS !"
-         // store success test event (if there is no previous one)
+         // store success test result
          if (!isTeacher.value) {
             const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
             if (previousTest) {
                await updateUserTestRelation(previousTest.uid, {
                   last_try_date: now,
-                  success_date: now,
+                  success_date: previousTest.success_date || now,
                })
             } else {
                await createUserTestRelation({
