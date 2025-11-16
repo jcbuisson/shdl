@@ -12,34 +12,19 @@
 
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <div class="fill-height" v-if="currentDocument">
-            <v-ace-editor
-               v-model:value="currentDocument.text"
-               @update:value="onTextChangeDebounced"
-               lang="json" 
-               theme="chrome" 
-               style="height: 100%; width: 100%;"
-               :options="{
-                  enableBasicAutocompletion: true,
-                  enableLiveAutocompletion: true,
-                  fontSize: 14,
-                  tabSize: 3, 
-                  useSoftTabs: true,
-               }"
-            />
-         </div>
+         <div ref="editorContainer" class="fill-height" v-if="currentDocument" style="height: 100%; width: 100%;"></div>
       </div>
    </v-card>
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
-import { VAceEditor } from 'vue3-ace-editor';
-import 'ace-builds/src-noconflict/mode-json'; // Example: JSON language mode
-import 'ace-builds/src-noconflict/theme-chrome'; // Example: Chrome theme
+import ace from 'ace-builds'
+import 'ace-builds/src-noconflict/mode-json'
+import 'ace-builds/src-noconflict/theme-chrome'
 
 import router from '/src/router'
 
@@ -65,11 +50,42 @@ const props = defineProps({
    document_uid: String,
 })
 
-let view = null
+// THANK YOU CLAUDE
+
+const editorContainer = ref(null)
+let editor = null
+let isUpdatingFromSubscription = false
+
+function initializeEditor() {
+   if (!editor && editorContainer.value) {
+      editor = ace.edit(editorContainer.value)
+      editor.setTheme('ace/theme/chrome')
+      editor.session.setMode('ace/mode/json')
+      editor.setOptions({
+         enableBasicAutocompletion: true,
+         enableLiveAutocompletion: true,
+         fontSize: 14,
+         tabSize: 3,
+         useSoftTabs: true,
+      })
+
+      // Listen for changes from user typing
+      editor.session.on('change', () => {
+         if (!isUpdatingFromSubscription) {
+            const text = editor.getValue()
+            if (currentDocument.value) {
+               currentDocument.value.text = text
+               onTextChangeDebounced(text)
+            }
+         }
+      })
+   }
+}
 
 onBeforeUnmount(() => {
-   if (view) {
-      view.destroy()
+   if (editor) {
+      editor.destroy()
+      editor = null
    }
 })
 
@@ -92,7 +108,38 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
       // handle document content change
-      currentDocument.value = doc
+      const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
+
+      if (isNewDocument) {
+         // New document - update everything including editor content
+         currentDocument.value = doc
+
+         // Wait for DOM to update, then initialize editor if needed
+         await nextTick()
+         initializeEditor()
+
+         if (editor && doc.text !== undefined) {
+            isUpdatingFromSubscription = true
+            editor.setValue(doc.text, -1) // -1 moves cursor to start
+            isUpdatingFromSubscription = false
+         }
+      } else {
+         // Same document - only update if text actually changed from external source
+         if (currentDocument.value.text !== doc.text) {
+            // External change (from another user or server)
+            currentDocument.value = doc
+            if (editor) {
+               isUpdatingFromSubscription = true
+               const cursorPos = editor.getCursorPosition()
+               editor.setValue(doc.text, -1)
+               editor.moveCursorToPosition(cursorPos)
+               isUpdatingFromSubscription = false
+            }
+         } else {
+            // Text is same, just update metadata
+            currentDocument.value = { ...currentDocument.value, ...doc }
+         }
+      }
 
       if (doc.type === 'shdl') {
          analyzeSHDLDocument(doc)
