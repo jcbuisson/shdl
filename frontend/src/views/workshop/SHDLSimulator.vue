@@ -110,7 +110,7 @@ const { module$ } = useSHDLModule()
 
 const { app } = useExpressXClient();
 const { getObservable: tests$ } = useSHDLTest(app)
-const { create: createUserTestRelation } = useUserSHDLTestRelation(app)
+const { create: createUserTestRelation, update: updateUserTestRelation } = useUserSHDLTestRelation(app)
 const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$ } = useBusinessObservables(app)
 
 
@@ -667,17 +667,26 @@ async function stepTest() {
       error = updateState()
    }
 
+   const now = new Date();
    if (error) {
       testStatusCode.value = 3
       testStatusText.value = error
 
       // store failed test event
       if (!isTeacher.value) {
-         await createUserTestRelation({
-            user_uid: props.user_uid,
-            shdl_test_uid: selectedTest.value.uid,
-            evaluation: 0,
-         })
+         const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
+         if (previousTest) {
+            await updateUserTestRelation(previousTest.uid, {
+               last_try_date: now,
+            })
+         } else {
+            await createUserTestRelation({
+               user_uid: props.user_uid,
+               shdl_test_uid: selectedTest.value.uid,
+               first_try_date: now,
+               last_try_date: now,
+            })
+         }
       }
    } else {
       if (testCurrentLineNo.value < testStatementList.value.length - 1) {
@@ -689,13 +698,19 @@ async function stepTest() {
          testStatusText.value = "SUCCÈS !"
          // store success test event (if there is no previous one)
          if (!isTeacher.value) {
-            const previousSuccessfullTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid && testRelation.success_date)
-            if (!previousSuccessfullTest) {
+            const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
+            if (previousTest) {
+               await updateUserTestRelation(previousTest.uid, {
+                  last_try_date: now,
+                  success_date: now,
+               })
+            } else {
                await createUserTestRelation({
                   user_uid: props.user_uid,
                   shdl_test_uid: selectedTest.value.uid,
-                  success_date: new Date(),
-                  evaluation: 100,
+                  first_try_date: now,
+                  last_try_date: now,
+                  success_date: now,
                })
             }
          }

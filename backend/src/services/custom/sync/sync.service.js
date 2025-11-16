@@ -11,8 +11,8 @@ export default function (app) {
       go: async (modelName, where, cutoffDate, clientMetadataDict) => {
          await mutex.acquire()
          try {
-            console.log()
-            console.log('>>>>> SYNC', modelName, where, cutoffDate)
+            // console.log()
+            // console.log('>>>>> SYNC', modelName, where, cutoffDate)
             const databaseService = app.service(modelName)
             const prisma = app.get('prisma')
       
@@ -23,8 +23,8 @@ export default function (app) {
                accu[value.uid] = value
                return accu
             }, {})
-            console.log('clientMetadataDict', clientMetadataDict)
-            console.log('databaseValuesDict', databaseValuesDict)
+            // console.log('clientMetadataDict', clientMetadataDict)
+            // console.log('databaseValuesDict', databaseValuesDict)
          
             // STEP 2: compute intersections between client and database uids
             const onlyDatabaseIds = new Set()
@@ -46,9 +46,9 @@ export default function (app) {
                   onlyClientIds.add(uid)
                }
             }
-            console.log('onlyDatabaseIds', onlyDatabaseIds)
-            console.log('onlyClientIds', onlyClientIds)
-            console.log('databaseAndClientIds', databaseAndClientIds)
+            // console.log('onlyDatabaseIds', onlyDatabaseIds)
+            // console.log('onlyClientIds', onlyClientIds)
+            // console.log('databaseAndClientIds', databaseAndClientIds)
          
             // STEP 3: build add/update/delete sets
             const addDatabase = []
@@ -101,13 +101,13 @@ export default function (app) {
                   }
                }
             }
-            console.log('addDatabase', addDatabase)
-            console.log('deleteDatabase', deleteDatabase)
-            console.log('updateDatabase', updateDatabase)
+            // console.log('addDatabase', addDatabase)
+            // console.log('deleteDatabase', deleteDatabase)
+            // console.log('updateDatabase', updateDatabase)
          
-            console.log('addClient', addClient)
-            console.log('deleteClient', deleteClient)
-            console.log('updateClient', updateClient)
+            // console.log('addClient', addClient)
+            // console.log('deleteClient', deleteClient)
+            // console.log('updateClient', updateClient)
          
             // STEP4: execute database deletions
             for (const uid of deleteDatabase) {
