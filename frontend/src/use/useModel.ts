@@ -115,7 +115,7 @@ export function useModel(app) {
          await db.values.update(uid, { __deleted__: true })
          await db.metadata.update(uid, { deleted_at })
          // and in database, if connected
-         if (isConnected.value) {
+         if (app.isConnected()) {
             app.service(modelName).deleteWithMeta(uid, deleted_at)
             .catch(async err => {
                console.log(`*** err sync ${modelName} remove`, err)
