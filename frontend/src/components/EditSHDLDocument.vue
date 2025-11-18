@@ -155,7 +155,7 @@ onUnmounted(() => {
 
 async function onTextChange(text) {
    if (currentDocument.value.type === 'shdl') {
-      analyzeSHDLDocument(currentDocument.value)
+      analyzeSHDLDocumentDebounced(currentDocument.value)
    }
    // save document
    await updateUserDocument(props.document_uid, {
@@ -177,7 +177,9 @@ async function onTextChange(text) {
       updateUid = updateEvent.uid
    }
 }
-const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
+const onTextChangeDebounced = useDebounceFn(onTextChange, 500);
+
+const analyzeSHDLDocumentDebounced = useDebounceFn(analyzeSHDLDocument, 2000);
 
 // analyze SHDL module and extract its equipotentials
 function analyzeSHDLDocument(doc) {

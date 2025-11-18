@@ -112,12 +112,33 @@ export async function checkModuleMap(moduleMap) {
          }
       }
 
+      // // update alias indexes in cases of multiple indirections
+      // module.equipotentials.forEach(equipotential => {
+      //    if (equipotential.type === 'alias') {
+      //       // look for real associated equipotential, following indirections
+      //       let realEquipotential = module.equipotentials[equipotential.aliasIndex]
+      //       while (realEquipotential.type === 'alias') {
+      //          realEquipotential = module.equipotentials[realEquipotential.aliasIndex]
+      //       }
+      //       // update .aliasIndex
+      //       equipotential.aliasIndex = realEquipotential.index
+      //       // update name->equipotential mapping
+      //       module.equipotentials['__' + equipotential.name] = realEquipotential.index
+      //    }
+      // })
+
       // update alias indexes in cases of multiple indirections
-      module.equipotentials.forEach(equipotential => {
+      for (const equipotential of module.equipotentials) {
          if (equipotential.type === 'alias') {
             // look for real associated equipotential, following indirections
             let realEquipotential = module.equipotentials[equipotential.aliasIndex]
             while (realEquipotential.type === 'alias') {
+               if (realEquipotential === equipotential) {
+                  return {
+                     message: `circularity issue with signal '${equipotential.name}'`,
+                     location: null
+                  }
+               }
                realEquipotential = module.equipotentials[realEquipotential.aliasIndex]
             }
             // update .aliasIndex
@@ -125,7 +146,7 @@ export async function checkModuleMap(moduleMap) {
             // update name->equipotential mapping
             module.equipotentials['__' + equipotential.name] = realEquipotential.index
          }
-      })
+      }
 
       // in all instances, replace alias references by their target
       module.equipotentials.forEach(function(equipotential) {
