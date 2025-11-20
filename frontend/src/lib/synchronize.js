@@ -148,12 +148,12 @@ async function getWhereList(whereDb) {
 export async function addSynchroDBWhere(where, whereDb) {
    await mutex.acquire()
    let modified = false
-   const swhere = stringifyWithSortedKeys(where)
+   const sortedjson = stringifyWithSortedKeys(where)
    try {
       const whereList = await getWhereList(whereDb)
-      if (!whereList.includes(swhere)) {
-         console.log('addSynchroDBWhere', where, stringifyWithSortedKeys(where))
-         await whereDb.add({ sortedjson: stringifyWithSortedKeys(where) })
+      if (!whereList.includes(sortedjson)) {
+         console.log('addSynchroDBWhere', sortedjson)
+         await whereDb.add({ sortedjson })
          modified = true
       }
    } catch(err) {
