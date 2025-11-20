@@ -19,17 +19,17 @@ import router from '/src/router'
 
 export function useAuthentication(app) {
 
-   const { reset: resetUseGroup, initWorker: initGroupSyncWorker } = useGroup(app)
-   const { reset: resetUseGroupSlot, initWorker: initGroupSlotSyncWorker } = useGroupSlot(app)
-   const { reset: resetUseGroupSlotSHDLTestRelation, initWorker: initGroupSlotSHDLTestSyncWorker } = useGroupSlotSHDLTestRelation(app)
-   const { reset: resetUseSHDLTest, initWorker: initSHDLTestSyncWorker } = useSHDLTest(app)
-   const { reset: resetUseUser, putUser, initWorker: initUserSyncWorker } = useUser(app)
-   const { reset: resetUseUserDocument, initWorker: initUserDocumentSyncWorker } = useUserDocument(app)
-   const { reset: resetUseUserDocumentEvent, initWorker: initUserDocumentEventSyncWorker } = useUserDocumentEvent(app)
-   const { reset: resetUseUserGroupRelation, initWorker: initUserGroupRelationSyncWorker } = useUserGroupRelation(app)
-   const { reset: resetUseUserSHDLTestEvent, initWorker: initUserSHDLTestSyncWorker } = useUserSHDLTestRelation(app)
-   const { reset: resetUseUserSlotExcuse, initWorker: initUserSlotExcuseSyncWorker } = useUserSlotExcuse(app)
-   const { reset: resetUseUserTabRelation, initWorker: initUserTabRelationSyncWorker } = useUserTabRelation(app)
+   const { reset: resetUseGroup } = useGroup(app)
+   const { reset: resetUseGroupSlot } = useGroupSlot(app)
+   const { reset: resetUseGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
+   const { reset: resetUseSHDLTest } = useSHDLTest(app)
+   const { reset: resetUseUser, putUser } = useUser(app)
+   const { reset: resetUseUserDocument } = useUserDocument(app)
+   const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent(app)
+   const { reset: resetUseUserGroupRelation } = useUserGroupRelation(app)
+   const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestRelation(app)
+   const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse(app)
+   const { reset: resetUseUserTabRelation } = useUserTabRelation(app)
    const { reset: resetSHDLModule } = useSHDLModule(app)
 
 
@@ -69,20 +69,7 @@ export function useAuthentication(app) {
       await clearCaches()
       const { user, expiresAt } = await app.service('auth').signin(email, password)
       setExpiresAt(expiresAt)
-      await putUser(user)
-
-      await initGroupSyncWorker(email, password);
-      await initGroupSlotSyncWorker(email, password);
-      await initGroupSlotSHDLTestSyncWorker(email, password);
-      await initSHDLTestSyncWorker(email, password);
-      await initUserSyncWorker(email, password);
-      await initUserDocumentSyncWorker(email, password);
-      await initUserDocumentEventSyncWorker(email, password);
-      await initUserGroupRelationSyncWorker(email, password);
-      await initUserSHDLTestSyncWorker(email, password);
-      await initUserSlotExcuseSyncWorker(email, password);
-      await initUserTabRelationSyncWorker(email, password);
-      
+      await putUser(user)      
       return user
    }
 

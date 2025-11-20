@@ -30,22 +30,6 @@ export function useModel(app) {
          await db.metadata.clear()
       }
 
-      // let syncWorker: Worker;
-      // let workerApi: { sendToWorker: (data: any) => Promise<any> };
-      let workerApi;
-
-      const initWorker = async (email: string, password: string) => {
-         console.log('initWorker', dbName, modelName, fields);
-         if (!workerApi) {
-            console.log('new worker', modelName);
-            const syncWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });
-            workerApi = useWorker(syncWorker);
-
-            const result = await workerApi.sendToWorker(['init', dbName, modelName, fields, email, password])
-            console.log('result from worker', result)
-         }
-      }
-
       /////////////          PUB / SUB          /////////////
 
       app.service(modelName).on('createWithMeta', async ([value, meta]) => {
@@ -142,17 +126,7 @@ export function useModel(app) {
       function getObservable(where = {}) {
          addSynchroWhere(where).then((isNew: boolean) => {
             if (isNew && app.isConnected()) {
-
-               // synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
-
-               if (workerApi) {
-                  workerApi.sendToWorker(['synchronize', where, app.getDisconnectedDate()]).then(result => {
-                     console.log('result from worker/sync', result);
-                  })
-               } else {
-                  // JCB : que faire si le worker n'est pas encore initialisé ?
-                  console.log('NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER NOWORKER ');
-               }
+               synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
             }
          })
          const predicate = wherePredicate(where)
@@ -162,8 +136,6 @@ export function useModel(app) {
       let count = 0;
       
       function addSynchroWhere(where: object) {
-         // console.log('addSynchroWhere', dbName, modelName, where)
-         // return addSynchroDBWhere(where, db.whereList)
          const promise = addSynchroDBWhere(where, db.whereList)
          promise.then(isNew => isNew && count++ && console.log(`addSynchroWhere (${count})`, dbName, modelName, where))
          return promise
@@ -190,7 +162,6 @@ export function useModel(app) {
 
       return {
          db, reset,
-         initWorker,
          create, update, remove,
          findByUID, findWhere,
          getObservable,
