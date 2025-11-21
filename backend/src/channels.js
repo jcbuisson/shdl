@@ -7,8 +7,12 @@ export default function(app) {
       const prisma = context.app.get('prisma')
       const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
       const isTeacher = (followupRelations.length > 0)
-      // the events of a teacher are only sent to himself ; the events of a student are sent to himself and to all teachers
-      return isTeacher ? [context.socket.id] : [context.socket.id, 'teachers']
+      if (isTeacher) {
+         return ['teachers', 'students']
+      } else {
+         // the events of a student are sent to himself (room: uid) and all teachers
+         return [context.socket.data.user.uid, 'teachers']
+      }
    }
 
    app.service('user').publish(async (context) => {

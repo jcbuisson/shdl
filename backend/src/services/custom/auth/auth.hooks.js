@@ -12,13 +12,18 @@ async function afterSignin(context) {
    // set socket.data.expiresAt
    const now = new Date()
    context.socket.data.expiresAt = new Date(now.getTime() + config.SESSION_EXPIRE_DELAY)
-   console.log('socket.data.expiresAt set by afterAuthentication', context.socket.data.expiresAt)
-   // add socket to "authenticated" channel
-   context.app.joinChannel('authenticated', context.socket)
-   // check if user is teacher and add its socket to the 'teachers' room if so
+   console.log('socket.data.expiresAt set by afterSignin', context.socket.data.expiresAt)
    const prisma = context.app.get('prisma')
    const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
-   if (followupRelations.length > 0) context.app.joinChannel('teachers', context.socket)
+   const isTeacher = (followupRelations.length > 0)
+   if (isTeacher) {
+      // add a teacher user to the 'teachers' channel
+      context.app.joinChannel('teachers', context.socket)
+   } else {
+      // add a student user to the <user_uid> channel (only member: himself)
+      context.app.joinChannel(context.socket.data.user.uid, context.socket);
+      context.app.joinChannel('students', context.socket);
+   }
    console.log('socket.rooms', context.socket.rooms)
    context.result = {
       user: context.socket.data.user,
