@@ -18,7 +18,8 @@ async function afterSignin(context) {
    // check if user is teacher and add its socket to the 'teachers' room if so
    const prisma = context.app.get('prisma')
    const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
-   if (followupRelations.length > 0) context.app.joinChannel('teachers', context.socket)
+   const isTeacher = (followupRelations.length > 0)
+   if (isTeacher) context.app.joinChannel('teachers', context.socket)
    console.log('socket.rooms', context.socket.rooms)
    context.result = {
       user: context.socket.data.user,
