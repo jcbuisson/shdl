@@ -30,7 +30,7 @@ export async function synchronize(app, modelName, idbValues, idbMetadata, where,
       const syncResult = await app.service('sync').go(modelName, where, cutoffDate, clientMetadataDict)
       toAdd = syncResult.toAdd
       const { toUpdate, toDelete, addDatabase, updateDatabase } = syncResult
-      console.log('->sync', modelName, where, toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
+      console.log('-> service.sync', modelName, where, toAdd, toUpdate, toDelete, addDatabase, updateDatabase)
 
       // 1- add missing elements in indexedDB cache
       // Use a single transaction for all adds to ensure atomicity
