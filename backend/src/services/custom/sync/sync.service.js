@@ -1,4 +1,4 @@
-import { Mutex } from "#root/src/lib/utilities.js"
+import { Mutex, truncateString } from "#root/src/lib/utilities.js"
 
 const mutex = new Mutex()
 
@@ -12,7 +12,7 @@ export default function (app) {
          await mutex.acquire()
          try {
             // console.log()
-            // console.log('>>>>> SYNC', modelName, where, cutoffDate)
+            console.log('>>>>> SYNC', modelName, where, cutoffDate)
             const databaseService = app.service(modelName)
             const prisma = app.get('prisma')
       
@@ -101,18 +101,18 @@ export default function (app) {
                   }
                }
             }
-            // console.log('addDatabase', addDatabase)
-            // console.log('deleteDatabase', deleteDatabase)
-            // console.log('updateDatabase', updateDatabase)
+            console.log('addDatabase', truncateString(JSON.stringify(addDatabase)))
+            console.log('deleteDatabase', truncateString(JSON.stringify(deleteDatabase)))
+            console.log('updateDatabase', truncateString(JSON.stringify(updateDatabase)))
          
-            // console.log('addClient', addClient)
-            // console.log('deleteClient', deleteClient)
-            // console.log('updateClient', updateClient)
+            console.log('addClient', truncateString(JSON.stringify(addClient)))
+            console.log('deleteClient', truncateString(JSON.stringify(deleteClient)))
+            console.log('updateClient', truncateString(JSON.stringify(updateClient)))
          
             // STEP4: execute database deletions
             for (const uid of deleteDatabase) {
                const clientMetaData = clientMetadataDict[uid]
-               console.log('---delete', uid, clientMetaData)
+               // console.log('---delete', uid, clientMetaData)
                await databaseService.deleteWithMeta(uid, clientMetaData.deleted_at)
             }
          

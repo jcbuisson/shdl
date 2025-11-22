@@ -1,4 +1,6 @@
 
+// channels : 'students', 'teachers', ...'<student_uid>'
+
 export default function(app) {
 
    async function roomsToPublish(context) {
@@ -8,9 +10,10 @@ export default function(app) {
       const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
       const isTeacher = (followupRelations.length > 0)
       if (isTeacher) {
+         // the events of a teacher are sent to all teachers and all students
          return ['teachers', 'students']
       } else {
-         // the events of a student are sent to himself (room: uid) and all teachers
+         // the events of a student are sent to himself (room: <uid>) and all teachers
          return [context.socket.data.user.uid, 'teachers']
       }
    }

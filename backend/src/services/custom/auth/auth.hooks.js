@@ -17,10 +17,10 @@ async function afterSignin(context) {
    const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
    const isTeacher = (followupRelations.length > 0)
    if (isTeacher) {
-      // add a teacher user to the 'teachers' channel
+      // add a teacher to the 'teachers' channel
       context.app.joinChannel('teachers', context.socket)
    } else {
-      // add a student user to the <user_uid> channel (only member: himself)
+      // add a student user to the <user_uid> channel (only member: himself) and the 'students' channel
       context.app.joinChannel(context.socket.data.user.uid, context.socket);
       context.app.joinChannel('students', context.socket);
    }

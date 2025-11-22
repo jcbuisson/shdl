@@ -63,7 +63,7 @@
 
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeMount } from 'vue'
 import { useRoute} from 'vue-router'
 import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
@@ -86,9 +86,9 @@ import router from '/src/router'
 import SplitPanel from '/src/components/SplitPanel.vue'
 
 const { app } = useExpressXClient();
-const { getObservable: users$, remove: removeUser } = useUser(app)
-const { getObservable: groups$ } = useGroup(app)
-const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
+const { getObservable: users$, remove: removeUser, addSynchroWhere: addSynchroWhereUser } = useUser(app)
+const { getObservable: groups$, addSynchroWhere: addSynchroWhereGroup } = useGroup(app)
+const { getObservable: userGroupRelations$, remove: removeGroupRelation, addSynchroWhere: addSynchroWhereGroupRelation } = useUserGroupRelation(app)
 const { extendExpiration } = useAuthentication(app)
 const { guardCombineLatest } = useBusinessObservables(app)
 
@@ -97,6 +97,13 @@ const props = defineProps({
    signedinUid: {
       type: String,
    },
+})
+
+onBeforeMount(async () => {
+   await addSynchroWhereUser({});
+   await addSynchroWhereGroup({});
+   await addSynchroWhereGroupRelation({});
+   console.log('END ONBEFORE')
 })
 
 const groupList = useObservable(groups$({}))

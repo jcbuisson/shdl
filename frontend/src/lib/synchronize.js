@@ -124,35 +124,41 @@ export function wherePredicate(where) {
    }
 }
 
-// function isSubset(subset, fullObject) {
-//    // return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
-//    for (const key in fullObject) {
-//       if (fullObject[key] !== subset[key]) return false
-//    }
-//    return true
-// }
-// console.log('isSubset({a: 1, b: 2}, {b: 2})=true', isSubset({a: 1, b: 2}, {b: 2}))
-// console.log('isSubset({}, {})=true', isSubset({}, {}))
-// console.log('isSubset({a: 1}, {})=true', isSubset({a: 1}, {}))
-// console.log('isSubset({a: 1}, {b: 2})=false', isSubset({a: 1}, {b: 2}))
-// console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
+function isSubset(subset, fullObject) {
+   // return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
+   for (const key in fullObject) {
+      if (fullObject[key] !== subset[key]) return false
+   }
+   return true
+}
+console.log('isSubset({a: 1, b: 2}, {b: 2})=true', isSubset({a: 1, b: 2}, {b: 2}))
+console.log('isSubset({}, {})=true', isSubset({}, {}))
+console.log('isSubset({a: 1}, {})=true', isSubset({a: 1}, {}))
+console.log('isSubset({a: 1}, {b: 2})=false', isSubset({a: 1}, {b: 2}))
+console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
+
+function isSubsetAmong(subset, fullObjectList) {
+   return fullObjectList.some(fullObject => isSubset(subset, fullObject));
+}
+console.log('isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}])=true', isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}]))
 
 
-// sortedjson is used in whereDb to have a unique standardized representation of an object
+
+// sortedjson is used as a unique standardized representation of a 'where' object ; it is used both as key and value in 'wheredb' database
 
 async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
-   return list.map(elt => elt.sortedjson)
+   return list.map(elt => JSON.parse(elt.sortedjson))
 }
 
 export async function addSynchroDBWhere(where, whereDb) {
    await mutex.acquire()
    let modified = false
-   const swhere = stringifyWithSortedKeys(where)
    try {
       const whereList = await getWhereList(whereDb)
-      if (!whereList.includes(swhere)) {
-         console.log('addSynchroDBWhere', where, stringifyWithSortedKeys(where))
+      // if (!whereList.whereIncludes(where)) {
+      if (!isSubsetAmong(where, whereList)) {
+         console.log('addSynchroDBWhere', where)
          await whereDb.add({ sortedjson: stringifyWithSortedKeys(where) })
          modified = true
       }
@@ -177,9 +183,8 @@ export async function removeSynchroDBWhere(where, whereDb) {
 }
 
 export async function synchronizeModelWhereList(app, modelName, idbValues, idbMetadata, cutoffDate, whereDb) {
-   const swhereList = await getWhereList(whereDb)
-   for (const swhere of swhereList) {
-      const where = JSON.parse(swhere)
+   const whereList = await getWhereList(whereDb)
+   for (const where of whereList) {
       await synchronize(app, modelName, idbValues, idbMetadata, where, cutoffDate)
    }
 }

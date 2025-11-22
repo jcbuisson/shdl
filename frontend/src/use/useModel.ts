@@ -166,6 +166,7 @@ export function useModel(app) {
          findByUID, findWhere,
          getObservable,
          synchronizeAll,
+         addSynchroWhere,
       }
    }
 
