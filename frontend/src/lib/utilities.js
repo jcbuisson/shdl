@@ -39,3 +39,23 @@ export class Mutex {
       }
    }
 }
+
+
+export function isSubset(subset, fullObject) {
+   // return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
+   for (const key in fullObject) {
+      if (fullObject[key] !== subset[key]) return false
+   }
+   return true
+}
+console.log('isSubset({a: 1, b: 2}, {b: 2})=true', isSubset({a: 1, b: 2}, {b: 2}))
+console.log('isSubset({}, {})=true', isSubset({}, {}))
+console.log('isSubset({a: 1}, {})=true', isSubset({a: 1}, {}))
+console.log('isSubset({a: 1}, {b: 2})=false', isSubset({a: 1}, {b: 2}))
+console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
+
+export function isSubsetAmong(subset, fullObjectList) {
+   return fullObjectList.some(fullObject => isSubset(subset, fullObject));
+}
+console.log('isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}])=true', isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}]))
+

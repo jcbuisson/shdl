@@ -125,6 +125,7 @@ export function useModel(app) {
 
       function getObservable(where = {}) {
          addSynchroWhere(where).then((isNew: boolean) => {
+            // console.log('getObservable addSynchroWhere', modelName, where, isNew);
             if (isNew && app.isConnected()) {
                synchronize(app, modelName, db.values, db.metadata, where, app.getDisconnectedDate())
             }

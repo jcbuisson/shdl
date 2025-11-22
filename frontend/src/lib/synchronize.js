@@ -1,5 +1,5 @@
 
-import { stringifyWithSortedKeys, Mutex } from "/src/lib/utilities"
+import { stringifyWithSortedKeys, Mutex, isSubset, isSubsetAmong } from "/src/lib/utilities"
 
 const mutex = new Mutex()
 
@@ -124,27 +124,6 @@ export function wherePredicate(where) {
    }
 }
 
-function isSubset(subset, fullObject) {
-   // return Object.entries(subset).some(([key, value]) => fullObject[key] === value)
-   for (const key in fullObject) {
-      if (fullObject[key] !== subset[key]) return false
-   }
-   return true
-}
-console.log('isSubset({a: 1, b: 2}, {b: 2})=true', isSubset({a: 1, b: 2}, {b: 2}))
-console.log('isSubset({}, {})=true', isSubset({}, {}))
-console.log('isSubset({a: 1}, {})=true', isSubset({a: 1}, {}))
-console.log('isSubset({a: 1}, {b: 2})=false', isSubset({a: 1}, {b: 2}))
-console.log('isSubset({a: 1}, {a: 1})=true', isSubset({a: 1}, {a: 1}))
-
-function isSubsetAmong(subset, fullObjectList) {
-   return fullObjectList.some(fullObject => isSubset(subset, fullObject));
-}
-console.log('isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}])=true', isSubsetAmong({a: 1, b: 2}, [{c: 3}, {b: 2}]))
-
-
-
-// sortedjson is used as a unique standardized representation of a 'where' object ; it is used both as key and value in 'wheredb' database
 
 async function getWhereList(whereDb) {
    const list = await whereDb.toArray()
@@ -156,9 +135,8 @@ export async function addSynchroDBWhere(where, whereDb) {
    let modified = false
    try {
       const whereList = await getWhereList(whereDb)
-      // if (!whereList.whereIncludes(where)) {
       if (!isSubsetAmong(where, whereList)) {
-         console.log('addSynchroDBWhere', where)
+         // sortedjson is used as a unique standardized representation of a 'where' object ; it is used both as key and value in 'wheredb' database
          await whereDb.add({ sortedjson: stringifyWithSortedKeys(where) })
          modified = true
       }
