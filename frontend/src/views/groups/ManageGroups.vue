@@ -66,6 +66,10 @@ const props = defineProps({
 
 const nameFilter = ref('')
 
+// Trick to force synchronization on all user-group relations, instead of starting dozens of synchronizations, one per group
+const allGroupUserRelations = useObservable(userGroupRelations$({}));
+console.log('allGroupUserRelations', allGroupUserRelations.value)
+
 const groupsAndUsers$ = groups$({}).pipe(
    switchMap(groups => 
       guardCombineLatest(

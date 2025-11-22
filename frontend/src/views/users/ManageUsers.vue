@@ -101,7 +101,7 @@ const props = defineProps({
 
 const groupList = useObservable(groups$({}));
 
-// force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
 const userGroupRelationList = useObservable(userGroupRelations$({}));
 console.log('userGroupRelationList', userGroupRelationList.value)
 
