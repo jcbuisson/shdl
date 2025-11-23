@@ -8,7 +8,7 @@
       <template v-for="group in userGroups" :key="group.uid">
          <StudentGroupAttendance :user_uid="user_uid" :group="group" :editable="editable"/>
       </template>
-      <h4>Taux de présence : {{ attendanceGrade + ' %' }}</h4>
+      <h4>Taux de présence : {{ isNaN(attendanceGrade) ? '-' : attendanceGrade + ' %' }}</h4>
       <v-divider :thickness="3"/>
 
       <!-- test results -->
@@ -23,7 +23,7 @@
             </tr>
          </thead>
          <tbody>
-            <tr v-for="test in userTests" :key="test.uid">
+            <tr v-for="test in userTests" :key="test?.uid">
                <td>{{ test.name }}</td>
                <td>{{ test.weight }}</td>
                <td v-if="testSuccessDate(test.uid)">{{ testSuccessDate(test.uid) }}</td>
@@ -56,19 +56,13 @@ import { useObservable } from '@vueuse/rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
-import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
 import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.vue'
 
 const { app } = useExpressXClient();
-const { getObservable: userGroupRelation$ } = useUserGroupRelation(app)
-const { getObservable: userSlotExcuse$ } = useUserSlotExcuse(app)
-const { getObservable: userDocumentEvent$ } = useUserDocumentEvent(app)
-const { getObservable: userSHDLTestRelation$, create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation(app)
+const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation(app)
 const { userGroups$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } = useBusinessObservables(app)
 
 const props = defineProps({
@@ -80,22 +74,6 @@ const props = defineProps({
       default: true,
    }
 })
-
-// // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-// const userGroupRelationList = useObservable(userGroupRelation$({}));
-// console.log('userGroupRelationList', userGroupRelationList.value)
-
-// // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-// const userSlotExcuseList = useObservable(userSlotExcuse$({}));
-// console.log('userSlotExcuseList', userSlotExcuseList.value)
-
-// // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-// const userDocumentEventList = useObservable(userDocumentEvent$({}));
-// console.log('userDocumentEventList', userDocumentEventList.value)
-
-// // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-// const userSHDLTestRelationList = useObservable(userSHDLTestRelation$({}));
-// console.log('userSHDLTestRelationList', userSHDLTestRelationList.value)
 
 const userGroups = ref([])
 const attendanceGrade = ref(-1)

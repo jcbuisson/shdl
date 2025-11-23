@@ -52,7 +52,7 @@ import SplitPanel from '/src/components/SplitPanel.vue'
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { app } = useExpressXClient();
-const { getObservable: user$ } = useUser(app)
+const { getObservable: users$ } = useUser(app)
 const { getObservable: groups$, remove: removeGroup } = useGroup(app)
 const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
 const { guardCombineLatest } = useBusinessObservables(app)
@@ -67,6 +67,10 @@ const props = defineProps({
 const nameFilter = ref('')
 
 // Trick to force synchronization on all user-group relations, instead of starting dozens of synchronizations, one per group
+const allUsers = useObservable(users$({}));
+console.log('allUsers', allUsers.value)
+
+// Trick to force synchronization on all user-group relations, instead of starting dozens of synchronizations, one per group
 const allGroupUserRelations = useObservable(userGroupRelations$({}));
 console.log('allGroupUserRelations', allGroupUserRelations.value)
 
@@ -76,7 +80,7 @@ const groupsAndUsers$ = groups$({}).pipe(
          groups.map(group =>
             userGroupRelations$({ group_uid: group.uid }).pipe(
                switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => user$({ uid: relation.user_uid }).pipe(map(users => users[0]))))
+                  guardCombineLatest(relations.map(relation => users$({ uid: relation.user_uid }).pipe(map(users => users[0]))))
                ),
                map(users => ({ group, users }))
             )
