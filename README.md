@@ -4,13 +4,8 @@
 Credit: University of Toulouse, ENSEEIHT
 
 
-# PB
-circularité (Claude) :
-1. client-app.js imports useAuthentication
-2. useAuthentication imports app from client-app.js
-3. useAuthentication also imports useUser, useGroup, etc.
-4. Those composables use useModel
-5. useModel imports app from client-app.js
+# Prisma 6/7
+npx prisma@6.4.1 db push
 
 
 

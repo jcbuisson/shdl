@@ -149,7 +149,8 @@ export function useBusinessObservables(app) {
          userTestGrade$(user_uid, now),
       ]).pipe(
          map(([attendanceGrade, testGrade]) => {
-            const percentage = (attendanceGrade + testGrade) / 2
+            // const percentage = (attendanceGrade + testGrade) / 2
+            const percentage = testGrade
             return Math.round(percentage * 20 / 100)
          })
       )

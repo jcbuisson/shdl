@@ -26,6 +26,7 @@ enum Tab {
    craps_tests  // CRAPS tests management
    followup     // students followup
    workshop     // workshop for shdl, craps, text document
+   grade        // user evaluation
 }
 
 model user {

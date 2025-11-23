@@ -6,4 +6,5 @@ export const tabs = [
    { uid: 'workshop', name: "Mes documents" },
    { uid: 'users', name: "Gestion des utilisateurs" },
    { uid: 'groups', name: "Gestion des groupes" },
+   { uid: 'grade', name: "Mon évaluation" },
 ]

@@ -206,6 +206,17 @@ const routes = [
                },
             ],      
          },
+         {
+            path: 'grade',
+            meta: {
+               roles: ['grade']
+            },
+            props: route => ({
+               user_uid: route.params.signedinUid,
+               editable: false,
+            }),
+            component: () => import('/src/views/followup/StudentGrade.vue'),
+         },
       ],
    },
 

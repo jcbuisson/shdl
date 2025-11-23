@@ -18,7 +18,7 @@
                <td>{{ format(slot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
                <td>{{ format(slot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
                <td><v-icon>{{ slotActivityIcon(slot) }}</v-icon></td>
-               <td><v-checkbox :disabled="isActiveDuringSlot(slot)" density="compact" hide-details :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
+               <td><v-checkbox :disabled="!editable || isActiveDuringSlot(slot)" density="compact" hide-details :modelValue="isExcused(slot)" @input="onExcuseClick(slot)"></v-checkbox></td>
             </tr>
          </tbody>
       </v-table>
@@ -48,6 +48,10 @@ const props = defineProps({
    },
    group: {
       type: Object,
+   },
+   editable: {
+      type: Boolean,
+      default: true,
    },
 })
 
