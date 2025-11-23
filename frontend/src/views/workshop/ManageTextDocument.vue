@@ -1,32 +1,30 @@
 <template>
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height">
+
+      <!-- Toolbar (does not grow) -->
+      <div v-if="currentDocument?.type === 'shdl'"
+            class="d-flex align-center"
+            :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }"
+            style="color: white; height: 48px; padding: 10px;">
+         <h5>{{ message.text }}</h5>
+      </div>
+
       <!-- Fills remaining vertical space -->
       <div class="d-flex flex-column flex-grow-1 overflow-auto">
-         <div ref="editorContainer" class="fill-height" v-if="currentDocument">
-            <v-ace-editor
-               v-model:value="onChangeDebounced.text"
-               @update:value="onChangeDebounced"
-               lang="json" 
-               theme="chrome" 
-               style="height: 100%; width: 100%;"
-               :options="{
-                  enableBasicAutocompletion: true,
-                  enableLiveAutocompletion: true,
-                  fontSize: 13,
-                  tabSize: 3, 
-                  useSoftTabs: true,
-               }"
-            />
-         </div>
+         <div ref="editorContainer" class="fill-height" v-if="currentDocument" style="height: 100%; width: 100%;"></div>
       </div>
    </v-card>
 </template>
 
 <script setup>
-import { ref, shallowRef, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
+
+import ace from 'ace-builds'
+import 'ace-builds/src-noconflict/mode-json'
+import 'ace-builds/src-noconflict/theme-chrome'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
@@ -48,18 +46,52 @@ const props = defineProps({
    },
 })
 
-const currentEditorView = shallowRef()
-const handleEditorReady = (payload) => {
-   console.log('ready', payload)
-   currentEditorView.value = payload.view
+
+// THANK YOU CLAUDE
+
+const editorContainer = ref(null)
+let editor = null
+let isUpdatingFromSubscription = false
+
+function initializeEditor() {
+   if (!editor && editorContainer.value) {
+      editor = ace.edit(editorContainer.value)
+      editor.setTheme('ace/theme/chrome')
+      editor.session.setMode('ace/mode/json')
+      editor.setOptions({
+         enableBasicAutocompletion: true,
+         enableLiveAutocompletion: true,
+         fontSize: 14,
+         tabSize: 3,
+         useSoftTabs: true,
+      })
+
+      // Listen for changes from user typing
+      editor.session.on('change', () => {
+         if (!isUpdatingFromSubscription) {
+            const text = editor.getValue()
+            if (currentDocument.value) {
+               currentDocument.value.text = text
+               onTextChangeDebounced(text)
+            }
+         }
+      })
+   }
 }
+
+onBeforeUnmount(() => {
+   if (editor) {
+      editor.destroy()
+      editor = null
+   }
+})
+
+const message = ref({})
 
 let subscription
 let subscription2
 
-const uid2docDict = {}
-const selectedCodeMirrorDoc = ref({})
-const selectedDocument = ref()
+const currentDocument = ref()
 
 let updateUid
 
@@ -70,33 +102,45 @@ function userDocument$(uid) {
 }
 
 watch(() => props.document_uid, async (uid, previous_uid) => {
-   updateUid = undefined
-   if (previous_uid) {
-      const previousDoc = uid2docDict[previous_uid]
-      // preserve state
-      previousDoc.state = currentEditorView.value?.state
-   }
-   const doc = uid2docDict[uid]
-   if (doc) {
-      selectedCodeMirrorDoc.value = doc
-      // restore state
-      currentEditorView.value.setState(doc.state)
-   } else {
-      console.log('create new doc')
-      const newDoc = {
-         content: '',
-         extensions: [EditorView.editable.of(props.editable)],
-      }
-      uid2docDict[uid] = newDoc
-      selectedCodeMirrorDoc.value = newDoc
-   }
-
-   // handle document content change
    if (subscription) subscription.unsubscribe()
-   subscription = userDocument$(uid).subscribe(async document => {
-      console.log('document', document)
-      selectedCodeMirrorDoc.value.content = document.text
-      selectedDocument.value = document
+   subscription = userDocument$(uid).subscribe(async doc => {
+      // handle document content change
+      const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
+
+      if (isNewDocument) {
+         // New document - update everything including editor content
+         currentDocument.value = doc
+
+         // Wait for DOM to update, then initialize editor if needed
+         await nextTick()
+         initializeEditor()
+
+         if (editor && doc.text !== undefined) {
+            isUpdatingFromSubscription = true
+            editor.setValue(doc.text, -1) // -1 moves cursor to start
+            isUpdatingFromSubscription = false
+         }
+      } else {
+         // Same document - only update if text actually changed from external source
+         if (currentDocument.value.text !== doc.text) {
+            // External change (from another user or server)
+            currentDocument.value = doc
+            if (editor) {
+               isUpdatingFromSubscription = true
+               const cursorPos = editor.getCursorPosition()
+               editor.setValue(doc.text, -1)
+               editor.moveCursorToPosition(cursorPos)
+               isUpdatingFromSubscription = false
+            }
+         } else {
+            // Text is same, just update metadata
+            currentDocument.value = { ...currentDocument.value, ...doc }
+         }
+      }
+
+      if (doc.type === 'shdl') {
+         analyzeSHDLDocument(doc)
+      }
    })
 
 }, { immediate: true })
@@ -106,14 +150,14 @@ onUnmounted(() => {
    subscription2 && subscription2.unsubscribe()
 })
 
-const onChange = async (text) => {
-   if (selectedDocument.value.type === 'shdl') {
-      handleSHDLDocumentChange(selectedDocument.value)
+async function onTextChange(text) {
+   if (currentDocument.value.type === 'shdl') {
+      analyzeSHDLDocumentDebounced(currentDocument.value)
    }
    // save document
    await updateUserDocument(props.document_uid, {
       text,
-      update_count: selectedDocument.value.update_count + 1,
+      update_count: currentDocument.value.update_count + 1,
    })
    // create or update document event
    if (updateUid) {
@@ -130,5 +174,5 @@ const onChange = async (text) => {
       updateUid = updateEvent.uid
    }
 }
-const onChangeDebounced = useDebounceFn(onChange, 500)
+const onTextChangeDebounced = useDebounceFn(onTextChange, 500);
 </script>

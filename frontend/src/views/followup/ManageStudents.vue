@@ -78,6 +78,7 @@ import useExpressXClient from '/src/use/useExpressXClient';
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useAuthentication } from "/src/use/useAuthentication"
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
@@ -93,6 +94,7 @@ const { app } = useExpressXClient();
 const { getObservable: users$ } = useUser(app)
 const { getObservable: groups$ } = useGroup(app)
 const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
+const { getObservable: userTabRelations$ } = useUserTabRelation(app)
 const { extendExpiration } = useAuthentication(app)
 const { userGrade$, guardCombineLatest, students$ } = useBusinessObservables(app)
 
@@ -105,6 +107,14 @@ const props = defineProps({
 
 const groupList = useObservable(groups$({}))
 const userGroups = ref([])
+
+// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+const userGroupRelationList = useObservable(userGroupRelations$({}));
+console.log('userGroupRelationList', userGroupRelationList.value)
+
+// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+const userTabRelationList = useObservable(userTabRelations$({}));
+console.log('userTabRelationList', userTabRelationList.value)
 
 const nameFilter = ref('')
 const groupFilter = ref('')

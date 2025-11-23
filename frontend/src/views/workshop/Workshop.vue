@@ -93,6 +93,7 @@ import { map } from 'rxjs'
 import useExpressXClient from '/src/use/useExpressXClient';
 
 import { useUserDocument } from '/src/use/useUserDocument'
+import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 
 import router from '/src/router'
@@ -103,6 +104,7 @@ import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { app } = useExpressXClient();
 const { getObservable: documents$, create: createUserDocument, remove: removeUserDocument } = useUserDocument(app)
+const { create: createUserDocumentEvent } = useUserDocumentEvent(app)
 const { modules$, addOrUpdateModule } = useSHDLModule(app)
 
 
@@ -188,7 +190,7 @@ const selectedDocument = ref(null)
 function selectDocument(document) {
    selectedDocument.value = document
    if (document.type === 'shdl') {
-      const module = moduleList.value.find(module => module.document_uid === document.uid)
+      // const module = moduleList.value.find(module => module.document_uid === document.uid)
       addOrUpdateModule({
          document_uid: document.uid,
          is_valid: null,
@@ -202,22 +204,23 @@ function selectDocument(document) {
 }
 
 async function createDocument() {
+   const text = data.value.type === 'shdl' ? `module ${data.value.name}()\nend module` : '';
    const createdDocument = await createUserDocument({
       user_uid: props.signedinUid,
       name: data.value.name,
       type: data.value.type,
-      text: `module ${data.value.name}()\nend module`,
-   })
-   const uid = uuidv7()
-   await app.service('user_document_event').create({
+      text,
+   });
+   const uid = uuidv7();
+   await createUserDocumentEvent({
       data: {
          uid,
          document_uid: createdDocument.uid,
          type: 'create',
          start: new Date(),
       }
-   })
-   router.push(`/home/${props.signedinUid}/workshop/shdl/${createdDocument.uid}`)
+   });
+   router.push(`/home/${props.signedinUid}/workshop/${data.value.type}/${createdDocument.uid}`);
 }
 
 async function deleteDocument(module) {

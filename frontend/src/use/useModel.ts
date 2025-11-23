@@ -6,7 +6,7 @@ import { v7 as uuidv7 } from 'uuid'
 import { tryOnScopeDispose } from '@vueuse/core'
 
 import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
-import useWorker from '/src/use/useWorker';
+// import useWorker from '/src/use/useWorker';
 
 
 export function useModel(app) {
