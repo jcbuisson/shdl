@@ -6,7 +6,7 @@
       </v-toolbar>
    
       <!-- Fills remaining vertical space -->
-      <div class="d-flex flex-column flex-grow-1 overflow-auto">
+      <!-- <div class="d-flex flex-column flex-grow-1 overflow-auto"> -->
          <v-table>
             <thead>
                <tr>
@@ -27,7 +27,31 @@
                </tr>
             </tbody>
          </v-table>
-      </div>
+      <!-- </div> -->
+
+      <v-toolbar color="green-darken-3 mt-4" density="compact">
+         <v-btn icon="mdi-plus" variant="text" @click="addMember"></v-btn>
+         Membres du groupe
+      </v-toolbar>
+
+      <!-- Fills remaining vertical space -->
+      <!-- <div class="d-flex flex-column flex-grow-1 overflow-auto"> -->
+         <v-table>
+            <thead>
+               <tr>
+                  <th class="text-left">Nom</th>
+                  <th class="text-left">Supprimer</th>
+               </tr>
+            </thead>
+            <tbody>
+               <tr v-for="userGroupRelation in userGroupRelationList" :key="userGroupRelation.uid">
+                  <td>{{ userGroupRelation.uid }}</td>
+                  <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteMember(user)"></v-btn></td>
+               </tr>
+            </tbody>
+         </v-table>
+      <!-- </div> -->
+      
    </v-card>
 
    <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
@@ -108,11 +132,13 @@ import useExpressXClient from '/src/use/useExpressXClient';
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
+import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { app } = useExpressXClient();
 const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot(app)
+const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
 const { getObservable: shdlTests$ } = useSHDLTest(app)
 const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
 
@@ -126,24 +152,33 @@ const props = defineProps({
    },
 })
 
-const shdlTestList = useObservable(shdlTests$())
-const slotList = ref([])
+const shdlTestList = useObservable(shdlTests$());
+const slotList = ref([]);
+const userGroupRelationList = ref([]);
 
-const selectedTestUIDs = ref([])
+const selectedTestUIDs = ref([]);
 
-let groupSubscription
-let slotSubscription
+let groupSubscription;
+let slotSubscription;
+let groupRelationSubscription;;
 
 onUnmounted(() => {
-   if (groupSubscription) groupSubscription.unsubscribe()
-   if (slotSubscription) slotSubscription.unsubscribe()
+   if (groupSubscription) groupSubscription.unsubscribe();
+   if (slotSubscription) slotSubscription.unsubscribe();
+   if (groupRelationSubscription) groupRelationSubscription.unsubscribe();
 })
 
 watch(() => props.group_uid, async (group_uid) => {
-   if (groupSubscription) groupSubscription.unsubscribe()
+   if (groupSubscription) groupSubscription.unsubscribe();
    groupSubscription = groupSlots$({ group_uid }).subscribe(slots => {
-      slotList.value = slots.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0)
+      slotList.value = slots.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0);
    })
+
+   if (groupRelationSubscription) groupRelationSubscription.unsubscribe();
+   groupRelationSubscription = userGroupRelations$({ group_uid: props.group_uid }).subscribe(userGroupRelations => {
+      userGroupRelationList.value = userGroupRelations;
+   })
+
 }, { immediate: true })
 
 const addOrEditSlotDialog = ref(false)
@@ -241,5 +276,13 @@ const deleteSlot = async (groupSlot) => {
          displaySnackbar({ text: "Erreur lors de la suppression...", color: 'error', timeout: 4000 })
       }
    }
+}
+
+const addMember = () => {
+   alert(`TODO - Aller dans "Gestion des utilisateurs"`)
+}
+
+const deleteMember = () => {
+   alert(`TODO - Aller dans "Gestion des utilisateurs"`)
 }
 </script>
