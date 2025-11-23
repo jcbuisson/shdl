@@ -23,3 +23,13 @@
 <script setup>
 import SplitPanel from '/src/components/SplitPanel.vue'
 </script>
+
+<style>
+.ace_editor .ace_active-line {
+   /* Use a standard background color */
+   background: hsla(65, 91%, 60%, 0.19) !important; 
+   
+   /* Optional: Change border or add a shadow for emphasis */
+   border-left: 3px solid #009900;
+}
+</style>

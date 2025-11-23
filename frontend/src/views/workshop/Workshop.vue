@@ -195,17 +195,13 @@ function selectDocument(document) {
          document_uid: document.uid,
          is_valid: null,
       })
-      router.push(`/home/${props.signedinUid}/workshop/shdl/${document.uid}`)
-   } else if (document.type === 'text') {
-      router.push(`/home/${props.signedinUid}/workshop/text/${document.uid}`)
-   } else if (document.type === 'craps') {
-      router.push(`/home/${props.signedinUid}/workshop/craps/${document.uid}`)
    }
+   router.push(`/home/${props.signedinUid}/workshop/${document.type}/${document.uid}`);
 }
 
 async function createDocument() {
    const text = data.value.type === 'shdl' ? `module ${data.value.name}()\nend module` : '';
-   const createdDocument = await createUserDocument({
+   const document = await createUserDocument({
       user_uid: props.signedinUid,
       name: data.value.name,
       type: data.value.type,
@@ -215,12 +211,12 @@ async function createDocument() {
    await createUserDocumentEvent({
       data: {
          uid,
-         document_uid: createdDocument.uid,
+         document_uid: document.uid,
          type: 'create',
          start: new Date(),
       }
    });
-   router.push(`/home/${props.signedinUid}/workshop/${data.value.type}/${createdDocument.uid}`);
+   selectDocument(document);
 }
 
 async function deleteDocument(module) {
