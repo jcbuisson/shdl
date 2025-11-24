@@ -77,6 +77,8 @@ import useExpressXClient from '/src/use/useExpressXClient';
 
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useGroupSlot } from '/src/use/useGroupSlot'
+import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
@@ -97,6 +99,8 @@ import SplitPanel from '/src/components/SplitPanel.vue'
 const { app } = useExpressXClient();
 const { getObservable: groups$ } = useGroup(app)
 const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
+const { getObservable: groupSlots$ } = useGroupSlot(app)
+const { getObservable: groupSlotSHDLTestRelations$ } = useGroupSlotSHDLTestRelation(app)
 const { getObservable: userSlotExcuses$ } = useUserSlotExcuse(app)
 const { getObservable: userDocumentEvents$ } = useUserDocumentEvent(app)
 const { getObservable: userSHDLTestRelations$ } = useUserSHDLTestRelation(app)
@@ -119,6 +123,14 @@ const userGroups = ref([])
 // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
 const userGroupRelationList = useObservable(userGroupRelations$({}));
 console.log('userGroupRelationList', userGroupRelationList.value)
+
+// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+const groupSlotList = useObservable(groupSlots$({}));
+console.log('groupSlotList', groupSlotList.value)
+
+// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+const groupSlotSHDLTestRelationList = useObservable(groupSlotSHDLTestRelations$({}));
+console.log('groupSlotSHDLTestRelationList', groupSlotSHDLTestRelationList.value)
 
 // Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
 const userSlotExcuseList = useObservable(userSlotExcuses$({}));
@@ -224,7 +236,7 @@ watch(() => [route.path, userAndGroupsAndGradeList.value], async () => {
 function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
-   router.push(`/home/${props.signedinUid}/followup/${user.uid}/activity`)
+   router.push(`/home/${props.signedinUid}/followup/${user.uid}/grade`)
 }
 
 function onResize(width) {
