@@ -64,6 +64,7 @@ function initializeEditor() {
       editor.setOptions({
          // enableBasicAutocompletion: true,
          // enableLiveAutocompletion: true,
+         behavioursEnabled: false,
          fontSize: 14,
          tabSize: 3,
          useSoftTabs: true,
