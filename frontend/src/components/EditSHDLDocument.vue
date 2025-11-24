@@ -62,8 +62,8 @@ function initializeEditor() {
       editor.setTheme('ace/theme/chrome')
       editor.session.setMode('ace/mode/json')
       editor.setOptions({
-         enableBasicAutocompletion: true,
-         enableLiveAutocompletion: true,
+         // enableBasicAutocompletion: true,
+         // enableLiveAutocompletion: true,
          fontSize: 14,
          tabSize: 3,
          useSoftTabs: true,
