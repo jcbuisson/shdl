@@ -142,6 +142,15 @@ export function useBusinessObservables(app) {
       )
    }
 
+   function groupMembers$(group_uid: string) {
+      return userGroupRelations$(group_uid).pipe(
+         switchMap(userGroupRelationList =>
+            guardCombineLatest(userGroupRelationList.map(relation => users$({ uid: relation.user_uid })))
+         ),
+         map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), []).sort((a, b) => a.lastname.localeCompare(b.lastname))),
+      )
+   }
+
    // emit value in 0..20
    function userGrade$(user_uid: string, now) {
       return guardCombineLatest([
@@ -271,6 +280,7 @@ export function useBusinessObservables(app) {
       userSHDLTests$,
       userGroupSlotSHDLTestRelation$,
       userSHDLTestsRelations$,
+      groupMembers$,
       userGrade$,
       userTestGrade$,
       userAttendanceGrade$,

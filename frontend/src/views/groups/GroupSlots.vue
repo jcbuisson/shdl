@@ -1,58 +1,52 @@
 <template>
-   <v-card class="d-flex flex-column fill-height">
+   <v-card>
       <v-toolbar color="green-darken-3" density="compact">
          <v-btn icon="mdi-plus" variant="text" @click="addSlot"></v-btn>
          Créneaux horaires
       </v-toolbar>
-   
-      <!-- Fills remaining vertical space -->
-      <!-- <div class="d-flex flex-column flex-grow-1 overflow-auto"> -->
-         <v-table>
-            <thead>
-               <tr>
-                  <th class="text-left">Nom</th>
-                  <th class="text-left">Début</th>
-                  <th class="text-left">Fin</th>
-                  <th class="text-left">Éditer</th>
-                  <th class="text-left">Supprimer</th>
-               </tr>
-            </thead>
-            <tbody>
-               <tr v-for="groupSlot in slotList" :key="groupSlot.uid">
-                  <td>{{ groupSlot.name }}</td>
-                  <td>{{ format(groupSlot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
-                  <td>{{ format(groupSlot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
-                  <td><v-btn color="grey-lighten-1" icon="mdi-pencil" variant="text" @click="editSlot(groupSlot)"></v-btn></td>
-                  <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteSlot(groupSlot)"></v-btn></td>
-               </tr>
-            </tbody>
-         </v-table>
-      <!-- </div> -->
+      <v-table>
+         <thead>
+            <tr>
+               <th class="text-left">Nom</th>
+               <th class="text-left">Début</th>
+               <th class="text-left">Fin</th>
+               <th class="text-left">Éditer</th>
+               <th class="text-left">Supprimer</th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr v-for="groupSlot in slotList" :key="groupSlot.uid">
+               <td>{{ groupSlot.name }}</td>
+               <td>{{ format(groupSlot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
+               <td>{{ format(groupSlot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
+               <td><v-btn color="grey-lighten-1" icon="mdi-pencil" variant="text" @click="editSlot(groupSlot)"></v-btn></td>
+               <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteSlot(groupSlot)"></v-btn></td>
+            </tr>
+         </tbody>
+      </v-table>
 
       <v-toolbar color="green-darken-3 mt-4" density="compact">
          <v-btn icon="mdi-plus" variant="text" @click="addMember"></v-btn>
          Membres du groupe
       </v-toolbar>
-
-      <!-- Fills remaining vertical space -->
-      <!-- <div class="d-flex flex-column flex-grow-1 overflow-auto"> -->
-         <v-table>
-            <thead>
-               <tr>
-                  <th class="text-left">Nom</th>
-                  <th class="text-left">Supprimer</th>
-               </tr>
-            </thead>
-            <tbody>
-               <tr v-for="userGroupRelation in userGroupRelationList" :key="userGroupRelation.uid">
-                  <td>{{ userGroupRelation.uid }}</td>
-                  <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteMember(user)"></v-btn></td>
-               </tr>
-            </tbody>
-         </v-table>
-      <!-- </div> -->
-      
+      <v-table>
+         <thead>
+            <tr>
+               <th class="text-left">Nom</th>
+               <th class="text-left">Prénom</th>
+               <th class="text-left">Supprimer</th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr v-for="member in groupMemberList" :key="$index">
+               <td>{{ member.lastname }}</td>
+               <td>{{ member.firstname }}</td>
+               <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteMember(member)"></v-btn></td>
+            </tr>
+         </tbody>
+      </v-table>
    </v-card>
+
 
    <v-dialog persistent v-model="addOrEditSlotDialog" max-width="400">
       <v-form v-model="valid" lazy-validation>
@@ -132,15 +126,15 @@ import useExpressXClient from '/src/use/useExpressXClient';
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { app } = useExpressXClient();
 const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot(app)
-const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
 const { getObservable: shdlTests$ } = useSHDLTest(app)
 const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
+const { groupMembers$ } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -152,20 +146,22 @@ const props = defineProps({
    },
 })
 
+const groupMembers = useObservable(groupMembers$({ group_uid: props.group_uid }))
+
 const shdlTestList = useObservable(shdlTests$());
 const slotList = ref([]);
-const userGroupRelationList = ref([]);
+const groupMemberList = ref([]);
 
 const selectedTestUIDs = ref([]);
 
 let groupSubscription;
 let slotSubscription;
-let groupRelationSubscription;;
+let groupMembersSubscription;;
 
 onUnmounted(() => {
    if (groupSubscription) groupSubscription.unsubscribe();
    if (slotSubscription) slotSubscription.unsubscribe();
-   if (groupRelationSubscription) groupRelationSubscription.unsubscribe();
+   if (groupMembersSubscription) groupMembersSubscription.unsubscribe();
 })
 
 watch(() => props.group_uid, async (group_uid) => {
@@ -174,9 +170,9 @@ watch(() => props.group_uid, async (group_uid) => {
       slotList.value = slots.toSorted((u1, u2) => (u1.start > u2.start) ? 1 : (u1.start < u2.start) ? -1 : 0);
    })
 
-   if (groupRelationSubscription) groupRelationSubscription.unsubscribe();
-   groupRelationSubscription = userGroupRelations$({ group_uid: props.group_uid }).subscribe(userGroupRelations => {
-      userGroupRelationList.value = userGroupRelations;
+   if (groupMembersSubscription) groupMembersSubscription.unsubscribe();
+   groupMembersSubscription = groupMembers$({ group_uid: props.group_uid }).subscribe(groupMembers => {
+      groupMemberList.value = groupMembers;
    })
 
 }, { immediate: true })
