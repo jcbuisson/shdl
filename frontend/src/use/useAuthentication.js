@@ -34,21 +34,45 @@ export function useAuthentication(app) {
 
 
    async function clearCaches() {
-      console.log('clearCaches')   
-      // resetUseAuthentication()
-      await resetUseAppState()
-      await resetUseGroup()
-      await resetUseGroupSlot()
-      await resetUseGroupSlotSHDLTestRelation()
-      await resetSHDLModule()
-      await resetUseSHDLTest()
-      await resetUseUser()
-      await resetUseUserDocument()
-      await resetUseUserDocumentEvent()
-      await resetUseUserGroupRelation()
-      await resetUseUserSHDLTestEvent()
-      await resetUseUserSlotExcuse()
-      await resetUseUserTabRelation()
+      console.log('clearCaches - starting')
+
+      // Helper to add timeout to any promise
+      const withTimeout = (promise, name, timeoutMs = 5000) => {
+         return Promise.race([
+            promise,
+            new Promise((_, reject) =>
+               setTimeout(() => reject(new Error(`Timeout clearing ${name}`)), timeoutMs)
+            )
+         ])
+      }
+
+      // Run all resets in parallel with timeout protection
+      const resetPromises = [
+         withTimeout(resetUseAppState(), 'AppState'),
+         withTimeout(resetUseGroup(), 'Group'),
+         withTimeout(resetUseGroupSlot(), 'GroupSlot'),
+         withTimeout(resetUseGroupSlotSHDLTestRelation(), 'GroupSlotSHDLTestRelation'),
+         withTimeout(resetSHDLModule(), 'SHDLModule'),
+         withTimeout(resetUseSHDLTest(), 'SHDLTest'),
+         withTimeout(resetUseUser(), 'User'),
+         withTimeout(resetUseUserDocument(), 'UserDocument'),
+         withTimeout(resetUseUserDocumentEvent(), 'UserDocumentEvent'),
+         withTimeout(resetUseUserGroupRelation(), 'UserGroupRelation'),
+         withTimeout(resetUseUserSHDLTestEvent(), 'UserSHDLTestEvent'),
+         withTimeout(resetUseUserSlotExcuse(), 'UserSlotExcuse'),
+         withTimeout(resetUseUserTabRelation(), 'UserTabRelation'),
+      ]
+
+      const results = await Promise.allSettled(resetPromises)
+
+      // Log any failures
+      results.forEach((result, index) => {
+         if (result.status === 'rejected') {
+            console.error('Failed to clear cache:', result.reason)
+         }
+      })
+
+      console.log('clearCaches - completed')
    }
 
    const restartApp = async () => {
