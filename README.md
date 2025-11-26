@@ -8,6 +8,56 @@ Credit: University of Toulouse, ENSEEIHT
 npx prisma@6.4.1 db push
 
 
+# Sync
+✅ Roll-your-own Sync Layer (manual sync)
+
+1. Store changes locally
+
+Add a changes table:
+```
+db.version(1).stores({
+  items: "id, updatedAt",
+  changes: "++localId, type, table, key, obj, timestamp"
+});
+```
+
+2. Subscribe to Dexie changes
+```
+db.on('changes', changes => {
+  db.changes.bulkAdd(changes);
+});
+```
+
+3. Push changes to your server when online
+```
+async function pushChanges() {
+  const toSend = await db.changes.toArray();
+  await fetch('/sync', { method: 'POST', body: JSON.stringify(toSend) });
+  await db.changes.clear();
+}
+```
+
+4. Pull updates from the server
+```
+async function pullChanges() {
+  const updates = await fetch('/pull').then(r => r.json());
+  await db.items.bulkPut(updates);
+}
+```
+
+5. Resolve conflicts
+
+Typical strategies:
+- Last write wins (timestamp)
+- Server wins
+- Client wins
+- Custom merge logic
+
+✔ Works with any backend
+✔ High flexibility
+❌ You must write conflict resolution
+❌ More code to maintain
+
 
 # Utilisation des observables
 

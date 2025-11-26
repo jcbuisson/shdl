@@ -45,7 +45,15 @@ export function useBusinessObservables(app) {
    function userGroups$(user_uid: string) {
       return userGroupRelations$({ user_uid }).pipe(
          switchMap(relations =>
-            guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+            guardCombineLatest(
+               relations.map(relation =>
+                  groups$({ uid: relation.group_uid }).pipe(
+                     // we know that tests should be of length 1
+                     filter(groups => groups.length > 0),
+                     map(groups => groups[0]),
+                  )
+               )
+            )
          ),
       )
    }
@@ -113,7 +121,15 @@ export function useBusinessObservables(app) {
          ),
          map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []).map(relation => relation.shdl_test_uid))]),
          switchMap(testUidList =>
-            guardCombineLatest(testUidList.map(uid => shdlTests$({ uid }).pipe(map(tests => tests[0]))))
+            guardCombineLatest(
+               testUidList.map(uid =>
+                  shdlTests$({ uid }).pipe(
+                     // we know that tests should be of length 1
+                     filter(tests => tests.length > 0),
+                     map(tests => tests[0]),
+                  )
+               )
+            )
          ),
       )
    }
