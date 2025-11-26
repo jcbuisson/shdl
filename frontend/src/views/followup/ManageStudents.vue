@@ -26,7 +26,7 @@
 
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(ugg, index) in filteredUserAndGroupAndGradeList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
+               <v-list-item three-line v-for="(ugg, index) in filteredUserAndGroupList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(ugg.user)">
                         <v-img :src="userPictPath(ugg.user)"></v-img>
@@ -39,14 +39,6 @@
                         <v-chip size="x-small">{{ group?.name }}</v-chip>
                      </template>
                   </v-list-item-subtitle>
-
-                  <template v-slot:append>
-                     <v-tooltip text="Note/20">
-                        <template v-slot:activator="{ props }">
-                           <v-chip v-bind="props" v-if="ugg?.grade >= 0" size="x-small" variant="flat" :color="ugg?.grade < 10 ? 'red' : 'grey'">{{ ugg?.grade }}</v-chip>
-                        </template>
-                     </v-tooltip>
-                  </template>
                </v-list-item>
             </div>
          </v-card>
@@ -69,7 +61,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { useRoute} from 'vue-router'
-import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
+import { Observable, from, map, filter, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
@@ -165,7 +157,13 @@ const userAndGroups$ = students$().pipe(
          users.map(user =>
             userGroupRelations$({ user_uid: user.uid }).pipe(
                switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+                  guardCombineLatest(
+                     relations.map(relation =>
+                     groups$({ uid: relation.group_uid }).pipe(
+                        filter(groups => groups?.length > 0),
+                        map(groups => groups[0]),
+                     )
+                  ))
                ),
                map(groups => ({ user, groups }))
             )
@@ -174,28 +172,12 @@ const userAndGroups$ = students$().pipe(
    ),
 )
 
-const now = new Date()
+const userAndGroupsList = useObservable(userAndGroups$)
 
-const grade$ = students$().pipe(
-   switchMap(users => 
-      guardCombineLatest(
-         users.map(user => userGrade$(user.uid, now)
-      )
-   ),
-))
-
-const userAndGroupsAndGrades$ = combineLatest(userAndGroups$, grade$).pipe(
-   map(([userAndGroupsAndGradeList, gradeList]) => userAndGroupsAndGradeList.map((userAndGroups, index) => {
-      const grade = gradeList[index]
-      return ({ ...userAndGroups, grade })
-   }))
-)
-const userAndGroupsAndGradeList = useObservable(userAndGroupsAndGrades$)
-
-const filteredUserAndGroupAndGradeList = computed(() => {
-   if (!userAndGroupsAndGradeList.value) return []
+const filteredUserAndGroupList = computed(() => {
+   if (!userAndGroupsList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
-   return userAndGroupsAndGradeList.value.filter(ug => {
+   return userAndGroupsList.value.filter(ug => {
       if (nameFilter_.length === 0) return true
       if (ug.user.firstname.toLowerCase().indexOf(nameFilter_) > -1) return true
       if (ug.user.lastname.toLowerCase().indexOf(nameFilter_) > -1) return true
@@ -217,16 +199,15 @@ const filteredUserAndGroupAndGradeList = computed(() => {
    })
 })
 
-
 const route = useRoute()
 const routeRegex = /home\/[a-z0-9]+\/followup\/([a-z0-9]+)/
 
-watch(() => [route.path, userAndGroupsAndGradeList.value], async () => {
-   if (!userAndGroupsAndGradeList.value) return
+watch(() => [route.path, filteredUserAndGroupList.value], async () => {
+   if (!filteredUserAndGroupList.value) return
    const match = route.path.match(routeRegex)
    if (!match) return
    const user_uid = route.path.match(routeRegex)[1]
-   const user = userAndGroupsAndGradeList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
+   const user = filteredUserAndGroupList.value.map(userAndGroups => userAndGroups.user).find(user => user.uid === user_uid)
    if (selectedUser.value?.uid !== user.uid) {
       selectUser(user)
    }

@@ -1,5 +1,5 @@
 <template>
-   <SplitPanel :leftWidth="userManagerSplitWidth" @resize="onResize">
+   <SplitPanel :llllllllleftWidth="userManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
