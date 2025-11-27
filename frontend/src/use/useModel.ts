@@ -21,7 +21,19 @@ export function useModel(app) {
          metadata: "uid, created_at, updated_at, deleted_at",
       })
 
-      // db.open().then(() => console.log('db ready', dbName, modelName))
+      // db.open().then(() => {
+      //    console.log('db ready', dbName, modelName)
+      // })
+
+      // const allValues$ = liveQuery(() =>  db.values.toArray());
+      // const subscription = allValues$.subscribe({
+      //    next: (values) => {
+      //       console.log('CHANGE', values);
+      //    },
+      //    error: (err) => {
+      //       console.error("Live Query error:", err);
+      //    }
+      // });
 
       const reset = async () => {
          console.log('reset', dbName, modelName)
@@ -29,6 +41,8 @@ export function useModel(app) {
          await db.values.clear()
          await db.metadata.clear()
       }
+
+
 
       /////////////          PUB / SUB          /////////////
 
