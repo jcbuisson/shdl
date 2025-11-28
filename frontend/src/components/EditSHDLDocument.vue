@@ -229,8 +229,6 @@ function analyzeSHDLDocument(doc) {
          } else {
             // display success
             displayOKMessageSHDL(rootModule)
-            // add simulator
-            router.push(`/home/${props.signedinUid}/workshop/shdl/${doc.uid}`)
          }
       },
 

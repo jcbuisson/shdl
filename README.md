@@ -23,8 +23,9 @@ db.version(1).stores({
 
 2. Subscribe to Dexie changes
 ```
-db.on('changes', changes => {
-  db.changes.bulkAdd(changes);
+db.values.hook("updating", (changes, primaryKey, previousValue) => {
+    console.log("CHANGES", primaryKey, changes, previousValue);
+    db.changes.bulkAdd(changes);
 });
 ```
 

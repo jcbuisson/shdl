@@ -1,11 +1,11 @@
-import Dexie from "dexie"
-import { from } from 'rxjs'
-import { liveQuery } from "dexie"
+import Dexie from "dexie";
+import { from } from 'rxjs';
+import { liveQuery } from "dexie";
 // uuidv7 are monotonically increasing and much improve database performance amid B-tree indexes
-import { v7 as uuidv7 } from 'uuid'
-import { tryOnScopeDispose } from '@vueuse/core'
+import { v7 as uuidv7 } from 'uuid';
+import { tryOnScopeDispose } from '@vueuse/core';
 
-import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js'
+import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js';
 // import useWorker from '/src/use/useWorker';
 
 
@@ -13,56 +13,58 @@ export function useModel(app) {
 
    function createModel(dbName: string, modelName: string, fields) {
 
-      const db = new Dexie(dbName)
+      const db = new Dexie(dbName);
 
       db.version(1).stores({
          whereList: "sortedjson",
          values: ['uid', '__deleted__', ...fields].join(','), // ex: "uid, __deleted__, email, firstname, lastname",
          metadata: "uid, created_at, updated_at, deleted_at",
-      })
+
+         // changes: "++localId, key, obj, timestamp"
+      });
 
       // db.open().then(() => {
       //    console.log('db ready', dbName, modelName)
-      // })
-
-      // const allValues$ = liveQuery(() =>  db.values.toArray());
-      // const subscription = allValues$.subscribe({
-      //    next: (values) => {
-      //       console.log('CHANGE', values);
-      //    },
-      //    error: (err) => {
-      //       console.error("Live Query error:", err);
-      //    }
       // });
 
+      db.values.hook("updating", (changes, primaryKey, previousValue) => {
+         console.log("CHANGES", primaryKey, changes, previousValue);
+         // const now = new Date();
+         // for (const key in changes) {
+         //    db.changes.add({ key, obj: changes[key], timestamp: now });
+         // }
+      });
+
       const reset = async () => {
-         console.log('reset', dbName, modelName)
-         await db.whereList.clear()
-         await db.values.clear()
-         await db.metadata.clear()
-      }
+         console.log('reset', dbName, modelName);
+         await db.whereList.clear();
+         await db.values.clear();
+         await db.metadata.clear();
+
+         // await db.changes.clear();
+      };
 
 
 
       /////////////          PUB / SUB          /////////////
 
       app.service(modelName).on('createWithMeta', async ([value, meta]) => {
-         console.log(`${modelName} EVENT createWithMeta`, value)
-         await db.values.put(value)
-         await db.metadata.put(meta)
-      })
+         console.log(`${modelName} EVENT createWithMeta`, value);
+         await db.values.put(value);
+         await db.metadata.put(meta);
+      });
 
       app.service(modelName).on('updateWithMeta', async ([value, meta]) => {
-         console.log(`${modelName} EVENT updateWithMeta`, value)
-         await db.values.put(value)
-         await db.metadata.put(meta)
-      })
+         console.log(`${modelName} EVENT updateWithMeta`, value);
+         await db.values.put(value);
+         await db.metadata.put(meta);
+      });
 
       app.service(modelName).on('deleteWithMeta', async ([value, meta]) => {
          console.log(`${modelName} EVENT deleteWithMeta`, value)
          await db.values.delete(value.uid)
          await db.metadata.put(meta)
-      })
+      });
 
 
       /////////////          CREATE/UPDATE/REMOVE          /////////////
