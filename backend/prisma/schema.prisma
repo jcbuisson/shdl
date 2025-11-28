@@ -121,6 +121,7 @@ model user_shdltest_relation {
    first_try_date          DateTime?
    last_try_date           DateTime?
    success_date            DateTime?
+   update_count            Int        @default(0)
    evaluation              Int?
 
    user user @relation(fields: [user_uid], references: [uid], onDelete: Cascade, onUpdate: NoAction)
