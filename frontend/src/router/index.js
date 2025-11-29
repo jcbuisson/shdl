@@ -212,6 +212,7 @@ const routes = [
                roles: ['grade']
             },
             props: route => ({
+               signedinUid: route.params.signedinUid,
                user_uid: route.params.signedinUid,
                editable: false,
             }),
