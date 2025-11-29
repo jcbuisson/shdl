@@ -1,6 +1,5 @@
 <template>
-   <!-- <div>module {{ module?.name }} {{ module?.is_valid }}</div>
-   <div>document_uid {{ document_uid }}</div> -->
+   <!-- <div>document {{ document }}</div> -->
 
    <!-- makes the layout a vertical stack filling the full height -->
    <v-card class="d-flex flex-column fill-height"
@@ -99,6 +98,7 @@ import { strToBin } from '/src/lib/binutils.js'
 import useExpressXClient from '/src/use/useExpressXClient';
 
 import { useSHDLModule } from '/src/use/useSHDLModule'
+
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
@@ -110,8 +110,9 @@ const { module$ } = useSHDLModule()
 
 const { app } = useExpressXClient();
 const { getObservable: tests$ } = useSHDLTest(app)
+
 const { create: createUserTestRelation, update: updateUserTestRelation } = useUserSHDLTestRelation(app)
-const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$ } = useBusinessObservables(app)
+const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$, userSHDLTestsRelations$, userDocument$ } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -120,6 +121,7 @@ const props = defineProps({
    document_uid: String,
 })
 
+const document = useObservable(userDocument$(props.document_uid))
 const module = ref()
 const previousValues = ref(null)
 const currentValues = ref(null)
@@ -702,7 +704,8 @@ async function stepTest() {
             if (previousTest) {
                await updateUserTestRelation(previousTest.uid, {
                   last_try_date: now,
-                  success_date: previousTest.success_date || now,
+                  // success_date: previousTest.success_date || now,
+                  // update_count: previousTest.update_count || document.update_count,
                })
             } else {
                await createUserTestRelation({
@@ -711,6 +714,7 @@ async function stepTest() {
                   first_try_date: now,
                   last_try_date: now,
                   success_date: now,
+                  update_count: document.value.update_count,
                })
             }
          }
@@ -771,18 +775,18 @@ function executeLine(line) {
    }
 }
 
-function onMemFileChange(e) {
-   var files = e.target.files || e.dataTransfer.files
-   if (!files.length) return
+// function onMemFileChange(e) {
+//    var files = e.target.files || e.dataTransfer.files
+//    if (!files.length) return
 
-   var reader = new FileReader()
-   reader.onload = (e) => {
-      let memContent = e.target.result
-      loadMemContents(memContent)
-      updateState()
-   }
-   reader.readAsText(files[0])
-}
+//    var reader = new FileReader()
+//    reader.onload = (e) => {
+//       let memContent = e.target.result
+//       loadMemContents(memContent)
+//       updateState()
+//    }
+//    reader.readAsText(files[0])
+// }
 
 function getMemoryInstanceArray() {
    let memoryEquipotentials = equipotentials.value.filter(function(equipotential) {

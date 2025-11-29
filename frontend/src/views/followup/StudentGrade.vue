@@ -1,4 +1,4 @@
-<template>
+<template>isTeacher {{ isTeacher }} signedinUid {{ signedinUid }} user_uid {{ user_uid }}
    <div class="pa-2">
       <!-- final grade -->
       <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
@@ -18,22 +18,24 @@
          <thead>
             <tr>
                <th class="text-left">Nom</th>
-               <th class="text-left">Coefficient</th>
+               <th class="text-left" style="max-width: 50px;">Coefficient</th>
                <th class="text-left">Réussite</th>
+               <th class="text-left" style="max-width: 50px;"># maj</th>
                <th class="text-left">Note (%)</th>
             </tr>
          </thead>
          <tbody>
             <tr v-for="test in userTests" :key="test?.uid">
-               <td>{{ test?.name }}</td>
-               <td>{{ test?.weight }}</td>
-               <td v-if="testSuccessDate(test?.uid)">{{ testSuccessDate(test?.uid) }}</td>
-               <td v-else><v-icon>mdi-close</v-icon></td>
+               <td style="max-width: 100px;">{{ test?.name }}</td>
+               <td style="max-width: 50px;">{{ test?.weight }}</td>
+               <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
+               <td style="max-width: 50px;">
+                  <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 ? 'red': 'gray'" variant="flat">{{ testUpdateCount(test?.uid) }}</v-chip>
+               </td>
                <td>
                   <v-slider
                      :disabled="!editable"
                      show-ticks="always"
-                     :tticks="{ 0: '0%', 25: '25%', 50: '50%', 75: '75%', 100: '100%'}"
                      thumb-label
                      step="25"
                      tick-size="4"
@@ -67,9 +69,12 @@ const { app } = useExpressXClient();
 
 const { getObservable: groups$ } = useGroup(app);
 const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation(app);
-const { userGroups$, userSlots$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } = useBusinessObservables(app);
+const { isTeacher$, userGroups$, userSlots$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } = useBusinessObservables(app);
 
 const props = defineProps({
+   signedinUid: {
+      type: String,
+   },
    user_uid: {
       type: String,
    },
@@ -78,6 +83,8 @@ const props = defineProps({
       default: true,
    }
 })
+
+const isTeacher = useObservable(isTeacher$(props.signedinUid))
 
 const groups = ref()
 const userGroups = ref([])
@@ -160,6 +167,12 @@ const testEvaluation = computed(() => (shdl_test_uid) => {
    if (!testRelations.value) return 0;
    const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid);
    return testRelation?.evaluation ?? (testRelation?.success_date ? 100 : 0);
+})
+
+const testUpdateCount = computed(() => (shdl_test_uid) => {
+   if (!testRelations.value) return 0;
+   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid);
+   return testRelation?.update_count;
 })
 
 async function onEvaluationChange(shdl_test_uid, evaluation) {

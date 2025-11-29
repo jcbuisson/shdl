@@ -24,7 +24,7 @@ export function useBusinessObservables(app) {
    const { getObservable: userGroupRelations$ } = useUserGroupRelation(app)
    const { getObservable: groups$ } = useGroup(app)
    const { getObservable: userSlotExcuses$ } = useUserSlotExcuse(app)
-   const { getObservable: userDocument$ } = useUserDocument(app)
+   const { getObservable: userDocuments$ } = useUserDocument(app)
    const { getObservable: userDocumentEvent$ } = useUserDocumentEvent(app)
    const { getObservable: groupSlots$ } = useGroupSlot(app)
    const { getObservable: shdlTests$ } = useSHDLTest(app)
@@ -55,6 +55,13 @@ export function useBusinessObservables(app) {
                )
             )
          ),
+      )
+   }
+
+   function userDocument$(uid: string) {
+      return userDocuments$({ uid }).pipe(
+         filter(documents => documents?.length > 0),
+         map(documents => documents[0]),
       )
    }
 
@@ -99,7 +106,7 @@ export function useBusinessObservables(app) {
    }
 
    function userEvents$(user_uid: string) {
-      return userDocument$({ user_uid }).pipe(
+      return userDocuments$({ user_uid }).pipe(
          switchMap(documentList => 
             guardCombineLatest(
                documentList.map(document =>
@@ -236,7 +243,7 @@ export function useBusinessObservables(app) {
    // Perform the syntactic parsing of an SHDL module `name` and all its submodules
    // Emit a list of their structures, the first element being the structure of the root module
    function shdlDocumentParsing$(user_uid, name, checked=[]) {
-      return userDocument$({ user_uid, name }).pipe(
+      return userDocuments$({ user_uid, name }).pipe(
          // parse root document
          map(documents => {
             const document = documents[0]
@@ -288,6 +295,7 @@ export function useBusinessObservables(app) {
    return {
       guardCombineLatest,
       userGroups$,
+      userDocument$,
       isTeacher$,
       teachers$,
       students$,
