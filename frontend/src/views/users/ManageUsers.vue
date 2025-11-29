@@ -90,7 +90,7 @@ const { getObservable: users$, remove: removeUser, addSynchroWhere: addSynchroWh
 const { getObservable: groups$, addSynchroWhere: addSynchroWhereGroup } = useGroup(app)
 const { getObservable: userGroupRelations$, remove: removeGroupRelation, addSynchroWhere: addSynchroWhereGroupRelation } = useUserGroupRelation(app)
 const { extendExpiration } = useAuthentication(app)
-const { guardCombineLatest } = useBusinessObservables(app)
+const { guardCombineLatest, group$ } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -116,7 +116,7 @@ const userAndGroups$ = users$({}).pipe(
          users.map(user =>
             userGroupRelations$({ user_uid: user.uid }).pipe(
                switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => groups$({ uid: relation.group_uid }).pipe(map(groups => groups[0]))))
+                  guardCombineLatest(relations.map(relation => group$(relation.group_uid)))
                ),
                map(groups => ({ user, groups }))
             )

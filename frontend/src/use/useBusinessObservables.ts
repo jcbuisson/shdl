@@ -58,10 +58,24 @@ export function useBusinessObservables(app) {
       )
    }
 
+   function user$(uid: string) {
+      return users$({ uid }).pipe(
+         filter(list => list?.length > 0),
+         map(list => list[0]),
+      )
+   }
+
+   function group$(uid: string) {
+      return groups$({ uid }).pipe(
+         filter(list => list?.length > 0),
+         map(list => list[0]),
+      )
+   }
+
    function userDocument$(uid: string) {
       return userDocuments$({ uid }).pipe(
-         filter(documents => documents?.length > 0),
-         map(documents => documents[0]),
+         filter(list => list?.length > 0),
+         map(list => list[0]),
       )
    }
 
@@ -294,8 +308,10 @@ export function useBusinessObservables(app) {
 
    return {
       guardCombineLatest,
-      userGroups$,
+      user$,
+      group$,
       userDocument$,
+      userGroups$,
       isTeacher$,
       teachers$,
       students$,

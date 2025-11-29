@@ -99,7 +99,7 @@ const { getObservable: userSHDLTestRelations$ } = useUserSHDLTestRelation(app)
 const { getObservable: userTabRelations$ } = useUserTabRelation(app)
 const { getObservable: userDocuments$ } = useUserDocument(app)
 const { extendExpiration } = useAuthentication(app)
-const { userGrade$, guardCombineLatest, students$ } = useBusinessObservables(app)
+const { userGrade$, guardCombineLatest, students$, group$ } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -157,13 +157,7 @@ const userAndGroups$ = students$().pipe(
          users.map(user =>
             userGroupRelations$({ user_uid: user.uid }).pipe(
                switchMap(relations =>
-                  guardCombineLatest(
-                     relations.map(relation =>
-                     groups$({ uid: relation.group_uid }).pipe(
-                        filter(groups => groups?.length > 0),
-                        map(groups => groups[0]),
-                     )
-                  ))
+                  guardCombineLatest(relations.map(relation => group$(relation.group_uid)))
                ),
                map(groups => ({ user, groups }))
             )
