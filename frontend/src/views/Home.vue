@@ -148,11 +148,11 @@ onMounted(async () => {
    //    })
    // }
 
-   // wait for 300ms and select first tab
+   // wait for 500ms and select first tab
    setTimeout(() => {
       console.log('tabs', userTabs.value);
       router.push(`/home/${props.signedinUid}/${userTabs.value.at(0).uid}`)
-   }, 300)
+   }, 500)
 
    interval = setInterval(() => {
       if (app.isConnected()) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive

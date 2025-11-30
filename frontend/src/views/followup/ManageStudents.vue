@@ -1,5 +1,5 @@
 <template>
-   <!-- <div>{{ studentList }}</div> -->
+   <div>{{ studentList }}</div>
    <SplitPanel :llllleftWidth="studentManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
