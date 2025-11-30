@@ -83,34 +83,26 @@ export function useBusinessObservables(app) {
       )
    }
 
+   // emit a list [{ user, isTeacher }, ...] for all users
+   function usersAndStatus$() {
+      return users$({}).pipe(
+         switchMap(users => guardCombineLatest(users.map(user => {
+            return isTeacher$(user.uid).pipe(
+               map(isTeacher => ({ user, isTeacher })),
+            )
+         })))
+      )
+   }
+
    function teachers$() {
-      return userTabRelations$({ tab: 'followup' }).pipe(
-         map(relations => relations.map(relation => relation.user_uid)),
-         switchMap(userUidList =>
-            guardCombineLatest(userUidList.map(uid => users$({ uid })))
-         ),
-         map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
+      return usersAndStatus$().pipe(
+         map(userStatusList => userStatusList.filter(({ user, isTeacher }) => isTeacher) .map(({ user, isTeacher }) => user))
       )
    }
 
    function students$() {
-      return users$({}).pipe(
-         switchMap(users =>
-            guardCombineLatest(users.map(user => userTabRelations$({ user_uid: user.uid })))
-         ),
-         map(listOfList => listOfList.filter(relations => !relations.some(relation => relation.tab === 'followup'))),
-         map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
-         switchMap(relations =>
-            guardCombineLatest(relations.map(relation => users$({ uid: relation.user_uid })))
-         ),
-         map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), [])),
-      )
-   }
-
-   function xteachers$() {
-      return users$({}).pipe(
-         switchMap(users => guardCombineLatest(users.map(user => isTeacher$(user.uid)))),
-         map(booleans => { })
+      return usersAndStatus$().pipe(
+         map(userStatusList => userStatusList.filter(({ user, isTeacher }) => !isTeacher) .map(({ user, isTeacher }) => user))
       )
    }
 
@@ -313,7 +305,6 @@ export function useBusinessObservables(app) {
       userGroups$,
       isTeacher$,
       teachers$,
-      xteachers$,
       students$,
       userSlots$,
       userEvents$,
