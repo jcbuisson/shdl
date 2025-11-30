@@ -21,7 +21,7 @@
                <th class="text-left">Nom</th>
                <th class="text-left" style="max-width: 50px;">Coefficient</th>
                <th class="text-left">Réussite</th>
-               <th v-if="true || isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
+               <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
                <th class="text-left">Note (%)</th>
             </tr>
          </thead>
@@ -30,7 +30,7 @@
                <td style="max-width: 100px;">{{ test?.name }}</td>
                <td style="max-width: 50px;">{{ test?.weight }}</td>
                <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
-               <td v-if="true || isTeacher" style="max-width: 50px;">
+               <td v-if="isTeacher" style="max-width: 50px;">
                   <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 && 'red'">
                      {{ testUpdateCount(test?.uid) }}
                   </v-chip>
