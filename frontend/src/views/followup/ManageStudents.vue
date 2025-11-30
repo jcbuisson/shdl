@@ -1,6 +1,6 @@
 <template>
-   <!-- <div>{{ userAndGroupsAndGradeList }}</div> -->
-   <SplitPanel :leftWidth="studentManagerSplitWidth" @resize="onResize">
+   <!-- <div>{{ studentList }}</div> -->
+   <SplitPanel :llllleftWidth="studentManagerSplitWidth" @resize="onResize">
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
@@ -99,7 +99,7 @@ const { getObservable: userSHDLTestRelations$ } = useUserSHDLTestRelation(app)
 const { getObservable: userTabRelations$ } = useUserTabRelation(app)
 const { getObservable: userDocuments$ } = useUserDocument(app)
 const { extendExpiration } = useAuthentication(app)
-const { userGrade$, guardCombineLatest, students$, group$ } = useBusinessObservables(app)
+const { userGrade$, guardCombineLatest, students$, group$, xteachers$ } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -107,6 +107,8 @@ const props = defineProps({
       type: String,
    },
 })
+
+const studentList = useObservable(xteachers$());
 
 const groupList = useObservable(groups$({}))
 const userGroups = ref([])

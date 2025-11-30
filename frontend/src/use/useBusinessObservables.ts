@@ -109,6 +109,15 @@ export function useBusinessObservables(app) {
       )
    }
 
+   function xteachers$() {
+      // return users$({}).pipe(
+      //    switchMap(users => guardCombineLatest(users.map(user => isTeacher$(user.id))))
+      // )
+      return users$({}).pipe(
+         map(users => users.map(user => isTeacher$(user.id)))
+      )
+   }
+
 
    function userSlots$(user_uid: string) {
       return userGroupRelations$({ user_uid }).pipe(
@@ -314,6 +323,7 @@ export function useBusinessObservables(app) {
       userGroups$,
       isTeacher$,
       teachers$,
+      xteachers$,
       students$,
       userSlots$,
       userEvents$,
