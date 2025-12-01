@@ -704,8 +704,8 @@ async function stepTest() {
             if (previousTest) {
                await updateUserTestRelation(previousTest.uid, {
                   last_try_date: now,
-                  // success_date: previousTest.success_date || now,
-                  // update_count: previousTest.update_count || document.update_count,
+                  success_date: now,
+                  update_count: document.update_count,
                })
             } else {
                await createUserTestRelation({
