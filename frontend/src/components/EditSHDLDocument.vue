@@ -36,6 +36,8 @@ import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import { checkModuleMap } from '/src/lib/shdl/shdlAnalyzer'
 import { useSHDLModule } from '/src/use/useSHDLModule'
 
+import { Mutex } from "/src/lib/utilities"
+
 const { app } = useExpressXClient();
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
@@ -48,6 +50,7 @@ const props = defineProps({
    signedinUid: String,
    user_uid: String,
    document_uid: String,
+   readonly: Boolean,
 })
 
 // THANK YOU CLAUDE
@@ -69,6 +72,7 @@ function initializeEditor() {
          tabSize: 3,
          useSoftTabs: true,
       })
+      editor.setReadOnly(props.readonly)
 
       // Listen for changes from user typing
       editor.session.on('change', () => {
@@ -98,6 +102,8 @@ let subscription2
 const currentDocument = ref()
 
 let updateUid
+
+const mutex = new Mutex()
 
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
@@ -131,9 +137,12 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
             currentDocument.value = doc
             if (editor) {
                isUpdatingFromSubscription = true
+               // use a mutex because of the possible race conditions between multiple updates
+               await mutex.acquire()
                const cursorPos = editor.getCursorPosition()
-               editor.setValue(doc.text, -1)
+               editor.setValue(doc.text, -1) // -1 moves cursor to start
                editor.moveCursorToPosition(cursorPos)
+               mutex.release()
                isUpdatingFromSubscription = false
             }
          } else {
