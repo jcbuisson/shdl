@@ -1,8 +1,10 @@
 <template>
    <div class="pa-8">
       <!-- final grade -->
-      <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
-      <v-divider :thickness="3" class="my-2" />
+      <template v-if="isTeacher">
+         <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
+         <v-divider :thickness="3" class="my-2" />
+      </template>
 
       <!-- attendance (teachers only) -->
        <template v-if="isTeacher">
@@ -19,7 +21,7 @@
          <thead>
             <tr>
                <th class="text-left">Nom</th>
-               <th class="text-left" style="max-width: 50px;">Coefficient</th>
+               <th v-if="isTeacher" class="text-left" style="max-width: 50px;">Coefficient</th>
                <th class="text-left">Réussite</th>
                <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
                <th class="text-left">Note (%)</th>
@@ -28,7 +30,7 @@
          <tbody>
             <tr v-for="test in userTests" :key="test?.uid">
                <td style="max-width: 100px;">{{ test?.name }}</td>
-               <td style="max-width: 50px;">{{ test?.weight }}</td>
+               <td v-if="isTeacher" style="max-width: 50px;">{{ test?.weight }}</td>
                <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
                <td v-if="isTeacher" style="max-width: 50px;">
                   <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 && 'red'">
