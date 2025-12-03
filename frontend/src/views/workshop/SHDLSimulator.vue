@@ -652,6 +652,11 @@ async function runTest() {
 }
 
 function initTest() {
+   // load memory
+   if (selectedTest.value.memory_contents) {
+      loadMemContents(selectedTest.value.memory_contents)
+   }
+   // load statements
    testStatementList.value = selectedTest.value.test_statements.split(/\r?\n/)
    testStatusCode.value = 0
    testCurrentLineNo.value = 0

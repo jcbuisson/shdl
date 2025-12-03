@@ -3,13 +3,16 @@
 
 export default function(app) {
 
-   async function roomsToPublish(context) {
-      // 'find' events are not sent to anyone
-      if (context.methodName.startsWith('find')) return []      
+   async function isTeacher() {
       const prisma = context.app.get('prisma')
       const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
-      const isTeacher = (followupRelations.length > 0)
-      if (isTeacher) {
+      return followupRelations.length > 0
+   }
+
+   async function roomsToPublish(context) {
+      // 'find' events are not sent to anyone
+      if (context.methodName.startsWith('find')) return []
+      if (isTeacher()) {
          // the events of a teacher are sent to all teachers and all students
          return ['teachers', 'students']
       } else {
