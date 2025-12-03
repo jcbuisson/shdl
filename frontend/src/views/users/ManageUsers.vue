@@ -86,9 +86,9 @@ import router from '/src/router'
 import SplitPanel from '/src/components/SplitPanel.vue'
 
 const { app } = useExpressXClient();
-const { getObservable: users$, remove: removeUser, addSynchroWhere: addSynchroWhereUser } = useUser(app)
-const { getObservable: groups$, addSynchroWhere: addSynchroWhereGroup } = useGroup(app)
-const { getObservable: userGroupRelations$, remove: removeGroupRelation, addSynchroWhere: addSynchroWhereGroupRelation } = useUserGroupRelation(app)
+const { getObservable: users$, remove: removeUser } = useUser(app)
+const { getObservable: groups$ } = useGroup(app)
+const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
 const { extendExpiration } = useAuthentication(app)
 const { guardCombineLatest, group$ } = useBusinessObservables(app)
 
@@ -101,7 +101,7 @@ const props = defineProps({
 
 const groupList = useObservable(groups$({}));
 
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
+// Trick to force synchronization on all user-group relations, instead of starting multiple, per-user synchronizations
 const userGroupRelationList = useObservable(userGroupRelations$({}));
 console.log('userGroupRelationList', userGroupRelationList.value)
 

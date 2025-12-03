@@ -1,0 +1,33 @@
+{
+  "name": "shdl-synthesis",
+  "version": "1.0.8",
+  "description": "SHDL synthseis",
+  "keywords": [
+    "shdl"
+  ],
+  "homepage": "https://jcbuisson.dev",
+  "main": "synthesize.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "bin": {
+    "shdl": "./commander.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.com:buisson31/nutrieduc-drf-vuejs-vuetify.git"
+  },
+  "author": "Jean-Christophe Buisson <buisson@enseeiht.fr> (jcbuisson.dev)",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "axios": "^0.19.0",
+    "colors": "^1.4.0",
+    "commander": "^2.20.0",
+    "inquirer": "^6.5.1",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.15",
+    "shelljs": "^0.8.3",
+    "uuid": "^3.3.3"
+  }
+}
