@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 
    'nexys4-ddr': {
       name: "Digilent Nexys4 DDR",

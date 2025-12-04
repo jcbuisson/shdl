@@ -8,26 +8,26 @@ https://www.xilinx.com/support/documentation/sw_manuals/xilinx14_6/xst_v6s6.pdf
 vivado -mode batch -source <your_Tcl_script>
 */
 
-const program = require('commander')
-const os = require('os')
-const fsp = require('fs').promises // node 10+
-const path = require('path')
-const axios = require('axios')
-const inquirer = require('inquirer')
-const jwt = require('jsonwebtoken')
+import program from 'commander';
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
+import inquirer from 'inquirer';
+import jwt from 'jsonwebtoken';
 
-const synthesizer = require('./synthesizer.js')
-const boards = require('./boards.js')
-const fetcher = require('./linked-utilities/shdlFetch.js')
-const analyser = require('./linked-utilities/shdlAnalyser.js')
+import { synthesize } from './synthesizer.js';
+import boards from './boards.js';
+import { fetchModuleTreeFromServer } from './linked-utilities/shdlFetch.js';
+import { checkModule } from './linked-utilities/shdlAnalyser.js';
 
-const secret = "MYSECRET"
+const secret = "MYSECRET";
 
 
 async function handleOptions(options) {
    // get config data
    let configPath = path.join(os.homedir(), '.shdl_config.json')
-   let configJSONString = await fsp.readFile(configPath)
+   let configJSONString = await fs.promises.readFile(configPath)
    let config = JSON.parse(configJSONString)
 
    // check that config.json contains server & board
@@ -77,7 +77,7 @@ async function handleOptions(options) {
       config.jwt = response.data
       // update config file
       configJSONString = JSON.stringify(config, null, 3)
-      await fsp.writeFile(configPath, configJSONString)
+      await fs.promises.writeFile(configPath, configJSONString)
    }
 
    // collect synthesis arguments
@@ -135,10 +135,10 @@ program
          // handle options
          let { userId, teamId, board, server, vivadoPath, jwtToken } = await handleOptions(options)
          // fetch module
-         let name2module = await fetcher.fetchModuleTreeFromServer(moduleName, userId, teamId, server, jwtToken, options)
+         let name2module = await fetchModuleTreeFromServer(moduleName, userId, teamId, server, jwtToken, options)
          let module = name2module[moduleName]
          // perform a full semantic check
-         let { err, moduleList } = analyser.checkModule(module.name, name2module)
+         let { err, moduleList } = checkModule(module.name, name2module)
          if (err) throw err
          // display module structure
          displayModuleStructure(module, name2module, '')
@@ -158,7 +158,7 @@ program
          // handle options
          let { userId, teamId, board, server, vivadoPath, jwtToken } = await handleOptions(options)
          // start synthesis
-         await synthesizer.synthesize(moduleName, userId, teamId, board, server, vivadoPath, jwtToken, options)
+         await synthesize(moduleName, userId, teamId, board, server, vivadoPath, jwtToken, options)
       } catch (error) {
          console.error(error.message)
       }
@@ -173,10 +173,10 @@ program
          let configPath = path.join(os.homedir(), '.shdl_config.json')
          let config
          try {
-            let configJSONString = await fsp.readFile(configPath)
+            let configJSONString = await fs.promises.readFile(configPath)
             config = JSON.parse(configJSONString)
          } catch(err) {
-            await fsp.writeFile(configPath, '{}')
+            await fs.promises.writeFile(configPath, '{}')
             config = {}
          }
          config = await inquirer.prompt([
@@ -199,7 +199,7 @@ program
                default: config.vivado || "/usr/local/bin/vivado"
             },
          ])
-         await fsp.writeFile(configPath, JSON.stringify(config, null, 3))
+         await fs.promises.writeFile(configPath, JSON.stringify(config, null, 3))
       } catch (error) {
          console.error(error.message)
       }
