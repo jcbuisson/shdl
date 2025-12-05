@@ -57,7 +57,6 @@ async function handleOptions(options) {
          message: "Enter password:",
       }
    ]);
-   // const credentials = { email: 'buisson@n7.fr', password: 'eureka31' };
    const { user } = await app.service('auth').signin(credentials.email, credentials.password);
 
    // collect synthesis arguments
