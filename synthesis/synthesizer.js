@@ -367,7 +367,7 @@ program_hw_devices [get_hw_devices]
 
    // run script
    let command = `${vivadoPath} -mode batch -nolog -nojournal -source /tmp/${moduleFile}.tcl`
-   let child = exec(command, {async: true, silent: !options.verbose})
+   let child = shell.exec(command, {async: true, silent: !options.verbose})
    let hasError = false
    child.stderr.on('data', function(data) {
       hasError = true

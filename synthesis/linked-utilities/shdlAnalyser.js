@@ -1,7 +1,7 @@
 
 import { pegParseDeep, checkStructure } from './shdlSyntax.js';
 import { collectEquipotentials, checkIOStatus } from './shdlSemantic.js';
-import { addUsedBy } from './shdlUtilities.js';
+import { addUsedBy, addUnused } from './shdlUtilities.js';
 import _ from 'lodash';
 
 

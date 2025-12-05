@@ -206,11 +206,11 @@ function checkModuleInstance(moduleInstance, name2module) {
       }
    }
    for (let i = 0; i < parameters.length; i++) {
-      let argumentArity = argumentArity(arguments_[i])
-      let parameterArity = parameterArity(parameters[i])
-      if (argumentArity !== parameterArity) {
+      let argArity = argumentArity(arguments_[i])
+      let paramArity = parameterArity(parameters[i])
+      if (argArity !== paramArity) {
          return {
-            message: `argument #${i+1} should have an arity of ${parameterArity} instead of ${argumentArity}`,
+            message: `argument #${i+1} should have an arity of ${paramArity} instead of ${argArity}`,
             location: moduleInstance.location,
          }
       }

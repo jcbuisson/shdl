@@ -45,19 +45,20 @@ async function handleOptions(options) {
       reconnectionDelayMax: 10000,
    });
    const app = expressXClient(socket, { debug: false });
-   const credentials = await inquirer.prompt([
-      {
-         name: 'email',
-         type: 'email',
-         message: "Enter email:",
-      },
-      {
-         name: 'password',
-         type: 'password',
-         message: "Enter password:",
-      }
-   ])
-   const { user } = await app.service('auth').signin(credentials.email, credentials.password)
+   // const credentials = await inquirer.prompt([
+   //    {
+   //       name: 'email',
+   //       type: 'email',
+   //       message: "Enter email:",
+   //    },
+   //    {
+   //       name: 'password',
+   //       type: 'password',
+   //       message: "Enter password:",
+   //    }
+   // ]);
+   const credentials = { email: 'buisson@n7.fr', password: 'eureka31' };
+   const { user } = await app.service('auth').signin(credentials.email, credentials.password);
 
    // collect synthesis arguments
    let userUid = user.uid

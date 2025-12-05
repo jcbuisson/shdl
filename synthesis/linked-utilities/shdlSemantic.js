@@ -632,8 +632,8 @@ export function checkIOStatus(module) {
    // check that all parameters are present in module.equipotentials
    for (let i = 0; i < module.structure.params.length; i++) {
       let parameter = module.structure.params[i]
-      let parameterArity = parameterArity(parameter)
-      for (let j = 0; j < parameterArity; j++) {
+      let paramArity = parameterArity(parameter)
+      for (let j = 0; j < paramArity; j++) {
          let signalName = parameterNameAtIndex(parameter, j)
          let equipotentialIndex = module.equipotentials["__" + signalName]
          if (equipotentialIndex === undefined) {
