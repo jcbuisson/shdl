@@ -13,29 +13,40 @@ function pegParse(moduleText) {
    }
 }
 
-async function fetchShdlModule(moduleName, userId, teamId, serverUrl, jwt, options) {
+async function fetchShdlModule(app, moduleName, userId, serverUrl, jwt, options) {
    if (options.verbose) console.log(`Fetching module ${moduleName}...`)
-   let url = (teamId == 0) ?
-      `${serverUrl}/api/shdl-modules/?name=${moduleName}&user=${userId}` :
-      `${serverUrl}/api/shdl-modules/?name=${moduleName}&team=${teamId}`
-   try {
-      let response = await axios({
-         method: 'get',
-         url: url,
-         headers: {"Authorization": `JWT ${jwt}`},
-      })
-      if (response.data.length === 0) {
-         throw { message: `*** could not find module '${moduleName}'` }
+   const userDocuments = await app.service('user_document').findMany({
+      where: {
+         user_uid: userId,
+         type: 'shdl',
+         name: moduleName,
       }
-      return response.data[0]
-   } catch(err) {
-      throw err
+   })
+   if (userDocuments.length !== 1) throw { message: `*** could not find module '${moduleName}'` }
+   return {
+      name: moduleName,
+      text: userDocuments[0].text,
    }
+
+   // let url = `${serverUrl}/api/shdl-modules/?name=${moduleName}&user=${userId}`;
+   // try {
+   //    let response = await axios({
+   //       method: 'get',
+   //       url: url,
+   //       headers: {"Authorization": `JWT ${jwt}`},
+   //    })
+   //    if (response.data.length === 0) {
+   //       throw { message: `*** could not find module '${moduleName}'` }
+   //    }
+   //    return response.data[0]
+   // } catch(err) {
+   //    throw err
+   // }
 }
 
-export async function fetchModuleTreeFromServer(rootModuleName, userId, teamId, serverUrl, jwt, options) {
+export async function fetchModuleTreeFromServer(app, rootModuleName, userId, serverUrl, jwt, options) {
    let name2module = {}
-   let rootModule = await fetchShdlModule(rootModuleName, userId, teamId, serverUrl, jwt, options)
+   let rootModule = await fetchShdlModule(app, rootModuleName, userId, serverUrl, jwt, options)
    name2module[rootModuleName] = rootModule
    let toCheck = [rootModule]
    let checked = []
@@ -72,7 +83,7 @@ export async function fetchModuleTreeFromServer(rootModuleName, userId, teamId, 
          }
          if (!name2module[submoduleName]) {
             try {
-               let submodule = await fetchShdlModule(submoduleName, userId, teamId, serverUrl, jwt, options)
+               let submodule = await fetchShdlModule(app, submoduleName, userId, serverUrl, jwt, options)
                name2module[submoduleName] = submodule
                toCheck.push(submodule)
             } catch(error) {

@@ -14,7 +14,7 @@
     "@codemirror/lang-javascript": "^6.2.4",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/theme-one-dark": "^6.1.2",
-    "@jcbuisson/express-x-client": "^2.2.1",
+    "@jcbuisson/express-x-client": "^2.2.2",
     "@lezer/generator": "^1.7.3",
     "@lezer/lr": "^1.4.2",
     "@mdi/font": "^7.4.47",

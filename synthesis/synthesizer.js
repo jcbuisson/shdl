@@ -1,6 +1,5 @@
 import fs from 'fs'
 import shell from 'shelljs';
-// import colors from 'colors';
 import { v7 as uuidv7 } from 'uuid';
 
 import { fetchModuleTreeFromServer } from './linked-utilities/shdlFetch.js';
@@ -10,12 +9,12 @@ import { strToBin } from './linked-utilities/binutils.js';
 
 
 // options: commander options (verbose, etc.)
-export async function synthesize(moduleName, userId, teamId, board, server, vivadoPath, jwt, options) {
+export async function synthesize(app, moduleName, userId, board, server, vivadoPath, jwt, options) {
    console.log(`Synthesis of module '${moduleName}' for board '${board.name}'`)
    let moduleFile = `${moduleName}-${uuidv7()}`
 
    // fetch root module tree from server
-   let name2module = await fetchModuleTreeFromServer(moduleName, userId, teamId, server, jwt, options)
+   let name2module = await fetchModuleTreeFromServer(app, moduleName, userId, server, jwt, options)
    let module = name2module[moduleName]
 
    // perform a full semantic check
@@ -368,7 +367,7 @@ program_hw_devices [get_hw_devices]
 
    // run script
    let command = `${vivadoPath} -mode batch -nolog -nojournal -source /tmp/${moduleFile}.tcl`
-   let child = shell.exec(command, {async: true, silent: !options.verbose})
+   let child = exec(command, {async: true, silent: !options.verbose})
    let hasError = false
    child.stderr.on('data', function(data) {
       hasError = true

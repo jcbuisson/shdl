@@ -16,6 +16,9 @@ import axios from 'axios';
 import inquirer from 'inquirer';
 import jwt from 'jsonwebtoken';
 
+import { io, Socket } from "socket.io-client";
+import expressXClient from "@jcbuisson/express-x-client";
+
 import { synthesize } from './synthesizer.js';
 import boards from './boards.js';
 import { fetchModuleTreeFromServer } from './linked-utilities/shdlFetch.js';
@@ -35,74 +38,34 @@ async function handleOptions(options) {
    if (!config.board) throw ({ message: "*** error: board name missing in config" })
    if (!boards[config.board.toLowerCase()]) throw ({ message: `*** error: unknown board name: ${config.board}` })
 
-   let jwtOK
-   if (config.jwt) {
-      // jwt is present in config
-      try {
-         // check its signature
-         jwt.verify(config.jwt, secret)
-         // check its expiration date
-         let jwtPayload = jwt.decode(config.jwt)
-         jwtOK = (jwtPayload.exp && Math.floor(Date.now() / 1000) < jwtPayload.exp)
-      } catch (err) {
-         // verification failed
-         jwtOK = false
+   const socket = io('http://localhost:3000', {
+      path: '/shdl-socket-io/',
+      transports: ["websocket"],
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+   });
+   const app = expressXClient(socket, { debug: false });
+   const credentials = await inquirer.prompt([
+      {
+         name: 'email',
+         type: 'email',
+         message: "Enter email:",
+      },
+      {
+         name: 'password',
+         type: 'password',
+         message: "Enter password:",
       }
-   }
-   // ask the server a new jwt if necessary
-   if (!jwtOK) {
-      if (options.verbose) console.log("Getting new authentication token...")
-      // get username /password
-      let credentials = await inquirer.prompt([
-         {
-            name: 'username',
-            type: 'text',
-            message: "Enter SHDL platform username:",
-         },
-         {
-            name: 'password',
-            type: 'password',
-            message: "Enter password:",
-         }
-      ])
-      // send username/password to server to get a fresh valid JWT
-      let response = await axios({
-         method: 'post',
-         url: `${config.server}/api/api-token-auth`,
-         data: {
-            username: credentials.username,
-            password: credentials.password
-         }
-      })
-      config.jwt = response.data
-      // update config file
-      configJSONString = JSON.stringify(config, null, 3)
-      await fs.promises.writeFile(configPath, configJSONString)
-   }
+   ])
+   const { user } = await app.service('auth').signin(credentials.email, credentials.password)
 
    // collect synthesis arguments
-   let jwtPayload = jwt.decode(config.jwt)
-   let userId = jwtPayload.user_id
+   let userUid = user.uid
    let board = boards[config.board.toLowerCase()]
    let server = config.server
    let vivadoPath = config.vivado
    let jwtToken = config.jwt
-
-   // fetch team if specified
-   let teamId = 0
-   if (options.team) {
-      let response = await axios({
-         method: 'get',
-         headers: { "Authorization": `JWT ${config.jwt}` },
-         url: `${config.server}/api/teams?user=${userId}&name=${options.team}`,
-      })
-      if (response.data.length === 0) {
-         throw ({ message: `*** error: you are not a member of any team named '${options.team}'` })
-      } else {
-         teamId = response.data[0].id
-      }
-   }
-   return { userId, teamId, board, server, vivadoPath, jwtToken }
+   return { app, userUid, board, server, vivadoPath }
 }
 
 function displayModuleStructure(module, name2module, prefix) {
@@ -129,13 +92,12 @@ program
    .command('check <moduleName>')
    .description("Check SHDL module <moduleName> and display its hierarchy")
    .option("-v, --verbose", "Verbose")
-   .option("-t, --team <teamName>", "Use modules from <teamName>")
    .action(async function (moduleName, options) {
       try {
          // handle options
-         let { userId, teamId, board, server, vivadoPath, jwtToken } = await handleOptions(options)
+         let { app, userUid, server, jwtToken } = await handleOptions(options)
          // fetch module
-         let name2module = await fetchModuleTreeFromServer(moduleName, userId, teamId, server, jwtToken, options)
+         let name2module = await fetchModuleTreeFromServer(app, moduleName, userUid, server, jwtToken, options)
          let module = name2module[moduleName]
          // perform a full semantic check
          let { err, moduleList } = checkModule(module.name, name2module)
@@ -152,13 +114,12 @@ program
    .description("Synthesize SHDL module <moduleName>")
    .option("-m, --memfile <memFile>", "Initialize memory blocks with <memFile>")
    .option("-v, --verbose", "Verbose")
-   .option("-t, --team <teamName>", "Use modules from <teamName>")
    .action(async function(moduleName, options) {
       try {
          // handle options
-         let { userId, teamId, board, server, vivadoPath, jwtToken } = await handleOptions(options)
+         let { app, userUid, board, server, vivadoPath, jwtToken } = await handleOptions(options)
          // start synthesis
-         await synthesize(moduleName, userId, teamId, board, server, vivadoPath, jwtToken, options)
+         await synthesize(app, moduleName, userUid, board, server, vivadoPath, jwtToken, options)
       } catch (error) {
          console.error(error.message)
       }
@@ -184,7 +145,7 @@ program
                name: 'server',
                type: 'text',
                message: "Enter SHDL platform url:",
-               default: config.server || "https://shdl.fr",
+               default: config.server || "https://app.shdl.fr",
             },
             {
                name: 'board',
