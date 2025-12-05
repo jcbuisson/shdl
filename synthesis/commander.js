@@ -12,9 +12,7 @@ import program from 'commander';
 import os from 'os';
 import fs from 'fs';
 import path from 'path';
-import axios from 'axios';
 import inquirer from 'inquirer';
-import jwt from 'jsonwebtoken';
 
 import { io, Socket } from "socket.io-client";
 import expressXClient from "@jcbuisson/express-x-client";
@@ -23,8 +21,6 @@ import { synthesize } from './synthesizer.js';
 import boards from './boards.js';
 import { fetchModuleTreeFromServer } from './linked-utilities/shdlFetch.js';
 import { checkModule } from './linked-utilities/shdlAnalyser.js';
-
-const secret = "MYSECRET";
 
 
 async function handleOptions(options) {
@@ -38,7 +34,7 @@ async function handleOptions(options) {
    if (!config.board) throw ({ message: "*** error: board name missing in config" })
    if (!boards[config.board.toLowerCase()]) throw ({ message: `*** error: unknown board name: ${config.board}` })
 
-   const socket = io('http://localhost:3000', {
+   const socket = io(config.server, {
       path: '/shdl-socket-io/',
       transports: ["websocket"],
       reconnectionDelay: 1000,
@@ -62,10 +58,8 @@ async function handleOptions(options) {
    // collect synthesis arguments
    let userUid = user.uid
    let board = boards[config.board.toLowerCase()]
-   let server = config.server
    let vivadoPath = config.vivado
-   let jwtToken = config.jwt
-   return { app, userUid, board, server, vivadoPath }
+   return { app, userUid, board, vivadoPath }
 }
 
 function displayModuleStructure(module, name2module, prefix) {
@@ -91,13 +85,12 @@ function displayModuleStructure(module, name2module, prefix) {
 program
    .command('check <moduleName>')
    .description("Check SHDL module <moduleName> and display its hierarchy")
-   .option("-v, --verbose", "Verbose")
    .action(async function (moduleName, options) {
       try {
          // handle options
-         let { app, userUid, server, jwtToken } = await handleOptions(options)
+         let { app, userUid } = await handleOptions(options)
          // fetch module
-         let name2module = await fetchModuleTreeFromServer(app, moduleName, userUid, server, jwtToken, options)
+         let name2module = await fetchModuleTreeFromServer(app, moduleName, userUid, options)
          let module = name2module[moduleName]
          // perform a full semantic check
          let { err, moduleList } = checkModule(module.name, name2module)
@@ -110,16 +103,15 @@ program
    })
 
 program
-   .command('build <moduleName>')
+   .command('synthesize <moduleName>')
    .description("Synthesize SHDL module <moduleName>")
    .option("-m, --memfile <memFile>", "Initialize memory blocks with <memFile>")
-   .option("-v, --verbose", "Verbose")
    .action(async function(moduleName, options) {
       try {
          // handle options
-         let { app, userUid, board, server, vivadoPath, jwtToken } = await handleOptions(options)
+         let { app, userUid, board, vivadoPath } = await handleOptions(options)
          // start synthesis
-         await synthesize(app, moduleName, userUid, board, server, vivadoPath, jwtToken, options)
+         await synthesize(app, moduleName, userUid, board, vivadoPath, options)
       } catch (error) {
          console.error(error.message)
       }

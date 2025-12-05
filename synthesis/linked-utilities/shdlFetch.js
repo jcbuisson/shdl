@@ -13,8 +13,8 @@ function pegParse(moduleText) {
    }
 }
 
-async function fetchShdlModule(app, moduleName, userId, serverUrl, jwt, options) {
-   if (options.verbose) console.log(`Fetching module ${moduleName}...`)
+async function fetchShdlModule(app, moduleName, userId, options) {
+   console.log(`Fetching module ${moduleName}...`)
    const userDocuments = await app.service('user_document').findMany({
       where: {
          user_uid: userId,
@@ -27,26 +27,11 @@ async function fetchShdlModule(app, moduleName, userId, serverUrl, jwt, options)
       name: moduleName,
       text: userDocuments[0].text,
    }
-
-   // let url = `${serverUrl}/api/shdl-modules/?name=${moduleName}&user=${userId}`;
-   // try {
-   //    let response = await axios({
-   //       method: 'get',
-   //       url: url,
-   //       headers: {"Authorization": `JWT ${jwt}`},
-   //    })
-   //    if (response.data.length === 0) {
-   //       throw { message: `*** could not find module '${moduleName}'` }
-   //    }
-   //    return response.data[0]
-   // } catch(err) {
-   //    throw err
-   // }
 }
 
-export async function fetchModuleTreeFromServer(app, rootModuleName, userId, serverUrl, jwt, options) {
+export async function fetchModuleTreeFromServer(app, rootModuleName, userId, options) {
    let name2module = {}
-   let rootModule = await fetchShdlModule(app, rootModuleName, userId, serverUrl, jwt, options)
+   let rootModule = await fetchShdlModule(app, rootModuleName, userId, options)
    name2module[rootModuleName] = rootModule
    let toCheck = [rootModule]
    let checked = []
@@ -83,7 +68,7 @@ export async function fetchModuleTreeFromServer(app, rootModuleName, userId, ser
          }
          if (!name2module[submoduleName]) {
             try {
-               let submodule = await fetchShdlModule(app, submoduleName, userId, serverUrl, jwt, options)
+               let submodule = await fetchShdlModule(app, submoduleName, userId, options)
                name2module[submoduleName] = submodule
                toCheck.push(submodule)
             } catch(error) {
