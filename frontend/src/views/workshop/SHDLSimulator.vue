@@ -158,19 +158,21 @@ watch(() => props.document_uid, async (document_uid) => {
    if (subscription) subscription.unsubscribe()
    subscription = module$(document_uid).subscribe({
       next: module_ => {
-         console.log('next simu', module_);
-         // if (module_.text === module.value.text) return;
-         selectedTest.value = null;
-         if (module_?.structure) {
-            module.value = module_;
-            initializeEquipotentials(module_);
-            let error = updateState();
-            if (error) {
-               testStatusCode.value = 3;
-               testStatusText.value = error;
+         console.log('next simu', module_, module.value);
+         if (!module.value || !module_.structure) {
+            console.log('NEXT simu', module_);
+            selectedTest.value = null;
+            if (module_?.structure) {
+               module.value = module_;
+               initializeEquipotentials(module_);
+               let error = updateState();
+               if (error) {
+                  testStatusCode.value = 3;
+                  testStatusText.value = error;
+               }
+            } else {
+               module.value = null;
             }
-         } else {
-            module.value = null;
          }
       },
       error: err => {
