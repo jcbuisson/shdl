@@ -159,7 +159,7 @@ watch(() => props.document_uid, async (document_uid) => {
    subscription = module$(document_uid).subscribe({
       next: module_ => {
          console.log('next simu', module_);
-         if (module_.text === module.value.text) return;
+         // if (module_.text === module.value.text) return;
          selectedTest.value = null;
          if (module_?.structure) {
             module.value = module_;
