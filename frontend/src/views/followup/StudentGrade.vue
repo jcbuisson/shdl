@@ -107,18 +107,14 @@ watch(
 
    async (user_uid) => {
 
+      // À ESSAYER
+      // groups = useObservable(groups$());
       subscriptions.push(groups$({}).subscribe(groups_ => {
          groups.value = groups_;
-         if (groups_.some(group => !group?.uid)) {
-            console.log('GROUPS GROUPS', groups_);
-         }
       }))
 
       subscriptions.push(userGroups$(user_uid).subscribe(userGroups_ => {
          userGroups.value = userGroups_;
-         if (userGroups_.some(userGroup => !userGroup?.uid)) {
-            console.log('USERGROUPS USERGROUPS', userGroups_);
-         }
       }))
 
       const now = new Date();
@@ -137,16 +133,10 @@ watch(
 
       subscriptions.push(userSlots$(props.user_uid).subscribe(slots => {
          userSlots.value = slots;
-         if (slots.some(slot => !slot?.uid)) {
-            console.log('SLOTS SLOTS', slots);
-         }
       }))
 
       subscriptions.push(userSHDLTests$(props.user_uid).subscribe(tests => {
          userTests.value = tests;
-         if (tests.some(test => !test?.uid)) {
-            console.log('TESTS TESTS', tests);
-         }
       }))
 
       subscriptions.push(userSHDLTestsRelations$(props.user_uid).subscribe(testRelations_ => {

@@ -22,7 +22,7 @@
 
       <!-- Toolbar (does not grow) -->
       <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
-         <div>
+         <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             {{ testCurrentLine }}
          </div>
 
@@ -158,24 +158,23 @@ watch(() => props.document_uid, async (document_uid) => {
    if (subscription) subscription.unsubscribe()
    subscription = module$(document_uid).subscribe({
       next: module_ => {
-         console.log('next simu', module_)
-         selectedTest.value = null
+         console.log('next simu', module_);
+         selectedTest.value = null;
          if (module_?.structure) {
-            module.value = module_
-            previousValues.value = module_.equipotentials.map(_ => false)
-            currentValues.value = module_.equipotentials.map(_ => false)
-            let error = updateState()
+            module.value = module_;
+            initializeEquipotentials(module_);
+            let error = updateState();
             if (error) {
-               testStatusCode.value = 3
-               testStatusText.value = error
+               testStatusCode.value = 3;
+               testStatusText.value = error;
             }
          } else {
-            module.value = null
+            module.value = null;
          }
       },
       error: err => {
-         module.value = null
-         console.log('err33', err)
+         module.value = null;
+         console.log('err33', err);
       },
    })
 }, { immediate: true })
@@ -191,6 +190,11 @@ const structure = computed(() => {
 const equipotentials = computed(() => {
    return module?.value?.equipotentials
 })
+
+function initializeEquipotentials(module) {
+   previousValues.value = module.equipotentials.map(_ => null)
+   currentValues.value = module.equipotentials.map(_ => null)
+}
 
 const parameterGroups = computed(() => {
    if (!structure.value || !equipotentials.value) return []
@@ -635,9 +639,11 @@ const testCurrentLineNo = ref(0)
 const testStatementList = ref()
 
 const testCurrentLine = computed(() => {
+   if (testStatementList.value.length === 0) return ''
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
-   const truncatedStatement = currentStatement.slice(0, 20) + (currentStatement.length>20?'...':'')
-   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${truncatedStatement}`
+   // const truncatedStatement = currentStatement.slice(0, 40) + (currentStatement.length > 40 ? '...' : '')
+   // return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${truncatedStatement}`
+   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${currentStatement}`
 })
 
 function delay(ms) {
@@ -652,12 +658,14 @@ async function runTest() {
 }
 
 function initTest() {
+   // (re)initialize equipotentials
+   initializeEquipotentials(module.value);
    // load memory
    if (selectedTest.value.memory_contents) {
       loadMemContents(selectedTest.value.memory_contents)
    }
    // load statements
-   testStatementList.value = selectedTest.value.test_statements.split(/\r?\n/)
+   testStatementList.value = selectedTest.value.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : [];
    testStatusCode.value = 0
    testCurrentLineNo.value = 0
 }
@@ -728,7 +736,7 @@ async function stepTest() {
 }
 
 function executeLine(line) {
-   if (line.trim().length === 0) return ''
+   if (!line || line.trim().length === 0) return ''
    try {
       // parse line
       let command = testLineParse(line)
