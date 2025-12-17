@@ -4,14 +4,23 @@ import { liveQuery } from "dexie"
 
 // Info on modules stored in IndexedDB (not in database)
 
+// Create singleton Dexie instance to share across all components
+let dbInstance = null
+
+function getDbInstance() {
+   if (!dbInstance) {
+      dbInstance = new Dexie(import.meta.env.VITE_APP_SHDL_MODULE_IDB)
+      dbInstance.version(1).stores({
+         // Indexed by document_uid and name
+         modules: "document_uid, name",
+      })
+   }
+   return dbInstance
+}
+
 export function useSHDLModule() {
 
-   const db = new Dexie(import.meta.env.VITE_APP_SHDL_MODULE_IDB)
-
-   db.version(1).stores({
-      // Indexed by document_uid and name
-      modules: "document_uid, name",
-   })
+   const db = getDbInstance()
 
    const reset = async () => {
       await db.modules.clear()
