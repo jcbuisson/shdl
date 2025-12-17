@@ -159,8 +159,8 @@ watch(() => props.document_uid, async (document_uid) => {
    subscription = module$(document_uid).subscribe({
       next: module_ => {
          console.log('next simu', module_, module.value);
-         if (!module.value || !module_.structure) {
-            console.log('NEXT simu', module_);
+         // if (!module.value || !module_.structure) {
+         //   console.log('NEXT simu', module_);
             selectedTest.value = null;
             if (module_?.structure) {
                module.value = module_;
@@ -173,7 +173,7 @@ watch(() => props.document_uid, async (document_uid) => {
             } else {
                module.value = null;
             }
-         }
+         // }
       },
       error: err => {
          module.value = null;
