@@ -1,5 +1,6 @@
 import Dexie from "dexie";
 import { from } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { liveQuery } from "dexie";
 // uuidv7 are monotonically increasing and much improve database performance amid B-tree indexes
 import { v7 as uuidv7 } from 'uuid';
@@ -8,20 +9,27 @@ import { tryOnScopeDispose } from '@vueuse/core';
 import { wherePredicate, synchronize, addSynchroDBWhere, removeSynchroDBWhere, synchronizeModelWhereList } from '/src/lib/synchronize.js';
 // import useWorker from '/src/use/useWorker';
 
+// Singleton map to reuse Dexie instances per database name
+const dbInstances = new Map();
+
+function getOrCreateDB(dbName: string, fields: string[]) {
+   if (!dbInstances.has(dbName)) {
+      const db = new Dexie(dbName);
+      db.version(1).stores({
+         whereList: "sortedjson",
+         values: ['uid', '__deleted__', ...fields].join(','),
+         metadata: "uid, created_at, updated_at, deleted_at",
+      });
+      dbInstances.set(dbName, db);
+   }
+   return dbInstances.get(dbName);
+}
 
 export function useModel(app) {
 
    function createModel(dbName: string, modelName: string, fields) {
 
-      const db = new Dexie(dbName);
-
-      db.version(1).stores({
-         whereList: "sortedjson",
-         values: ['uid', '__deleted__', ...fields].join(','), // ex: "uid, __deleted__, email, firstname, lastname",
-         metadata: "uid, created_at, updated_at, deleted_at",
-
-         // changes: "++localId, key, obj, timestamp"
-      });
+      const db = getOrCreateDB(dbName, fields);
 
       // db.open().then(() => {
       //    console.log('db ready', dbName, modelName)
@@ -147,7 +155,12 @@ export function useModel(app) {
             }
          })
          const predicate = wherePredicate(where)
-         return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray()))
+         return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())).pipe(
+            distinctUntilChanged((prev, curr) => {
+               // Deep equality check to prevent unnecessary emissions
+               return JSON.stringify(prev) === JSON.stringify(curr)
+            })
+         )
       }
 
       let count = 0;

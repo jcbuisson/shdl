@@ -1,5 +1,6 @@
 import Dexie from "dexie"
 import { from } from 'rxjs'
+import { distinctUntilChanged } from 'rxjs/operators'
 import { liveQuery } from "dexie"
 
 // Info on modules stored in IndexedDB (not in database)
@@ -27,11 +28,21 @@ export function useSHDLModule() {
    }
 
    const modules$ = () => {
-      return from(liveQuery(() => db.modules.toArray()))
+      return from(liveQuery(() => db.modules.toArray())).pipe(
+         distinctUntilChanged((prev, curr) => {
+            // Deep equality check to prevent unnecessary emissions
+            return JSON.stringify(prev) === JSON.stringify(curr)
+         })
+      )
    }
 
    const module$ = (document_uid) => {
-      return from(liveQuery(() => db.modules.get(document_uid)))
+      return from(liveQuery(() => db.modules.get(document_uid))).pipe(
+         distinctUntilChanged((prev, curr) => {
+            // Deep equality check to prevent unnecessary emissions
+            return JSON.stringify(prev) === JSON.stringify(curr)
+         })
+      )
    }
 
    async function addOrUpdateModule(module) {
