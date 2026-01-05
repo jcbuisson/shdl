@@ -16,26 +16,35 @@ async function createExcel() {
       if (!group) {
          console.log(`*** pas de groupe ${groupName}`);
          continue;
-      }
-      const relations = await prisma.user_group_relations.findMany({ where: { groupUid: group.uid }});
-      console.log('relations', relations);
+      }      
 
       const sheet = workbook.addWorksheet(group.name);
 
+      const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
+      console.log(group.name, groupSlots);
+
       sheet.columns = [
-         { header: 'ID', key: 'id', width: 10 },
-         { header: 'Name', key: 'name', width: 20 },
+         { header: 'Nom', key: 'lastname', width: 20 },
+         { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
+         { header: 'Note', key: 'note', width: 30 },
       ]
 
-      sheet.addRows([
-         { id: 1, name: 'Alice', email: 'alice@test.com' },
-         { id: 2, name: 'Bob', email: 'bob@test.com' },
-      ])
+      const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
+      for (const userGroupRelation of userGroupRelations) {
+         const user = await prisma.user.findUnique({ where: { uid: userGroupRelation.user_uid }})
+
+         sheet.addRow({
+            lastname: user.lastname,
+            firstname: user.firstname,
+            email: user.email,
+            note: user.note,
+         })
+      }
    }
 
    // Save file
-   await workbook.xlsx.writeFile('example.xlsx')
+   await workbook.xlsx.writeFile('eval_archi_1SN25.xlsx')
 }
 
 createExcel()
