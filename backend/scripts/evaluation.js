@@ -17,7 +17,9 @@ async function createExcel() {
          console.log(`*** pas de groupe ${groupName}`);
          continue;
       }
-      console.log('user_group_relations', group.user_group_relations)
+      const relations = await prisma.user_group_relations.findMany({ where: { groupUid: group.uid }});
+      console.log('relations', relations);
+
       const sheet = workbook.addWorksheet(group.name);
 
       sheet.columns = [
