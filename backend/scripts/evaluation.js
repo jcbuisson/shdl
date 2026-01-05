@@ -22,6 +22,14 @@ async function createExcel() {
 
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
       console.log(group.name, groupSlots);
+      const groupTests = new Set();
+      for (const groupSlot of groupSlots) {
+         const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
+         for (const groupslotShdltestRelation of groupslotShdltestRelations) {
+            const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
+            console.log(shdlTest.name)
+         }
+      }
 
       sheet.columns = [
          { header: 'Nom', key: 'lastname', width: 20 },
