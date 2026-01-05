@@ -7,16 +7,17 @@ async function createExcel() {
    const workbook = new ExcelJS.Workbook();
    const prisma = new PrismaClient();
 
-   const groupUidList = [
+   const groupNames = [
       '1SN25A', '1SN25B', '1SN25C', '1SN25D', '1SN25E', '1SN25F', '1SN25G', '1SN25H', '1SN25I', '1SN25J', '1SN25K', '1SN25L', '1SN25M', '1SN25N',
    ]
 
-   for (const groupUid of groupUidList) {
-      const group = await prisma.group.findUnique({ where: { uid: groupUid }});
+   for (const groupName of groupNames) {
+      const [group] = await prisma.group.findMany({ where: { name: groupName }});
       if (!group) {
-         console.log(`*** pas de groupe ${groupUid}`);
+         console.log(`*** pas de groupe ${groupName}`);
          continue;
       }
+      console.log('user_group_relations', group.user_group_relations)
       const sheet = workbook.addWorksheet(group.name);
 
       sheet.columns = [
