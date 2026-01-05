@@ -36,7 +36,7 @@ export function useModel(app) {
       // });
 
       db.values.hook("updating", (changes, primaryKey, previousValue) => {
-         console.log("CHANGES", primaryKey, changes, previousValue);
+         // console.log("CHANGES", primaryKey, changes, previousValue);
          // const now = new Date();
          // for (const key in changes) {
          //    db.changes.add({ key, obj: changes[key], timestamp: now });
@@ -157,7 +157,7 @@ export function useModel(app) {
          const predicate = wherePredicate(where)
          return from(liveQuery(() => db.values.filter(value => !value.__deleted__ && predicate(value)).toArray())).pipe(
             distinctUntilChanged((prev, curr) => {
-               // Deep equality check to prevent unnecessary emissions
+               // Deep equality check to prevent unnecessary emissions (in particular on database write)
                return JSON.stringify(prev) === JSON.stringify(curr)
             })
          )

@@ -36,6 +36,7 @@
     "@jcbuisson/express-x": "^2.1.19",
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^3.0.2",
+    "exceljs": "^4.4.0",
     "inquirer": "^12.5.2",
     "jsonwebtoken": "^9.0.2",
     "mkdirp": "^3.0.1",
