@@ -36,19 +36,31 @@ async function createExcel() {
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
          { header: 'Note', key: 'note', width: 30 },
-         ...groupTests.map(test => ({ header: test.name, key: test.uid, width: 20 })),
+         ...groupTests.map(test => ({ header: `${test.name} (${test.weight})`, key: test.uid, width: 20 })),
       ]
 
       const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
       for (const userGroupRelation of userGroupRelations) {
-         const user = await prisma.user.findUnique({ where: { uid: userGroupRelation.user_uid }})
-
-         sheet.addRow({
+         const user = await prisma.user.findUnique({ where: { uid: userGroupRelation.user_uid }});
+         const row = {
             lastname: user.lastname,
             firstname: user.firstname,
             email: user.email,
             note: user.note,
-         })
+         }
+         for (const test of groupTests) {
+            const [userTestRelation] = await prisma.user_shdltest_relation.findMany({ where: { user_uid: user.uid, shdl_test_uid: test.uid }});
+            let evaluation = 0;
+            if (userTestRelation) {
+               if (userTestRelation.evaluation) {
+                  evaluation = userTestRelation.evaluation;
+               } else if (userTestRelation.success_date) {
+                  evaluation = 100;
+               }
+            }
+            row[test.uid] = evaluation;
+         }
+         sheet.addRow(row);
       }
    }
 
