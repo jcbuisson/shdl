@@ -37,7 +37,7 @@ async function createExcel() {
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
          { header: 'Note', key: 'note', width: 30 },
-         ...groupTests.map(test => ({ header: test.name, key: test.uid, width: 10 })),
+         ...groupTests.map(test => ({ header: test.name, key: test.uid, width: 20 })),
       ]
 
       const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
