@@ -20,14 +20,15 @@ async function createExcel() {
 
       const sheet = workbook.addWorksheet(group.name);
 
+      // collect all tests for the slots of this group
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
       console.log(group.name, groupSlots);
-      const groupTests = new Set();
+      let groupTests = [];
       for (const groupSlot of groupSlots) {
          const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
          for (const groupslotShdltestRelation of groupslotShdltestRelations) {
             const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
-            console.log(shdlTest.name)
+            groupTests.push(shdlTest);
          }
       }
 
@@ -36,6 +37,7 @@ async function createExcel() {
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
          { header: 'Note', key: 'note', width: 30 },
+         ...groupTests.map(test => ({ header: test.name, key: test.uid, width: 10 })),
       ]
 
       const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
