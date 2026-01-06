@@ -22,7 +22,6 @@ async function createExcel() {
 
       // collect all tests for the slots of this group
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
-      console.log(group.name, groupSlots);
       let groupTests = [];
       for (const groupSlot of groupSlots) {
          const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
