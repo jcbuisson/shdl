@@ -22,22 +22,30 @@ async function createExcel() {
 
       // collect all tests for the slots of this group
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
-      let groupTests = [];
+      const groupTests = new Set();
       for (const groupSlot of groupSlots) {
          const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
          for (const groupslotShdltestRelation of groupslotShdltestRelations) {
             const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
-            groupTests.push(shdlTest);
+            groupTests.add(shdlTest);
          }
       }
+      const sortedGroupTestList = [...groupTests].sort((a, b) => a.name.localeCompare(b.name));
 
       sheet.columns = [
          { header: 'Nom', key: 'lastname', width: 20 },
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
-         { header: 'Note', key: 'note', width: 30 },
-         ...groupTests.map(test => ({ header: `${test.name} (${test.weight})`, key: test.uid, width: 20 })),
+         { header: 'Remarques', key: 'note', width: 30 },
+         { header: 'Note / 20', key: 'mark', width: 10 },
+         ...sortedGroupTestList.map(test => ({ header: test.name, key: test.uid, width: 20 })),
       ]
+      const weightRow = {};
+      for (const test of groupTests) {
+         weightRow[test.uid] = test.weight;
+      }
+      sheet.addRow(weightRow);
+
 
       const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
       for (const userGroupRelation of userGroupRelations) {
@@ -48,6 +56,8 @@ async function createExcel() {
             email: user.email,
             note: user.note,
          }
+         let markSum = 0;
+         let markWeight = 0;
          for (const test of groupTests) {
             const [userTestRelation] = await prisma.user_shdltest_relation.findMany({ where: { user_uid: user.uid, shdl_test_uid: test.uid }});
             let evaluation = 0;
@@ -58,8 +68,11 @@ async function createExcel() {
                   evaluation = 100;
                }
             }
+            markSum += evaluation;
+            markWeight += test.weight
             row[test.uid] = evaluation;
          }
+         row['mark'] = Math.round((markSum / markWeight) / 5);
          sheet.addRow(row);
       }
    }
