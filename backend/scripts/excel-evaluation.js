@@ -68,7 +68,7 @@ async function createExcel() {
                   evaluation = 100;
                }
             }
-            markSum += evaluation;
+            markSum += evaluation * test.weight;
             markWeight += test.weight
             row[test.uid] = evaluation;
          }
