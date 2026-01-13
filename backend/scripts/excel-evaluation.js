@@ -37,7 +37,7 @@ async function createExcel() {
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
          { header: 'Remarques', key: 'note', width: 30 },
-         { header: 'Nb présence', key: 'attendance', width: 10 },
+         { header: '% présence', key: 'attendance', width: 10 },
          { header: 'Note / 20', key: 'mark', width: 10 },
          ...sortedGroupTestList.map(test => ({ header: test.name, key: test.uid, width: 20 })),
       ]
@@ -74,15 +74,6 @@ async function createExcel() {
 
             const slotStart = new Date(groupSlot.start);
             const slotEnd = new Date(groupSlot.end);
-            // const isAttendingSlot = userDocuments.some(async userDocument => {
-            //    const userDocumentEvents = await prisma.user_document_event.findMany({ where: { document_uid: userDocument.uid }});
-            //    const hasDocumentChanged = userDocumentEvents.some(event => {
-            //       const eventStart = new Date(event.start);
-            //       return (eventStart >= slotStart && eventStart <= slotEnd);
-            //    })
-            //    console.log(user.lastname, userDocument.name, groupSlot.name, hasDocumentChanged);
-            //    return hasDocumentChanged;
-            // })
             let isAttendingSlot = false;
             for (const userDocument of userDocuments) {
                const userDocumentEvents = await prisma.user_document_event.findMany({ where: { document_uid: userDocument.uid }});
@@ -116,6 +107,7 @@ async function createExcel() {
             markWeight += test.weight
             row[test.uid] = evaluation;
          }
+         console.log(user.lastname, markSum, markWeight);
          row['mark'] = Math.round((markSum / markWeight) / 5);
          sheet.addRow(row);
       }
