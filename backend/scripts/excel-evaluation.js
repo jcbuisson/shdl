@@ -37,6 +37,7 @@ async function createExcel() {
          { header: 'Prénom', key: 'firstname', width: 20 },
          { header: 'Email', key: 'email', width: 30 },
          { header: 'Remarques', key: 'note', width: 30 },
+         { header: 'Nb présence', key: 'attendance', width: 10 },
          { header: 'Note / 20', key: 'mark', width: 10 },
          ...sortedGroupTestList.map(test => ({ header: test.name, key: test.uid, width: 20 })),
       ]
@@ -56,6 +57,29 @@ async function createExcel() {
             email: user.email,
             note: user.note,
          }
+         // compute attendance
+         let total = 0;
+         let count = 0;
+         const userDocuments = await prisma.user_document.findMany({ where: { user_uid: user.uid }});
+         for (const groupSlot of groupSlots) {
+            const userExcuses = await prisma.user_slot_excuse.findMany({ where: { user_uid: user.uid, group_slot_uid: groupSlot.uid }});
+            if (userExcuses.length > 0) continue;
+
+            const slotStart = new Date(groupSlot.start);
+            const slotEnd = new Date(groupSlot.end);
+            const isAttendingSlot = userDocuments.some(async userDocument => {
+               const userDocumentEvents = await prisma.user_document_event.findMany({ where: { documùent_uid: userDocument.uid }});
+               const hasDocumentChanged = userDocumentEvents.some(event => {
+                  const eventStart = new Date(event.start);
+                  return (eventStart >= slotStart && eventStart <= slotEnd);
+               })
+               return hasDocumentChanged;
+            })
+            if (isAttendingSlot) count += 1;
+            total += 1;
+         } 
+         row['attendance'] = Math.floor(count * 100 / total);
+         // compute mark
          let markSum = 0;
          let markWeight = 0;
          for (const test of groupTests) {
