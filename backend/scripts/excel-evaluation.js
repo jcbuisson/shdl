@@ -49,15 +49,15 @@ async function createExcel() {
 
 
       const userGroupRelations = await prisma.user_group_relation.findMany({ where: { group_uid: group.uid }});
-      // const users = [];
-      // for (const userGroupRelation of userGroupRelations) {
-      //    const user = await prisma.user.findUnique({ where: { uid: userGroupRelation.user_uid }});
-      //    users.push(user);
-      // }
-      const users = userGroupRelations.reduce(async (accu, relation) => {
-         const user = await prisma.user.findUnique({ where: { uid: relation.user_uid }});
-         return [user, ...accu];
-      }, []);
+      const users = [];
+      for (const userGroupRelation of userGroupRelations) {
+         const user = await prisma.user.findUnique({ where: { uid: userGroupRelation.user_uid }});
+         users.push(user);
+      }
+      // const users = userGroupRelations.reduce(async (accu, relation) => {
+      //    const user = await prisma.user.findUnique({ where: { uid: relation.user_uid }});
+      //    return [user, ...accu];
+      // }, []);
       const sortedUsers = users.sort((a, b) => a.lastname.localeCompare(b.lastname));
       for (const user of sortedUsers) {
          const row = {
