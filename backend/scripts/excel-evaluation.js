@@ -115,7 +115,7 @@ async function createExcel() {
             markWeight += test.weight
             row[test.uid] = evaluation;
          }
-         console.log(user.lastname, markSum, markWeight);
+         console.log(user.lastname, markSum, markWeight, evaluation);
          row['mark'] = Math.round((markSum / markWeight) / 5);
          sheet.addRow(row);
       }
