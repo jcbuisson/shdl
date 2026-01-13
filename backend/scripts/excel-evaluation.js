@@ -56,7 +56,6 @@ async function createExcel() {
       }
       const sortedUsers = users.sort((a, b) => a.lastname.localeCompare(b.lastname));
       for (const user of sortedUsers) {
-         console.log(user.lastname, user.firstname);
          const row = {
             lastname: user.lastname,
             firstname: user.firstname,
@@ -68,7 +67,6 @@ async function createExcel() {
          let count = 0;
          const userDocuments = await prisma.user_document.findMany({ where: { user_uid: user.uid }});
          for (const groupSlot of groupSlots) {
-            console.log(groupSlot.name);
             const userExcuses = await prisma.user_slot_excuse.findMany({ where: { user_uid: user.uid, group_slot_uid: groupSlot.uid }});
             if (userExcuses.length > 0) continue;
 
