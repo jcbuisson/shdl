@@ -22,15 +22,25 @@ async function createExcel() {
 
       // collect all tests for the slots of this group
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
-      const groupTests = new Set();
+      // const groupTests = new Set();
+      // for (const groupSlot of groupSlots) {
+      //    const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
+      //    for (const groupslotShdltestRelation of groupslotShdltestRelations) {
+      //       const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
+      //       groupTests.add(shdlTest);
+      //    }
+      // }
+      const groupTests = [];
       for (const groupSlot of groupSlots) {
          const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
          for (const groupslotShdltestRelation of groupslotShdltestRelations) {
-            const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
-            groupTests.add(shdlTest);
+            const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }});
+            if (!groupTests.some(test => test.uid === shdlTest.uid)) {
+               groupTests.push(shdlTest);
+            }
          }
       }
-      const sortedGroupTestList = [...groupTests].sort((a, b) => a.name.localeCompare(b.name));
+      const sortedGroupTestList = groupTests.sort((a, b) => a.name.localeCompare(b.name));
 
       sheet.columns = [
          { header: 'Nom', key: 'lastname', width: 20 },
