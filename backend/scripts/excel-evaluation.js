@@ -74,15 +74,27 @@ async function createExcel() {
 
             const slotStart = new Date(groupSlot.start);
             const slotEnd = new Date(groupSlot.end);
-            const isAttendingSlot = userDocuments.some(async userDocument => {
+            // const isAttendingSlot = userDocuments.some(async userDocument => {
+            //    const userDocumentEvents = await prisma.user_document_event.findMany({ where: { document_uid: userDocument.uid }});
+            //    const hasDocumentChanged = userDocumentEvents.some(event => {
+            //       const eventStart = new Date(event.start);
+            //       return (eventStart >= slotStart && eventStart <= slotEnd);
+            //    })
+            //    console.log(user.lastname, userDocument.name, groupSlot.name, hasDocumentChanged);
+            //    return hasDocumentChanged;
+            // })
+            let isAttendingSlot = false;
+            for (const userDocument of userDocuments) {
                const userDocumentEvents = await prisma.user_document_event.findMany({ where: { document_uid: userDocument.uid }});
-               const hasDocumentChanged = userDocumentEvents.some(event => {
+               for (const event of userDocumentEvents) {
                   const eventStart = new Date(event.start);
-                  return (eventStart >= slotStart && eventStart <= slotEnd);
-               })
-               console.log(user.lastname, userDocument.name, groupSlot.name, hasDocumentChanged);
-               return hasDocumentChanged;
-            })
+                  if (eventStart >= slotStart && eventStart <= slotEnd) {
+                     isAttendingSlot = true;
+                     break;
+                  }
+               }
+               if (isAttendingSlot) break;
+            }
             if (isAttendingSlot) count += 1;
             total += 1;
          }
