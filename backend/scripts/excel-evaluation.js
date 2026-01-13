@@ -68,7 +68,7 @@ async function createExcel() {
             const slotStart = new Date(groupSlot.start);
             const slotEnd = new Date(groupSlot.end);
             const isAttendingSlot = userDocuments.some(async userDocument => {
-               const userDocumentEvents = await prisma.user_document_event.findMany({ where: { documùent_uid: userDocument.uid }});
+               const userDocumentEvents = await prisma.user_document_event.findMany({ where: { document_uid: userDocument.uid }});
                const hasDocumentChanged = userDocumentEvents.some(event => {
                   const eventStart = new Date(event.start);
                   return (eventStart >= slotStart && eventStart <= slotEnd);
