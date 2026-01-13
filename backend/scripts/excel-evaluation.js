@@ -82,11 +82,12 @@ async function createExcel() {
                   const eventStart = new Date(event.start);
                   return (eventStart >= slotStart && eventStart <= slotEnd);
                })
+               console.log(user.lastname, userDocument.name, groupSlot.name, hasDocumentChanged);
                return hasDocumentChanged;
             })
             if (isAttendingSlot) count += 1;
             total += 1;
-         } 
+         }
          row['attendance'] = Math.floor(count * 100 / total);
          // compute mark
          let markSum = 0;
