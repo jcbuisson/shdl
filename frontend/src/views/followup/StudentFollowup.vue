@@ -3,7 +3,7 @@
    <v-card class="d-flex flex-column fill-height">
 
       <!-- Toolbar (does not grow) -->
-      <v-tabs slider-color="indigo" v-model="tab">
+      <v-tabs slider-color="indigo" v-model="tab" class="flex-shrink-0">
          <!-- <v-tab :to="{ path: `/home/${signedinUid}/followup/${user_uid}/activity` }" router value='activity'>
             Activité
          </v-tab> -->
