@@ -211,7 +211,7 @@ watch(() => [route.path, filteredUserAndGroupList.value], async () => {
 function selectUser(user) {
    extendExpiration()
    selectedUser.value = user
-   router.push(`/home/${props.signedinUid}/followup/${user.uid}/grade`)
+   router.push(`/home/${props.signedinUid}/followup/${user.uid}/workshop`)
 }
 
 function onResize(width) {
