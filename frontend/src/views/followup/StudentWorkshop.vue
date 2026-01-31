@@ -35,8 +35,8 @@
 
 
 <script setup>
-import { ref } from 'vue'
-import { useObservable } from '@vueuse/rxjs'
+import { ref, watch, onUnmounted } from 'vue'
+// import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
@@ -63,9 +63,27 @@ const props = defineProps({
 
 const filter = ref('')
 
-const documentList = useObservable(documents$({user_uid: props.user_uid}).pipe(
-   map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
-))
+// const documentList = useObservable(documents$({user_uid: props.user_uid}).pipe(
+//    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
+// ))
+const documentList = ref([]);
+
+let documentListSubscription;
+
+watch(() => props.user_uid, async (user_uid) => {
+   if (documentListSubscription) documentListSubscription.unsubscribe()
+   documentListSubscription = documents$({user_uid}).pipe(
+      map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
+   ).subscribe(docList => {
+      documentList.value = docList;
+   })
+},
+   { immediate: true } // so that it's called on component mount
+)
+
+onUnmounted(() => {
+   if (documentListSubscription) documentListSubscription.unsubscribe()
+})
 
 const selectedDocument = ref(null)
 
@@ -79,16 +97,6 @@ function selectDocument(document) {
       router.push(`/home/${props.signedinUid}/followup/${props.user_uid}/workshop/craps/${document.uid}`)
    }
 }
-
-// const route = useRoute()
-// const routeRegex = /\/home\/([a-z0-9]+)\/workshop\/([a-z0-9]+)/
-
-// watch(() => [route.path, documentList.value], async () => {
-//    const match = route.path.match(routeRegex)
-//    if (!match) return
-//    const uid = match[2]
-//    selectedDocument.value = documentList.value.find(document => document.uid === uid)
-// }, { immediate: true })
 
 function onResize(width) {
    setStudentManagerWorkshopSplitWidth(width)
