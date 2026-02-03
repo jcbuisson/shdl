@@ -1,15 +1,36 @@
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
+/// <reference lib="webworker" />
+import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
+import { NavigationRoute, registerRoute } from 'workbox-routing'
 
-declare let self: ServiceWorkerGlobalScope
+export const SW_VERSION = '2.0.25';
 
-// prompt for new content
 self.addEventListener('message', (event) => {
-   if (event.data && event.data.type === 'SKIP_WAITING')
-      self.skipWaiting()
+   if (event.data && event.data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+
+   } else if (event.data === 'GET_VERSION') {
+      // when app ask for version number
+      event.source.postMessage({ type: 'VERSION', version: SW_VERSION });
+   }
 })
 
-// cleanup outdated cached assets
+// self.__WB_MANIFEST is the default injection point
+precacheAndRoute(self.__WB_MANIFEST)
+
+
+////////  COPIED FROM A VITE-VUE-PWA SCAFOLDING EXAMPLE
+
+// clean old assets
 cleanupOutdatedCaches()
 
-// cache assets
-precacheAndRoute(self.__WB_MANIFEST)
+/** @type {RegExp[] | undefined} */
+let allowlist
+// in dev mode, we disable precaching to avoid caching issues
+if (import.meta.env.DEV)
+   allowlist = [/^\/$/]
+
+// to allow work offline
+registerRoute(new NavigationRoute(
+   createHandlerBoundToURL('index.html'),
+   { allowlist },
+))

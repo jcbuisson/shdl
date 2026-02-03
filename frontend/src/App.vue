@@ -1,5 +1,5 @@
 <template>
-   <ReloadPrompt></ReloadPrompt>
+   <VersionUpdater></VersionUpdater>
 
    <router-view></router-view>
 
@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import ReloadPrompt from '/src/components/ReloadPrompt.vue'
+import VersionUpdater from '/src/components/VersionUpdater.vue'
 import { snackbar } from '/src/use/useSnackbar'
 
 // const myWorker = new Worker(new URL("/src/worker.js", import.meta.url), { type: 'module' });

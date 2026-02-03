@@ -7,6 +7,10 @@
             <v-toolbar-title text="SHDL / CRAPS"></v-toolbar-title>
 
             <template v-slot:append>
+               <!-- <div class="d-flex ga-2">
+                  v. 1.1
+               </div> -->
+
                <div class="d-flex ga-2">
                   <!-- <OnlineButton :isOnline="isConnected" @connect="connect" @disconnect="disconnect" /> -->
                   <GithubLink
@@ -98,19 +102,18 @@ const props = defineProps({
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
-// // synchronize when connection starts or restarts
-// // (placed here because of import circularity issues)
-// app.addConnectListener(async () => {
-//    console.log(">>>>>>>>>>>>>>>> SYNC ALL")
-//    // order matters
-//    await synchronizeAllUser()
-//    await synchronizeAllGroup()
-//    await synchronizeAllGroupSlot()
-//    await synchronizeAllUserTabRelation()
-//    await synchronizeAllUserGroupRelation()
-//    await synchronizeAllUserDocument()
-//    await synchronizeAllUserDocumentEvent()
-// })
+if ('serviceWorker' in navigator) {
+   navigator.serviceWorker.ready.then(reg => {
+      reg.active.postMessage('GET_VERSION');
+
+      navigator.serviceWorker.addEventListener('message', (event) => {
+         if (event.data.type === 'VERSION') {
+            console.log("Service Worker version", event.data.version);
+            version.value = event.data.version;
+         }
+      });
+   });
+}
 
 const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
    .pipe(

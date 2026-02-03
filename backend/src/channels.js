@@ -6,7 +6,8 @@ export default function(app) {
    async function roomsToPublish(context) {
       // 'find' events are not sent to anyone
       if (context.methodName.startsWith('find')) return [];
-      if (isTeacher(context)) {
+      const teacher = await isTeacher(context);
+      if (teacher) {
          if (context.serviceName === 'user_document_event') {
             return []; // exception
          } else {

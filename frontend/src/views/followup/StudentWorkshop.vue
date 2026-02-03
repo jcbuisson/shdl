@@ -36,7 +36,6 @@
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
-// import { useObservable } from '@vueuse/rxjs'
 import { map } from 'rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
@@ -63,9 +62,6 @@ const props = defineProps({
 
 const filter = ref('')
 
-// const documentList = useObservable(documents$({user_uid: props.user_uid}).pipe(
-//    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
-// ))
 const documentList = ref([]);
 
 let documentListSubscription;
