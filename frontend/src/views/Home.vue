@@ -4,7 +4,7 @@
       <div class="d-flex flex-column fill-height">
          <!-- Toolbar (does not grow) -->
          <v-toolbar extended>
-            <v-toolbar-title text="SHDL / CRAPS"></v-toolbar-title>
+            <v-toolbar-title text="SHDL - CRAPS"></v-toolbar-title>
 
             <template v-slot:append>
                <!-- <div class="d-flex ga-2">
