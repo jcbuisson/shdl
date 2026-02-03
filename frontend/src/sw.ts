@@ -2,7 +2,7 @@
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 
-export const SW_VERSION = '2.0.25';
+export const SW_VERSION = '2.0.15';
 
 self.addEventListener('message', (event) => {
    if (event.data && event.data.type === 'SKIP_WAITING') {
