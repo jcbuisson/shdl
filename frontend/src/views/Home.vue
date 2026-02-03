@@ -102,6 +102,8 @@ const props = defineProps({
 
 const isAuthenticated = computed(() => !!expiresAt.value)
 
+const version = ref()
+
 if ('serviceWorker' in navigator) {
    navigator.serviceWorker.ready.then(reg => {
       reg.active.postMessage('GET_VERSION');
