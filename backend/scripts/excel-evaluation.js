@@ -11,6 +11,12 @@ async function createExcel() {
       '1SN25A', '1SN25B', '1SN25C', '1SN25D', '1SN25E', '1SN25F', '1SN25G', '1SN25H', '1SN25I', '1SN25J', '1SN25K', '1SN25L', '1SN25M', '1SN25N',
    ]
 
+   const acceptedTestNames = [
+      'adder32_test', 'adder8_test', 'addsub32_test', 'cal_max_test', 'count_012789_test', 'count_init4_test', 'count_init8_test',
+      'count4_b1_b2_test', 'count4_test', 'decoder3to8_test', 'etats_cal_max_test', 'etats_tri_selection_test',
+      'max_tab_test', 'reg8_D_test', 'reg8_T_test', 'test_fulladder', 'tri_selection_int_test', 'tri_selection_test', 'ucmp2_test',
+   ]
+
    for (const groupName of groupNames) {
       const [group] = await prisma.group.findMany({ where: { name: groupName }});
       if (!group) {
@@ -22,21 +28,13 @@ async function createExcel() {
 
       // collect all tests for the slots of this group
       const groupSlots = await prisma.group_slot.findMany({ where: { group_uid: group.uid }});
-      // const groupTests = new Set();
-      // for (const groupSlot of groupSlots) {
-      //    const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
-      //    for (const groupslotShdltestRelation of groupslotShdltestRelations) {
-      //       const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }})
-      //       groupTests.add(shdlTest);
-      //    }
-      // }
       const groupTests = [];
       for (const groupSlot of groupSlots) {
          const groupslotShdltestRelations = await prisma.groupslot_shdltest_relation.findMany({ where: { group_slot_uid: groupSlot.uid }});
          for (const groupslotShdltestRelation of groupslotShdltestRelations) {
             const shdlTest = await prisma.shdl_test.findUnique({ where: { uid: groupslotShdltestRelation.shdl_test_uid }});
             if (!groupTests.some(test => test.uid === shdlTest.uid)) {
-               groupTests.push(shdlTest);
+               if (acceptedTestNames.includes(shdlTest.name)) groupTests.push(shdlTest);
             }
          }
       }
