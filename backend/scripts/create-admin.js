@@ -1,5 +1,3 @@
-
-import { PrismaClient } from '@prisma/client'
 import { expressX } from '@jcbuisson/express-x'
 
 import inquirer from 'inquirer'
@@ -7,14 +5,15 @@ import bcrypt from 'bcryptjs'
 import { v7 as uuidv7 } from 'uuid'
 
 import config from '#config'
+import { createDB } from '#root/src/db/index.js'
 import services from '#root/src/services/index.js'
 
 
 async function main() {
    try {
       const app = expressX(config)
-      const prisma = new PrismaClient()
-      app.set('prisma', prisma)
+      const db = createDB(config.DATABASE_URL)
+      app.set('db', db)
       app.configure(services)
 
       const answers = await inquirer.prompt([
@@ -44,22 +43,19 @@ async function main() {
             message: 'Repeat password',
          },
       ])
-      // check password match
       if (answers.password !== answers.repeat) {
          throw new Error("passwords do not match")
       }
-      // create user
-      let uid = uuidv7()
+      const uid = uuidv7()
       const now = new Date()
-      const [user, _] = await app.service('user').createWithMeta(uid, {
+      const [user] = await app.service('user').createWithMeta(uid, {
          email: answers.email,
          firstname: answers.firstname,
          lastname: answers.lastname,
          password: await bcrypt.hash(answers.password, 5),
       }, now)
-      // create relation with 'users' (user management) tab
-      uid = uuidv7()
-      await app.service('user_tab_relation').createWithMeta(uid, {
+      const tabUid = uuidv7()
+      await app.service('user_tab_relation').createWithMeta(tabUid, {
          user_uid: user.uid,
          tab: 'users',
       }, now)

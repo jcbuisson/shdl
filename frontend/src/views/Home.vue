@@ -160,7 +160,7 @@ onMounted(async () => {
    }, 500)
 
    interval = setInterval(() => {
-      if (app.isConnected()) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
+      if (app.isConnected) app.service('auth').ping() // force backend to send `expireAt` even when user is inactive
    }, 30000)
 })
 

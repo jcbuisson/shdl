@@ -30,17 +30,25 @@
   "contributors": [],
   "scripts": {
     "dev": "npx nodemon src/app.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@jcbuisson/express-x": "^2.1.19",
-    "@prisma/client": "^6.4.1",
+    "@jcbuisson/express-x": "^3.1.6",
+    "@jcbuisson/express-x-drizzle": "^3.1.6",
     "bcryptjs": "^3.0.2",
+    "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "inquirer": "^12.5.2",
     "jsonwebtoken": "^9.0.2",
     "mkdirp": "^3.0.1",
     "nodemailer": "^6.10.0",
+    "postgres": "^3.4.9",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
 }

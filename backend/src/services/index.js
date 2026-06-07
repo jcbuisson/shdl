@@ -1,45 +1,76 @@
+import { drizzleOfflinePlugin } from '@jcbuisson/express-x-drizzle'
+import { eq, and } from 'drizzle-orm'
 
-// database services
-import metadataService from './database/metadata/metadata.service.js'
+import * as schema from '#root/src/db/schema.js'
+import { isAuthenticated } from '#root/src/hooks.mjs'
+import { protect } from '#root/src/common-server.mjs'
 
-import userService from './database/user/user.service.js'
-import groupService from './database/group/group.service.js'
-import groupSlotService from './database/group_slot/group_slot.service.js'
-import userTabRelationService from './database/user_tab_relation/user_tab_relation.service.js'
-import userGroupRelationService from './database/user_group_relation/user_group_relation.service.js'
-import userDocumentService from './database/user_document/user_document.service.js'
-import userDocumentEventService from './database/user_document_event/user_document_event.service.js'
-import userSlotExcuseService from './database/user_slot_excuse/user_slot_excuse.service.js'
-import shdlTestService from './database/shdl_test/shdl_test.service.js'
-import groupSlotSHDLTestRelationService from './database/groupslot_shdltest_relation/groupslot_shdltest_relation.service.js'
-import userSHDLTestRelationService from './database/user_shdltest_relation/user_shdltest_relation.service.js'
-
-// custom services
 import authService from './custom/auth/auth.service.js'
-import syncService from './custom/sync/sync.service.js'
 import mailService from './custom/mail/mail.service.js'
 import fileUploadService from './custom/file-upload/file-upload.service.mjs'
 
 
+const commonHooks = {
+   before: { all: [isAuthenticated] },
+}
+
+const userHooks = {
+   before: { all: [isAuthenticated] },
+   after:  { all: [protect('password')] },
+}
+
+
 export default function (app) {
-   // add database services
-   app.configure(metadataService)
+   const db = app.get('db')
 
-   app.configure(userService)
-   app.configure(groupService)
-   app.configure(groupSlotService)
-   app.configure(userTabRelationService)
-   app.configure(userGroupRelationService)
-   app.configure(userDocumentService)
-   app.configure(userDocumentEventService)
-   app.configure(userSlotExcuseService)
-   app.configure(shdlTestService)
-   app.configure(groupSlotSHDLTestRelationService)
-   app.configure(userSHDLTestRelationService)
+   // model services + sync service
+   drizzleOfflinePlugin(app, db, schema.metadata, [
+      schema.user,
+      schema.group,
+      schema.group_slot,
+      schema.user_tab_relation,
+      schema.user_group_relation,
+      schema.user_document,
+      schema.user_document_event,
+      schema.user_slot_excuse,
+      schema.shdl_test,
+      schema.groupslot_shdltest_relation,
+      schema.user_shdltest_relation,
+   ])
 
-   // add custom services
+   // metadata service (flat where, used by frontend rollback path)
+   app.createService('metadata', {
+      findUnique: async (where = {}) => {
+         const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
+         if (conditions.length === 0) return null
+         const rows = await db.select().from(schema.metadata)
+            .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+            .limit(1)
+         return rows[0] ?? null
+      },
+      findMany: async (where = {}) => {
+         const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
+         if (conditions.length === 0) return db.select().from(schema.metadata)
+         return db.select().from(schema.metadata)
+            .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+      },
+   })
+
+   // hooks
+   app.service('user').hooks(userHooks)
+   app.service('group').hooks(commonHooks)
+   app.service('group_slot').hooks(commonHooks)
+   app.service('user_tab_relation').hooks(commonHooks)
+   app.service('user_group_relation').hooks(commonHooks)
+   app.service('user_document').hooks(commonHooks)
+   app.service('user_document_event').hooks(commonHooks)
+   app.service('user_slot_excuse').hooks(commonHooks)
+   app.service('shdl_test').hooks(commonHooks)
+   app.service('groupslot_shdltest_relation').hooks(commonHooks)
+   app.service('user_shdltest_relation').hooks(commonHooks)
+
+   // custom services
    app.configure(authService)
-   app.configure(syncService)
    app.configure(mailService)
    app.configure(fileUploadService)
 }

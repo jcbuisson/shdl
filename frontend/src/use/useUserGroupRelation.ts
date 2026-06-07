@@ -1,13 +1,9 @@
 
-import { useModel } from '/src/use/useModel.ts';
-
-// Create singleton model instance
 let modelInstance = null
 
 export function useUserGroupRelation(app) {
    if (!modelInstance) {
-      const { createModel } = useModel(app);
-      modelInstance = createModel(import.meta.env.VITE_APP_USER_GROUP_RELATION_IDB, 'user_group_relation', ['user_uid', 'group_uid'])
+      modelInstance = app.createOfflineModel('user_group_relation', ['user_uid', 'group_uid'])
    }
 
    /////////////          UTILITY          /////////////

@@ -1,40 +1,16 @@
-
 import hooks from './user_slot_excuse.hooks.js'
-
+import { makeFindUnique, makeFindMany, makeCreateWithMeta, makeUpdateWithMeta, makeDeleteWithMeta } from '#root/src/db/helpers.js'
+import * as schema from '#root/src/db/schema.js'
 
 export default function (app) {
-
-   const prisma = app.get('prisma')
+   const db = app.get('db')
 
    app.createService('user_slot_excuse', {
-
-      findUnique: prisma.user_slot_excuse.findUnique,
-
-      findMany: prisma.user_slot_excuse.findMany,
-      
-      createWithMeta: async (uid, data, created_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_slot_excuse.create({ data: { uid, ...data } }),
-            prisma.metadata.create({ data: { uid, created_at } })
-         ])
-         return [value, meta]
-      },
-      
-      updateWithMeta: async (uid, data, updated_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_slot_excuse.update({ where: { uid }, data }),
-            prisma.metadata.update({ where: { uid }, data: { updated_at } })
-         ])
-         return [value, meta]
-      },
-      
-      deleteWithMeta: async (uid, deleted_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_slot_excuse.delete({ where: { uid } }),
-            prisma.metadata.update({ where: { uid }, data: { deleted_at } })
-         ])
-         return [value, meta]
-      },
+      findUnique:     makeFindUnique(db, schema.user_slot_excuse),
+      findMany:       makeFindMany(db, schema.user_slot_excuse),
+      createWithMeta: makeCreateWithMeta(db, schema.user_slot_excuse, schema.metadata),
+      updateWithMeta: makeUpdateWithMeta(db, schema.user_slot_excuse, schema.metadata),
+      deleteWithMeta: makeDeleteWithMeta(db, schema.user_slot_excuse, schema.metadata),
    })
 
    app.service('user_slot_excuse').hooks(hooks)

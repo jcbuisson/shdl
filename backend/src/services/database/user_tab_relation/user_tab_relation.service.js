@@ -1,40 +1,16 @@
-
 import hooks from './user_tab_relation.hooks.js'
-
+import { makeFindUnique, makeFindMany, makeCreateWithMeta, makeUpdateWithMeta, makeDeleteWithMeta } from '#root/src/db/helpers.js'
+import * as schema from '#root/src/db/schema.js'
 
 export default function (app) {
-
-   const prisma = app.get('prisma')
+   const db = app.get('db')
 
    app.createService('user_tab_relation', {
-
-      findUnique: prisma.user_tab_relation.findUnique,
-
-      findMany: prisma.user_tab_relation.findMany,
-      
-      createWithMeta: async (uid, data, created_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_tab_relation.create({ data: { uid, ...data } }),
-            prisma.metadata.create({ data: { uid, created_at } })
-         ])
-         return [value, meta]
-      },
-      
-      updateWithMeta: async (uid, data, updated_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_tab_relation.update({ where: { uid }, data }),
-            prisma.metadata.update({ where: { uid }, data: { updated_at } })
-         ])
-         return [value, meta]
-      },
-      
-      deleteWithMeta: async (uid, deleted_at) => {
-         const [value, meta] = await prisma.$transaction([
-            prisma.user_tab_relation.delete({ where: { uid } }),
-            prisma.metadata.update({ where: { uid }, data: { deleted_at } })
-         ])
-         return [value, meta]
-      },
+      findUnique:     makeFindUnique(db, schema.user_tab_relation),
+      findMany:       makeFindMany(db, schema.user_tab_relation),
+      createWithMeta: makeCreateWithMeta(db, schema.user_tab_relation, schema.metadata),
+      updateWithMeta: makeUpdateWithMeta(db, schema.user_tab_relation, schema.metadata),
+      deleteWithMeta: makeDeleteWithMeta(db, schema.user_tab_relation, schema.metadata),
    })
 
    app.service('user_tab_relation').hooks(hooks)

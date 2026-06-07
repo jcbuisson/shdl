@@ -1,15 +1,10 @@
 
-import { useModel } from '/src/use/useModel.ts';
-
-// Create singleton model instance
 let modelInstance = null
 
 
 export function useUserTabRelation(app) {
-   // Return existing instance if already created
    if (!modelInstance) {
-      const { createModel } = useModel(app);
-      modelInstance = createModel(import.meta.env.VITE_APP_USER_TAB_RELATION_IDB, 'user_tab_relation', ['user_uid', 'tab'])
+      modelInstance = app.createOfflineModel('user_tab_relation', ['user_uid', 'tab'])
    }
    
    /////////////          UTILITY          /////////////

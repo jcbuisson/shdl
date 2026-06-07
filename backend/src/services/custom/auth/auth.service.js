@@ -1,37 +1,32 @@
-
-// COMMON TO NUTRIEDUC & INFIRMIER
-
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v7 as uuidv7 } from 'uuid'
+import { eq } from 'drizzle-orm'
 
 import hooks from './auth.hooks.js'
 import config from '#config'
-
 import { EXError } from '#root/src/common-server.mjs'
+import * as schema from '#root/src/db/schema.js'
 
 
 export default function (app) {
 
-   const prisma = app.get('prisma')
-
    app.createService('auth', {
 
       signin: async (email, password) => {
-         const prisma = app.get('prisma')
-         // check existence of a user with `email`
-         const user = await prisma.user.findUnique({ where: { email }})
+         const db = app.get('db')
+         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const user = rows[0] ?? null
          if (!user) throw new EXError('wrong-credentials')
-         // check its password
          const correct = await bcrypt.compare(password, user.password)
          if (!correct) throw new EXError('wrong-credentials')
          return user // returned value is replaced by { user, expiresAt } by 'after' hook
       },
 
       signup: async (email) => {
-         // check existence of a user with `email`
-         const user = await prisma.user.findUnique({ where: { email }})
-         // send email
+         const db = app.get('db')
+         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const user = rows[0] ?? null
          if (user) {
             await app.service('mail').send({
                from: 'buisson@enseeiht.fr',
@@ -45,7 +40,6 @@ export default function (app) {
          } else {
             const token = jwt.sign({ email }, config.JWT_PRIVATE_KEY, {
                algorithm: "RS256",
-               // expiresIn: "1h",
             })
             await app.service('mail').send({
                from: 'buisson@enseeiht.fr',
@@ -59,33 +53,30 @@ export default function (app) {
          }
       },
 
-      // see hooks
       signout: async () => {
          return 'ok'
       },
 
       createAccountWithToken: async (token, password, firstname, lastname) => {
          try {
-            // create user
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
             const uid = uuidv7()
             const data = { uid, email: payload.email, password, firstname, lastname }
             const created_at = new Date()
-            // const [user, _] = await app.service('user').createWithMeta(uid, data, created_at)
-            const [user, _] = await prisma.$transaction([
-               prisma.user.create({ data: { uid, ...data } }),
-               prisma.metadata.create({ data: { uid, created_at } })
-            ])
+            const db = app.get('db')
+            const [user] = await db.transaction(async (tx) => {
+               const [u] = await tx.insert(schema.user).values({ uid, ...data }).returning()
+               await tx.insert(schema.metadata).values({ uid, created_at }).returning()
+               return [u]
+            })
             // give user tab 'workshop'
             for (const tab of ['workshop']) {
-               const uid = uuidv7()
-               const data = { uid, user_uid: user.uid, tab }
-               // await app.service('user_tab_relation').createWithMeta(uid, data, created_at)
-               await prisma.$transaction([
-                  prisma.user_tab_relation.create({ data: { uid, ...data } }),
-                  prisma.metadata.create({ data: { uid, created_at } })
-               ])
+               const tabUid = uuidv7()
+               await db.transaction(async (tx) => {
+                  await tx.insert(schema.user_tab_relation).values({ uid: tabUid, user_uid: user.uid, tab }).returning()
+                  await tx.insert(schema.metadata).values({ uid: tabUid, created_at }).returning()
+               })
             }
             return user
          } catch(err) {
@@ -101,12 +92,12 @@ export default function (app) {
          try {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
             password = await bcrypt.hash(password, 5)
-            const user = await prisma.user.update({
-               where: { uid: payload.user_uid },
-               data: {
-                  password
-               },
-            })
+            const db = app.get('db')
+            const rows = await db.update(schema.user)
+               .set({ password })
+               .where(eq(schema.user.uid, payload.user_uid))
+               .returning()
+            const user = rows[0]
             delete user.password
             return user
          } catch(err) {
@@ -119,13 +110,12 @@ export default function (app) {
       },
 
       forgottenPassword: async (email) => {
-         // check existence of a user with `email`
-         const user = await prisma.user.findUnique({ where: { email }})
+         const db = app.get('db')
+         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const user = rows[0] ?? null
          if (!user) return
-         // send reset password email
          const token = jwt.sign({ user_uid: user.uid }, config.JWT_PRIVATE_KEY, {
             algorithm: "RS256",
-            // expiresIn: "1h",
          })
          await app.service('mail').send({
             from: 'buisson@enseeiht.fr',
@@ -135,9 +125,6 @@ export default function (app) {
          })
       },
 
-      // Typically used each time a user interacts with the application
-      // Sends event 'expiresAt' with the new expiration date to the client socket, or null if client is no longer authenticated
-      // See hooks
       extendExpiration: async () => {
       },
 

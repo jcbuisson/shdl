@@ -1,28 +1,28 @@
+import { eq, and } from 'drizzle-orm'
 
 import config from '#config'
-
 import { protect } from '#root/src/common-server.mjs'
 import { extendExpiration, checkExpiration } from '#root/src/hooks.mjs'
-
+import * as schema from '#root/src/db/schema.js'
 
 
 async function afterSignin(context) {
-   // set socket.data.user
    context.socket.data.user = Object.assign({}, context.result)
-   // set socket.data.expiresAt
    const now = new Date()
    context.socket.data.expiresAt = new Date(now.getTime() + config.SESSION_EXPIRE_DELAY)
    console.log('socket.data.expiresAt set by afterSignin', context.socket.data.expiresAt)
-   const prisma = context.app.get('prisma')
-   const followupRelations = await prisma.user_tab_relation.findMany({ where: { user_uid: context.socket.data.user.uid, tab: 'followup' } })
+   const db = context.app.get('db')
+   const followupRelations = await db.select().from(schema.user_tab_relation)
+      .where(and(
+         eq(schema.user_tab_relation.user_uid, context.socket.data.user.uid),
+         eq(schema.user_tab_relation.tab, 'followup')
+      ))
    const isTeacher = (followupRelations.length > 0)
    if (isTeacher) {
-      // add a teacher to the 'teachers' channel
       context.app.joinChannel('teachers', context.socket)
    } else {
-      // add a student user to the <user_uid> channel (only member: himself) and the 'students' channel
-      context.app.joinChannel(context.socket.data.user.uid, context.socket);
-      context.app.joinChannel('students', context.socket);
+      context.app.joinChannel(context.socket.data.user.uid, context.socket)
+      context.app.joinChannel('students', context.socket)
    }
    console.log('socket.rooms', context.socket.rooms)
    context.result = {
@@ -32,9 +32,7 @@ async function afterSignin(context) {
 }
 
 function afterSignout(context) {
-   // clear connection data
    context.socket.data = {}
-   // leave all rooms except socket#id
    const rooms = new Set(context.socket.rooms)
    for (const room of rooms) {
       if (room === context.socket.id) continue
