@@ -85,12 +85,16 @@ export function useBusinessObservables(app) {
 
    // emit a list [{ user, isTeacher }, ...] for all users
    function usersAndStatus$() {
-      return users$({}).pipe(
-         switchMap(users => guardCombineLatest(users.map(user => {
-            return isTeacher$(user.uid).pipe(
-               map(isTeacher => ({ user, isTeacher })),
-            )
-         })))
+      return combineLatest([
+         users$({}),
+         userTabRelations$({}),
+      ]).pipe(
+         map(([users, tabRelations]) =>
+            users.map(user => ({
+               user,
+               isTeacher: tabRelations.some(rel => rel.user_uid === user.uid && rel.tab === 'followup'),
+            }))
+         )
       )
    }
 
@@ -113,7 +117,7 @@ export function useBusinessObservables(app) {
             guardCombineLatest(relations.map(relation => groupSlots$({ group_uid: relation.group_uid })))
          ),
          map(listOfSlotList => listOfSlotList.reduce((accu, slotList) => [...accu, ...slotList], [])),
-         shareReplay({ bufferSize: 1, refCount: true }),
+         shareReplay({ bufferSize: 1, refCount: true }), // share multiple subscriptions
       )
    }
 
@@ -144,7 +148,7 @@ export function useBusinessObservables(app) {
                testUidList.map(uid => shdlTest$(uid))
             )
          ),
-         shareReplay({ bufferSize: 1, refCount: true }),
+         shareReplay({ bufferSize: 1, refCount: true }), // share multiple subscriptions
       )
    }
 
