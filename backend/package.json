@@ -29,8 +29,8 @@
   },
   "contributors": [],
   "scripts": {
-    "dev": "npx nodemon src/app.js",
-    "create-admin": "node scripts/create-admin.js",
+    "dev": "npx nodemon --exec 'node --env-file=.env' src/app.js",
+    "create-admin": "node --env-file=.env scripts/create-admin.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
