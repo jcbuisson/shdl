@@ -44,8 +44,6 @@ import useExpressXClient from '/src/use/useExpressXClient';
 import { useUser } from '/src/use/useUser'
 import { useGroup } from '/src/use/useGroup'
 import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useBusinessObservables } from '/src/use/useBusinessObservables'
-
 import router from '/src/router'
 
 import SplitPanel from '/src/components/SplitPanel.vue'
@@ -55,9 +53,6 @@ const { app } = useExpressXClient();
 const { getObservable: users$ } = useUser(app)
 const { getObservable: groups$, remove: removeGroup } = useGroup(app)
 const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
-const { guardCombineLatest } = useBusinessObservables(app)
-
-
 const props = defineProps({
    signedinUid: {
       type: String,
@@ -66,26 +61,19 @@ const props = defineProps({
 
 const nameFilter = ref('')
 
-// Trick to force synchronization on all user-group relations, instead of starting dozens of synchronizations, one per group
-const allUsers = useObservable(users$({}));
-console.log('allUsers', allUsers.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting dozens of synchronizations, one per group
-const allGroupUserRelations = useObservable(userGroupRelations$({}));
-console.log('allGroupUserRelations', allGroupUserRelations.value)
-
-const groupsAndUsers$ = groups$({}).pipe(
-   switchMap(groups => 
-      guardCombineLatest(
-         groups.map(group =>
-            userGroupRelations$({ group_uid: group.uid }).pipe(
-               switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => users$({ uid: relation.user_uid }).pipe(map(users => users[0]))))
-               ),
-               map(users => ({ group, users }))
-            )
-         )
-      )
+const groupsAndUsers$ = combineLatest([
+   groups$({}),
+   userGroupRelations$({}),
+   users$({}),
+]).pipe(
+   map(([groups, allRelations, allUsers]) =>
+      groups.map(group => ({
+         group,
+         users: allRelations
+            .filter(rel => rel.group_uid === group.uid)
+            .map(rel => allUsers.find(u => u.uid === rel.user_uid))
+            .filter(Boolean),
+      }))
    ),
 )
 
