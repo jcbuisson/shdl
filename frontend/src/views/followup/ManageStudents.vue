@@ -108,42 +108,7 @@ const props = defineProps({
    },
 })
 
-const groupList = useObservable(groups$({}))
 const userGroups = ref([])
-
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userGroupRelationList = useObservable(userGroupRelations$({}));
-console.log('userGroupRelationList', userGroupRelationList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const groupSlotList = useObservable(groupSlots$({}));
-console.log('groupSlotList', groupSlotList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const groupSlotSHDLTestRelationList = useObservable(groupSlotSHDLTestRelations$({}));
-console.log('groupSlotSHDLTestRelationList', groupSlotSHDLTestRelationList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userSlotExcuseList = useObservable(userSlotExcuses$({}));
-console.log('userSlotExcuseList', userSlotExcuseList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userDocumentEventList = useObservable(userDocumentEvents$({}));
-console.log('userDocumentEventList', userDocumentEventList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userSHDLTestRelationList = useObservable(userSHDLTestRelations$({}));
-console.log('userSHDLTestRelationList', userSHDLTestRelationList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userTabRelationList = useObservable(userTabRelations$({}));
-console.log('userTabRelationList', userTabRelationList.value)
-
-// Trick to force synchronization on all user-group relations, instead of starting hundreds of synchronizations, one per user
-const userDocumentList = useObservable(userDocuments$({}));
-console.log('userDocumentList', userDocumentList.value)
-
 const nameFilter = ref('')
 const groupFilter = ref('')
 
@@ -151,10 +116,13 @@ function onGroupChange(uid) {
    groupFilter.value = uid
 }
 
+// Create userAndGroups$ first so the essential models (user, user_tab_relation,
+// user_group_relation, group) register their {} syncs ahead of the heavy ones.
+// The offlinePlugin runs all syncs through a shared mutex, so order matters.
 const userAndGroups$ = combineLatest([
-   students$(),
-   userGroupRelations$({}),
-   groups$({}),
+   students$(),          // schedules: user sync (1st), user_tab_relation sync (2nd)
+   userGroupRelations$({}),  // schedules: user_group_relation sync (3rd)
+   groups$({}),          // schedules: group sync (4th)
 ]).pipe(
    map(([users, allRelations, allGroups]) =>
       users.map(user => ({
@@ -166,6 +134,19 @@ const userAndGroups$ = combineLatest([
       }))
    ),
 )
+
+// groupList for the group filter dropdown (groups$({}) already registered above)
+const groupList = useObservable(groups$({}))
+
+// Pre-sync remaining models needed by sub-pages (heavy — run after essential models)
+useObservable(userGroupRelations$({}))
+useObservable(userTabRelations$({}))
+useObservable(groupSlots$({}))
+useObservable(groupSlotSHDLTestRelations$({}))
+useObservable(userSlotExcuses$({}))
+useObservable(userDocumentEvents$({}))
+useObservable(userSHDLTestRelations$({}))
+useObservable(userDocuments$({}))
 
 const userAndGroupsList = useObservable(userAndGroups$)
 
