@@ -1,5 +1,5 @@
 import { Observable, from, map, of, merge, combineLatest, throwError } from 'rxjs'
-import { mergeMap, switchMap, scan, tap, catchError, filter } from 'rxjs/operators'
+import { mergeMap, switchMap, scan, tap, catchError, filter, shareReplay } from 'rxjs/operators'
 
 import { useUser } from '/src/use/useUser'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
@@ -113,6 +113,7 @@ export function useBusinessObservables(app) {
             guardCombineLatest(relations.map(relation => groupSlots$({ group_uid: relation.group_uid })))
          ),
          map(listOfSlotList => listOfSlotList.reduce((accu, slotList) => [...accu, ...slotList], [])),
+         shareReplay({ bufferSize: 1, refCount: true }),
       )
    }
 
@@ -143,6 +144,7 @@ export function useBusinessObservables(app) {
                testUidList.map(uid => shdlTest$(uid))
             )
          ),
+         shareReplay({ bufferSize: 1, refCount: true }),
       )
    }
 
