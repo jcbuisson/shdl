@@ -90,7 +90,7 @@ const { getObservable: users$, remove: removeUser } = useUser(app)
 const { getObservable: groups$ } = useGroup(app)
 const { getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
 const { extendExpiration } = useAuthentication(app)
-const { guardCombineLatest, group$ } = useBusinessObservables(app)
+const { guardCombineLatest } = useBusinessObservables(app)
 
 
 const props = defineProps({
@@ -110,18 +110,19 @@ const userGroups = ref([])
 const nameFilter = ref('')
 const groupFilter = ref('')
 
-const userAndGroups$ = users$({}).pipe(
-   switchMap(users => 
-      guardCombineLatest(
-         users.map(user =>
-            userGroupRelations$({ user_uid: user.uid }).pipe(
-               switchMap(relations =>
-                  guardCombineLatest(relations.map(relation => group$(relation.group_uid)))
-               ),
-               map(groups => ({ user, groups }))
-            )
-         )
-      )
+const userAndGroups$ = combineLatest([
+   users$({}),
+   userGroupRelations$({}),
+   groups$({}),
+]).pipe(
+   map(([users, allRelations, allGroups]) =>
+      users.map(user => ({
+         user,
+         groups: allRelations
+            .filter(rel => rel.user_uid === user.uid)
+            .map(rel => allGroups.find(g => g.uid === rel.group_uid))
+            .filter(Boolean),
+      }))
    ),
 )
 const userAndGroupsList = useObservable(userAndGroups$)
