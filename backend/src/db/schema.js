@@ -60,8 +60,8 @@ export const shdl_test = pgTable('shdl_test', {
    uid:              text('uid').notNull().unique(),
    name:             text('name').notNull(),
    weight:           integer('weight').notNull().default(1),
-   test_statements:  text('test_statements'),
-   memory_contents:  text('memory_contents'),
+   test_statements:  text('test_statements'), // ex: "set rst 1\ncheck a 0"
+   memory_contents:  text('memory_contents'), // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
 })
 
 export const groupslot_shdltest_relation = pgTable('groupslot_shdltest_relation', {
@@ -88,7 +88,7 @@ export const user_shdltest_relation = pgTable('user_shdltest_relation', {
 export const user_document = pgTable('user_document', {
    uid:          text('uid').notNull().unique(),
    user_uid:     text('user_uid').notNull(),
-   type:         text('type').notNull(),
+   type:         text('type').notNull(), // 'shdl', 'craps', 'text'
    name:         text('name').notNull(),
    text:         text('text').notNull(),
    update_count: integer('update_count').notNull().default(0),
@@ -97,7 +97,7 @@ export const user_document = pgTable('user_document', {
 export const user_document_event = pgTable('user_document_event', {
    uid:          text('uid').notNull().unique(),
    document_uid: text('document_uid').notNull(),
-   type:         text('type').notNull(),
+   type:         text('type').notNull(), // 'create', 'edit', 'delete', 'pass_test'
    start:        timestamp('start').notNull(),
    end:          timestamp('end'),
 })
