@@ -4,11 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SHDL (Simple Hardware Description Language) is an educational platform for teaching digital hardware design. The system consists of a Node.js/Express backend with PostgreSQL database and a Vue 3 frontend, featuring real-time collaboration via WebSockets.
+SHDL (Simple Hardware Description Language) is an educational platform for teaching digital hardware design and assembly programming. The system consists of a Node.js/Express backend with PostgreSQL database and a Vue 3 frontend, featuring real-time collaboration via WebSockets.
+
+The platform supports two types of student documents:
+- **SHDL documents**: Hardware circuit descriptions in the SHDL language
+- **CRAPS documents**: Assembly programs for the CRAPS educational processor (a SPARC-inspired 32-bit ISA)
 
 ## Development Commands
 
-### Backend (Node.js/Express + Prisma)
+### Backend (Node.js/Express + Drizzle)
 
 ```bash
 cd backend
@@ -20,10 +24,9 @@ npm run dev
 npm run create-admin
 
 # Database operations
-npx prisma migrate dev         # Create and apply migrations
-npx prisma migrate deploy      # Apply migrations in production
-npx prisma generate            # Generate Prisma Client after schema changes
-npx prisma studio              # Open database GUI
+npm run db:generate   # Generate migration files from schema changes
+npm run db:push       # Push schema changes to database
+npm run db:studio     # Open Drizzle Studio (database GUI)
 ```
 
 ### Frontend (Vue 3 + Vite)
@@ -50,7 +53,7 @@ npm run type-check
 
 **Backend:**
 - Express.js with custom `@jcbuisson/express-x` framework (WebSocket + service layer)
-- PostgreSQL database with Prisma ORM
+- PostgreSQL database with Drizzle ORM (`@jcbuisson/express-x-drizzle`)
 - Socket.io for real-time bidirectional communication
 - JWT authentication (RS256) with bcryptjs
 - Node.js ES modules (package.json `"type": "module"`)
@@ -59,8 +62,8 @@ npm run type-check
 - Vue 3 with Composition API (`<script setup>`)
 - Vuetify 3 for UI components
 - RxJS for reactive state management with observables
-- Socket.io client via custom wrapper (`@jcbuisson/express-x-client`)
-- ACE Editor and CodeMirror 6 for code editing
+- Socket.io client via custom wrapper (`@jcbuisson/express-x-client` v3, `offlinePlugin` for IndexedDB cache)
+- Ace Editor for code editing (both SHDL and CRAPS)
 - D3.js for visualizations
 - Vite build system with TypeScript support
 
@@ -80,8 +83,7 @@ shdl/
 │   │   │       ├── mail/             # Email sending
 │   │   │       └── file-upload/      # File uploads
 │   │   └── lib/                      # Utilities and helpers
-│   ├── prisma/
-│   │   └── schema.prisma             # Database schema
+│   ├── drizzle/                      # Drizzle schema and migrations
 │   ├── config/
 │   │   └── index.mjs                 # Environment configuration
 │   └── scripts/
@@ -91,29 +93,41 @@ shdl/
     ├── src/
     │   ├── main.js                   # Vue app entry point
     │   ├── App.vue                   # Root component
-    │   ├── client.mjs                # WebSocket client wrapper
-    │   ├── client-app.js             # Client app initialization
+    │   ├── client-app.js             # WebSocket client initialization
     │   ├── router/
     │   │   └── index.js              # Vue Router configuration
-    │   ├── views/                    # Page components (25 views)
+    │   ├── views/                    # Page components
     │   │   ├── login/                # Authentication flows
     │   │   ├── users/                # User management (admin)
     │   │   ├── groups/               # Group management (admin)
-    │   │   ├── workshop/             # SHDL/text editor (main workspace)
+    │   │   ├── workshop/             # SHDL/CRAPS editor (main workspace)
     │   │   ├── followup/             # Student progress tracking (teacher)
     │   │   └── shdl_tests/           # Test definition (admin)
     │   ├── components/               # Reusable Vue components
-    │   │   ├── EditSHDLDocument.vue  # SHDL code editor
-    │   │   └── SHDLSimulator.vue     # SHDL simulator
+    │   │   ├── EditSHDLDocument.vue  # SHDL code editor (Ace)
+    │   │   ├── SHDLSimulator.vue     # SHDL simulator
+    │   │   └── craps/
+    │   │       ├── CrapsEditor.vue         # CRAPS assembly editor (Ace)
+    │   │       ├── CrapsSimulator.vue      # CRAPS step/run simulator
+    │   │       ├── CrapsMemoryEditor.vue   # Memory view sub-component
+    │   │       ├── CrapsRegistersEditor.vue# Registers view sub-component
+    │   │       ├── CrapsModule.vue         # Single module display
+    │   │       ├── CrapsModuleList.vue     # Module list
+    │   │       ├── CrapsUserModules.vue    # User module management
+    │   │       └── craps-doc.txt           # CRAPS ISA reference
     │   ├── lib/
-    │   │   ├── businessObservables.ts # RxJS observables for data streams
-    │   │   └── shdl/                 # SHDL language implementation
-    │   │       ├── shdlPegParser.js  # PEG-based parser (generated)
-    │   │       ├── shdlSyntax.ts     # Syntax validation
-    │   │       ├── shdlAnalyzer.ts   # Semantic analysis
-    │   │       └── shdlUtilities.js  # Helper functions
+    │   │   ├── useBusinessObservables.ts # Business-level RxJS observables
+    │   │   ├── shdl/                 # SHDL language implementation
+    │   │   │   ├── shdlPegParser.js  # PEG-based parser (generated)
+    │   │   │   ├── shdlSyntax.ts     # Syntax validation
+    │   │   │   ├── shdlAnalyzer.ts   # Semantic analysis
+    │   │   │   └── shdlUtilities.js  # Helper functions
+    │   │   └── craps/                # CRAPS language implementation
+    │   │       ├── craps_grammar.peg # PEG grammar definition
+    │   │       ├── parser.js         # PEG-generated parser
+    │   │       └── crapsChecker.js   # Assembler: symbol resolution + binary encoding
     │   └── use/                      # Vue composables
-    │       ├── useModel.ts           # Generic model CRUD
+    │       ├── useExpressXClient.ts  # WebSocket client (express-x-client v3)
     │       ├── useAuthentication.js  # Auth state management
     │       └── useAppState.js        # Global app state
     └── vite.config.js                # Vite build configuration
@@ -143,9 +157,9 @@ app.createService('user', {
 })
 ```
 
-### Database Models (Prisma)
+### Database Models (Drizzle)
 
-Key entities in `backend/prisma/schema.prisma`:
+Key entities defined in the Drizzle schema:
 
 - **User**: Core user entity (email, password, firstname, lastname, pict, notes)
 - **Tab**: Access control tabs (users, groups, shdl_tests, craps_tests, followup, workshop)
@@ -153,13 +167,13 @@ Key entities in `backend/prisma/schema.prisma`:
 - **Group**: Student groups/classes
 - **UserGroupRelation**: Many-to-many user-group membership
 - **GroupSlot**: Time slots for group lessons/workshops
-- **UserDocument**: SHDL/CRAPS/text documents created by users
+- **UserDocument**: SHDL/CRAPS/text documents created by users (field `type` distinguishes them)
 - **UserDocumentEvent**: Audit trail (create, edit, delete, pass_test events)
 - **SHDLTest**: Test definitions with test statements and memory contents
 - **UserSHDLTestRelation**: Tracks student test attempts with dates and scores
 - **Metadata**: Generic audit table (created_at, updated_at, deleted_at) for all entities
 
-All database operations wrap model + metadata updates in a transaction. Use `createWithMeta`, `updateWithMeta`, `deleteWithMeta` instead of direct Prisma calls.
+All database operations wrap model + metadata updates in a transaction. Use `createWithMeta`, `updateWithMeta`, `deleteWithMeta` instead of direct DB calls.
 
 ### Pub/Sub Channels (`backend/src/channels.js`)
 
@@ -172,16 +186,14 @@ This enables real-time student monitoring by teachers.
 
 ### Reactive State with RxJS Observables
 
-The application uses RxJS observables for all data streams, defined in `frontend/src/lib/businessObservables.ts`:
+The application uses RxJS observables for all data streams. Business-level observables are in `frontend/src/use/useBusinessObservables.ts`:
 
 ```typescript
-// Example: Stream of users matching a filter
-const users$ = (filter) => service$('user', 'findMany', { filter })
+// Example: Stream of all users
+const users$ = (where) => useUser(app).getObservable(where)
 
-// Example: Stream of user's group memberships
-const userGroups$ = (user_uid) => service$('user_group_relation', 'findMany', {
-  filter: { user_uid }
-})
+// Example: Stream of students only (users without followup tab access)
+const { students$ } = useBusinessObservables(app)
 ```
 
 **Key Observable Patterns:**
@@ -195,37 +207,41 @@ const userGroups$ = (user_uid) => service$('user_group_relation', 'findMany', {
 
 Composables wrap service calls and observables for use in Vue components:
 
-- `useModel.ts`: Generic CRUD operations for any model
+- `useExpressXClient.ts`: Creates the WebSocket client with `offlinePlugin` (IndexedDB cache) and `reloadPlugin` (reconnection)
 - `useAuthentication.js`: Auth state (signedinUser$, isTeacher$, userTabs$)
 - `useAppState.js`: Global state (connection status, session expiration)
-- `useWebsocket.js`: WebSocket connection management
+- Per-model composables (e.g. `useUser.js`, `useGroup.ts`): Wrap `app.createOfflineModel(modelName, fields)` and expose `getObservable`, `create`, `update`, `remove`, `findWhere`
 
 **Usage in components:**
 ```vue
 <script setup>
-import { useModel } from '@/use/useModel'
+import useExpressXClient from '/src/use/useExpressXClient'
+import { useUser } from '/src/use/useUser'
 
-const { items: users, create, update, remove } = useModel('user', {
-  filter: { /* ... */ }
-})
+const { app } = useExpressXClient()
+const { getObservable: users$, create, update, remove } = useUser(app)
+
+// Reactive list — updates whenever IndexedDB changes
+const userList = useObservable(users$({}))
 </script>
 ```
 
-### WebSocket Client (`frontend/src/client.mjs`)
+### WebSocket Client (`frontend/src/use/useExpressXClient.ts`)
 
-The client wraps Socket.io with a Promise-based API:
+The client uses `@jcbuisson/express-x-client` v3:
 
 ```javascript
-import app from '@/client-app'
+import { createClient, reloadPlugin, offlinePlugin } from '@jcbuisson/express-x-client'
+
+const app = createClient(socket, { debug: false })
+offlinePlugin(app)   // provides app.createOfflineModel(), app.isConnected (boolean), app.disconnectedDate
+reloadPlugin(app)    // handles reconnection via sessionStorage
 
 // Call service method (returns Promise)
-const users = await app.service('user').findMany({ filter: {} })
-
-// Subscribe to real-time events
-app.service('user').on('createWithMeta', (user) => {
-  console.log('New user created:', user)
-})
+const users = await app.service('user').findMany({ where: {} })
 ```
+
+`offlinePlugin` serializes all model syncs through a shared mutex — the order in which `getObservable(where)` is first called determines sync scheduling order. Call essential models first for faster first-paint.
 
 ### Router Structure
 
@@ -277,6 +293,55 @@ import { analyzeModule } from '@/lib/shdl/shdlAnalyzer'
 const { equipotentials, errors } = analyzeModule(ast, submodules)
 ```
 
+## CRAPS Language Implementation
+
+CRAPS is a SPARC-inspired 32-bit educational processor ISA. Students write assembly programs stored as `UserDocument` records with `type = 'craps'`. The implementation is in `frontend/src/lib/craps/` and `frontend/src/components/craps/`.
+
+### ISA Overview
+
+- **Registers**: `%r0` (always 0), `%r1`–`%r19` (general purpose), `%r28` (return address after `call`), `%r29`/`%sp` (stack pointer), `%r30`/`%pc` (program counter), `%r31`/`%ir` (instruction register)
+- **Flags**: N (negative), Z (zero), V (overflow), C (carry) — only modified by `cc`-suffix instructions and comparisons
+- **Memory map**: RAM at `[0x00000000, 0x10000000)`, switches I/O (16 bits, read-only) at `0x90000000`, leds I/O (16 bits, write-only) at `0xB0000000`
+
+### Instructions
+
+**Real instructions**: `add`/`addcc`, `sub`/`subcc`, `and`/`andcc`, `or`/`orcc`, `xor`/`xorcc`, `umulcc`, `sll`, `slr`, `ld`, `st`, `sethi`, `b(cond)`, `reti`
+
+**Synthetic instructions** (expanded by the assembler): `clr`, `mov`, `inc`/`inccc`, `dec`/`deccc`, `set`, `setq`, `cmp`, `tst`, `negcc`, `nop`, `call`, `ret`, `push`, `pop`
+
+**Branch conditions** (`b<cond>`): `ba`, `be`/`bz`/`beq`, `bne`/`bnz`, `bcs`, `bcc`, `bvs`, `bvc`, `bpos`/`bnn`, `bneg`/`bn`, `bg`/`bgt`, `bge`, `bl`/`blt`, `ble`, `bgu`, `bgeu`, `blu`, `bleu`
+
+**Assembler directives**: `.org address`, `.word val1, val2, ...`, `label = value`
+
+### Key Components
+
+1. **Parser** (`lib/craps/parser.js`): PEG-generated from `craps_grammar.peg`; converts CRAPS source into an AST of lines (each line has `lineno`, `label`, `directive`, `instruction`, or `synthetic`)
+2. **Assembler/Checker** (`lib/craps/crapsChecker.js`): Two-pass assembler — first pass collects labels and EQU symbols, second pass encodes instructions into 32-bit binary words; produces a `memory` dict (`address → { value, lineno, instruction, synthetic, text }`) and a `symbols` table
+3. **Editor** (`components/craps/CrapsEditor.vue`): Ace-based editor with live parse-on-change (debounced 500ms) and syntax error display
+4. **Simulator** (`components/craps/CrapsSimulator.vue`): In-browser step/run simulator; maintains register file (32×32-bit), flag array (N/Z/V/C), memory dict, and I/O (switches ↔ leds); supports breakpoints and hardware interrupts (IT button)
+5. **Sub-components**: `CrapsMemoryEditor.vue` (memory view with breakpoint toggle), `CrapsRegistersEditor.vue` (register file view)
+
+### Simulation Flow
+
+1. Assembler (`crapsChecker`) produces a `memory` dict from the source
+2. `CrapsSimulator` clones that dict on reset; step executes one instruction at a time
+3. `ld`/`st` to I/O addresses are intercepted: reads from `0x90000000` return switch state, writes to `0xB0000000` update the led array
+4. `set` and `push`/`pop` expand to 2 machine words; PC advances by 2 for those
+
+### Parsing Example
+
+```javascript
+import { checkModule } from '/src/lib/craps/crapsChecker'
+
+const { errorMsg, lines, symbols, memory } = checkModule({ text: sourceCode })
+if (errorMsg) {
+  console.error('Assembly error:', errorMsg)
+} else {
+  console.log('Memory map:', memory)   // { address: { value (bin32), lineno, ... } }
+  console.log('Symbols:', symbols)     // { labelName: address | value }
+}
+```
+
 ## Authentication & Session Management
 
 ### JWT Token Flow
@@ -310,10 +375,10 @@ JWT_PUBLIC_KEY_PATH=./public.pem
 
 ### Student Workflow
 1. Student signs in and navigates to workshop tab
-2. Creates/edits SHDL module documents
-3. Runs SHDL simulator to test design
-4. Submits module for test validation
-5. Test results tracked in `UserSHDLTestRelation`
+2. Creates/edits SHDL module documents or CRAPS assembly programs
+3. For SHDL: runs the SHDL simulator to test circuit behavior
+4. For CRAPS: edits source in the Ace-based editor; runs the in-browser CRAPS simulator (step/run/reset, breakpoints, I/O)
+5. Submits SHDL module for test validation; test results tracked in `UserSHDLTestRelation`
 
 ### Teacher Workflow
 1. Teacher creates SHDL module templates (documents)
@@ -342,15 +407,14 @@ Instead, the system uses RxJS observables that emit new values whenever data cha
 
 ## Database Operations
 
-### Prisma Client Usage
+### Drizzle Client Usage
 
-Always use Prisma client via `app.db` (initialized in `backend/src/app.js`):
+The backend uses `@jcbuisson/express-x-drizzle` which wraps Drizzle ORM. Access the DB via `app.db` (initialized in `backend/src/app.js`):
 
 ```javascript
 // In services
-const users = await app.db.user.findMany({
-  where: { email: { contains: '@example.com' } },
-  include: { user_tab_relations: true }
+const users = await app.db.query.user.findMany({
+  where: (user, { like }) => like(user.email, '%@example.com')
 })
 ```
 
@@ -365,7 +429,7 @@ await app.service('user').createWithMeta({
 })
 
 // BAD: Bypasses metadata tracking
-await app.db.user.create({ data: { email, password } })
+await app.db.insert(schema.user).values({ email, password })
 ```
 
 ## Testing & Validation
