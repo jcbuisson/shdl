@@ -45,15 +45,15 @@
 
       <!-- I/O -->
       <div class="px-2 py-1" style="border-bottom: 1px solid #e0e0e0; font-family: monospace; font-size: 0.8em;">
-         <div class="d-flex align-center" style="gap: 2px;">
-            <span style="width: 60px; color: #666;">Leds</span>
+         <div class="d-flex align-center" style="gap: 3px;">
+            <span style="width: 75px; color: #666;">Leds</span>
             <span v-for="i in 16" :key="'l'+i"
-               :style="{ color: leds[16-i] ? '#f9a825' : '#bdbdbd', fontSize: '18px', cursor: 'default' }">●</span>
+               :style="{ color: leds[16-i] ? '#e53935' : '#bdbdbd', fontSize: '26px', cursor: 'default' }">●</span>
          </div>
-         <div class="d-flex align-center" style="gap: 2px; margin-top: 2px;">
-            <span style="width: 60px; color: #666;">Switches</span>
+         <div class="d-flex align-center" style="gap: 3px; margin-top: -4px;">
+            <span style="width: 75px; color: #666;">Switches</span>
             <span v-for="i in 16" :key="'s'+i"
-               :style="{ color: switches[16-i] ? '#1565c0' : '#bdbdbd', fontSize: '18px', cursor: 'pointer' }"
+               :style="{ color: switches[16-i] ? '#1565c0' : '#bdbdbd', fontSize: '26px', cursor: 'pointer' }"
                @click="toggleSwitch(16-i)">{{ switches[16-i] ? '▣' : '□' }}</span>
          </div>
       </div>
