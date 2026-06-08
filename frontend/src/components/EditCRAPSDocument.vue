@@ -23,6 +23,7 @@ import { map } from 'rxjs'
 
 import ace from 'ace-builds'
 import 'ace-builds/src-noconflict/theme-chrome'
+import '/src/lib/craps/crapsAceMode.js'
 
 import useExpressXClient from '/src/use/useExpressXClient'
 import { useUserDocument } from '/src/use/useUserDocument'
@@ -50,7 +51,7 @@ function initializeEditor() {
    if (!editor && editorContainer.value) {
       editor = ace.edit(editorContainer.value)
       editor.setTheme('ace/theme/chrome')
-      editor.session.setMode('ace/mode/text')
+      editor.session.setMode('ace/mode/craps')
       editor.setOptions({
          fontSize: 14,
          tabSize: 3,
