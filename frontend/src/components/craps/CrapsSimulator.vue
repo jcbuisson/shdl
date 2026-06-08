@@ -11,8 +11,17 @@
          <span class="text-caption">{{ cycleCount }} cycles</span>
          <v-btn density="compact" variant="outlined" size="x-small" @click="sendIT" :disabled="!hasMemory">IT</v-btn>
 
+         <!-- Speed slider: 0 = max speed, 500 = very slow -->
+         <div class="d-flex align-center" style="gap: 4px; margin-left: 8px; min-width: 140px;">
+            <v-icon size="small" style="color: #aaa;">mdi-speedometer</v-icon>
+            <v-slider v-model="sliderValue" :min="0" :max="100" :step="1"
+               density="compact" hide-details style="min-width: 100px;"
+               :title="`Délai : ${stepDelay} ms/instruction (0 = max)`">
+            </v-slider>
+         </div>
+
          <!-- Flags -->
-         <div class="d-flex align-center" style="gap: 3px; margin-left: 8px;">
+         <div class="d-flex align-center" style="gap: 3px; margin-left: 4px;">
             <v-chip v-for="(name, i) in ['N','Z','V','C']" :key="name"
                size="x-small" :color="flags[i] ? 'blue' : 'grey-lighten-2'" variant="flat" label>
                {{ name }}
@@ -128,6 +137,9 @@ const errorMsg = ref(null)
 const itFlipFlop = ref(0)
 const breakpoints = ref(new Set())
 const codeChanged = ref(false)
+const sliderValue = ref(45)  // 0–100; maps quadratically → ms delay
+// slider² / 20: 0→0, 20→20, 45→101, 63→198, 100→500
+const stepDelay = computed(() => Math.round(sliderValue.value ** 2 / 20))
 const registerBase = ref('hexadécimal')
 const bases = ['hexadécimal', 'décimal signé', 'décimal non signé', 'binaire']
 
@@ -187,16 +199,27 @@ async function runStop() {
    stopped.value = false
    running.value = true
    while (running.value && !inError.value) {
-      // Execute a batch of steps between animation frames for performance
-      for (let i = 0; i < 200 && running.value && !inError.value; i++) {
+      if (stepDelay.value > 0) {
+         // Slow / visible mode: one step then wait
          step()
          if (breakpoints.value.has(currentAddress.value)) {
             running.value = false
             stopped.value = true
             break
          }
+         await new Promise(resolve => setTimeout(resolve, stepDelay.value))
+      } else {
+         // Batch mode (max speed): many steps per animation frame
+         for (let i = 0; i < 200 && running.value && !inError.value; i++) {
+            step()
+            if (breakpoints.value.has(currentAddress.value)) {
+               running.value = false
+               stopped.value = true
+               break
+            }
+         }
+         await new Promise(resolve => requestAnimationFrame(resolve))
       }
-      await new Promise(resolve => requestAnimationFrame(resolve))
    }
    running.value = false
    stopped.value = true
