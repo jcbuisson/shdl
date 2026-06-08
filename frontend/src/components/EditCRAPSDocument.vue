@@ -28,10 +28,12 @@ import useExpressXClient from '/src/use/useExpressXClient'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { checkModule } from '/src/lib/craps/crapsChecker.js'
+import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
 
 const { app } = useExpressXClient()
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
+const { setAssembly } = useCRAPSAssembly()
 
 const props = defineProps({
    signedinUid: String,
@@ -125,12 +127,14 @@ onUnmounted(() => {
 })
 
 function assembleCRAPSDocument(doc) {
-   const { errorMsg, memory } = checkModule({ text: doc.text || '' })
-   if (errorMsg) {
-      message.value = { inError: true, text: errorMsg }
+   const result = checkModule({ text: doc.text || '' })
+   if (result.errorMsg) {
+      message.value = { inError: true, text: result.errorMsg }
+      setAssembly(props.document_uid, { memory: null, symbols: null, errorMsg: result.errorMsg })
    } else {
-      const wordCount = Object.keys(memory).length
+      const wordCount = Object.keys(result.memory).length
       message.value = { inError: false, text: `Programme OK, ${wordCount} mot${wordCount > 1 ? 's' : ''}` }
+      setAssembly(props.document_uid, { memory: result.memory, symbols: result.symbols, errorMsg: null })
    }
 }
 

@@ -1,0 +1,356 @@
+
+# CRAPS programmer's guide
+
+The instruction set architecture (ISA) of CRAPS is largely inspired from 32-bit SPARC version 8.
+Contrary to SPARC, there are no register windows and no floating point instructions.
+
+CRAPS is a load/store architecture: it has a large set of registers and most instructions operate solely on them.
+There is only one instruction to read from memory (ld) and one to write into it (st). Memory is considered
+to be a slow device and the instruction set encourages to use registers as much as possible, and
+memory as less as possible.
+
+## Examples
+
+The following example program runs cyclicly and never stops; at each cycle it reads a 16-bit number `n` on (simulated) switches,
+computes the square root of `n` and displays it on the (simulated) 16 leds.
+
+```
+SW = 0x90000000 // switches I/O address
+LD = 0xB0000000 // leds I/O address
+
+           set    SW, %r8
+           set    LD, %r9
+loop:      ld     [%r8+%r0], %r1
+           umulcc %r1, %r1, %r2
+           st     %r2, [%r9+%r0]
+           ba     loop
+```
+
+This second program computes the sum of the elements of an array of signed integers:
+
+```
+tab      =      0x100000
+n        =      3
+         
+         set    tab, %r1
+         clr    %r2
+         clr    %r3
+loop:    ld     [%r1+%r2], %r4
+         add    %r4, %r3, %r3
+         inc    %r2
+         cmp    %r2, n
+         blu    loop
+stop:    ba     stop
+
+         .org	 tab
+         .word  -1, 10, 2*n+1
+```
+
+## CRAPS memory mapping
+
+#### RAM
+[0x00000000 - 0x10000000[
+
+#### I/O addresses
+- Switches (16 bits): read at address 0x90000000
+- Leds (16 bits): write at address 0xb0000000
+
+
+## CRAPS registers
+
+#### %r0 = 0
+%r0 is a special register: you always get 0 when you read it. You can write into it, but the value is lost.  
+It is useful in many ways; for example when performing `subcc %r1, %r2, %r0` to compare `%r1` and `%r2` (= synthetic instruction `cmp %r1, %r2`),
+we are not interested in the result value of the subtraction, but only in the flag values, so writing the result in %r0 waste no other register.
+It is also used for synthetic instructions `clr`, `mov`, `setq`, `tst`, `negcc`, `push`, `pop`.
+
+#### %r1-%r19: general purpose programmer's registers
+The programmer can use them at will
+
+#### %r28: return address after a `call`
+See synthetic instructions `call`, `ret`
+
+#### %r29 = %sp: stack pointer
+See stack-related synthetic instructions `push` and `pop`
+
+#### %r30 = %pc: program counter
+Holds the current execution address
+
+#### %r31 = %ir: instruction register
+Holds the current instruction code being executed
+
+
+## CRAPS instructions
+
+### add
+idem	addcc, but no flags are modified
+
+### addcc
+`addcc %rs1, %rs2, %rd`  
+`addcc %rs1, simm13, %rd`  
+Add the two operands `%rs1` and `%rs2 / simm13` and put the result in register `%rd`. The C flag is not added to the arguments.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***	:	N,	Z,	V,	C
+
+***Example***:	`addcc %r1, 5, %r1`  
+Add 5 to `%r1` and set flags N, Z, V, C
+
+### and
+idem	addcc, but no flags are modified
+
+### andcc
+`andcc %rs1, %rs2, %rd`  
+`andcc %rs1, simm13, %rd`  
+Performs a bit-wise AND between the two operands `%rs1` and `%rs2 / simm13` and put the result in register `%rd`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***	:	N,	Z
+
+***Example***:	`andcc %r1, %r2, %r3`  
+Performs a bit-wise AND between `%r1` and `%r2` and put the result in `%r3`
+
+### b(cond)
+`b(cond) label`  
+If condition `cond` is verified, branch to `label`; otherwise proceed to next instruction.
+
+***Modified flags***	:	None
+
+***General purpose conditions***
+
+| Instruction             |      Description                       | Test                       |
+|:-----------------------:|:--------------------------------------:|:--------------------------:|
+| `ba`                    |  branch always, unconditionnal branch  | 1                          |
+| `be` / `bz` / `beq`     |  branch on equal                       | `Z`                    |
+| `bne` / `bnz`           |  branch on not equal                   | `not Z`                    |
+| `bcs`                   |  branch on carry set                   | `C`                        |
+| `bcc`                   |  branch on carry clear                 | `not C`                    |
+| `bvs`                   |  branch on overflow set                | `V`                        |
+| `bvc`                   |  branch on overflow clear              | `not V`                    |
+|------------------------------------|-----------------------------------------------------------|--------------------------------------|
+
+***Signed arithmetic conditions***
+
+| Instruction             |      Description                 | Test                       |
+|:-----------------------:|:--------------------------------:|:--------------------------:|
+| `bpos` / `bnn`          |  branch on positive              | `not N`                    |
+| `bneg` / `bn`           |  branch on negative              | `N`                        |
+| `bg` / `bgt`            |  branch on greater               | `not (Z or (N xor V))`     |
+| `bge`                   |  branch on greater or equal      | `not (N xor V)`            |
+| `bl` / `blt`            |  branch on less                  | `N xor V`                  |
+| `ble`                   |  branch on less or equal         | `Z or (N xor V)`           |
+|------------------------------------|-----------------------------------------------------------|--------------------------------------|
+
+***Unsigned arithmétic conditions***
+
+| Instruction             |      Description                       | Test                       |
+|:-----------------------:|:--------------------------------------:|:--------------------------:|
+| `bgu`                   |  branch on greater unsigned            | `not (Z or (N xor V))`     |
+| `bgeu`                  |  branch on greater or equal unsigned   | `not (N xor V)`            |
+| `blu`                   |  branch on less unsigned               | `N xor V`                  |
+| `bleu`                  |  branch on less or equal unsigned      | `Z or (N xor V)`           |
+|------------------------------------|-----------------------------------------------------------|--------------------------------------|
+
+
+### call
+See ***Synthetic instructions*** section.
+
+
+### clr
+See ***Synthetic instructions*** section.
+
+
+### cmp
+See ***Synthetic instructions*** section.
+
+
+### inc, incc
+See ***Synthetic instructions*** section.
+
+
+### dec, deccc
+See ***Synthetic instructions*** section.
+
+
+### ld
+`ld [%rs1 + %rs2], %rd`  
+`ls [%rs1 + simm13], %rd`  
+Load the content of a memory location and copy it into register `%rd`. The address at which memory is read is
+obtained by adding `%rs1` and `%rs2` / `simm13`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***: None
+
+***Example***:	`ld [%r1 - 2], %r3`  
+Compute `%r1 - 2`, read memory at this address and copy memory contents into `%r3`.
+
+
+### negcc
+See ***Synthetic instructions*** section.
+
+
+### nop
+See ***Synthetic instructions*** section.
+
+
+### or
+idem	orcc, but no flags are modified
+
+### orcc
+`orcc %rs1, %rs2, %rd`  
+`orcc %rs1, simm13, %rd`  
+Performs a bit-wise OR between the two operands `%rs1` and `%rs2 / simm13` and put the result in register `%rd`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***: N, Z
+
+***Example***:	`orcc %r1, 1, %r1`  
+Set bit #0 of `%r1` and leave all others unchanged
+
+
+### push, pop
+See ***Synthetic instructions*** section.
+
+
+### ret
+See ***Synthetic instructions*** section.
+
+
+### reti
+"Return interrupt": this instruction must be used at the end of an interrupt subprogram.
+
+***Modified flags***: None
+
+
+### sethi
+`sethi imm24, %rd`  
+Set High. This instruction is generally used through the synthetic instruction `set`.
+Sets the 24 highest-order bits of `%rd` with immediate unsigned value `imm24`.  
+
+***Modified flags***: None
+
+
+### set, setq
+See ***Synthetic instructions*** section.
+
+
+### sll
+`sll %rs1, %rs2, %rd`  
+`sll %rs1, imm5, %rd`  
+Shift Logical Left. Left-shift the bit array of `%rs1` of `%rs2` (or `simm13`) positions and put the result in register `%rd`.
+Zeros are inserted on the `%rs2 / imm5` lowest-order bits of `%rd`.  
+If used, `imm5` must be in [0, 31]
+
+***Modified flags***: None
+
+***Example***:	`sll %r1, 7, %r2`  
+Shift left the bits of `%r1` and put the result in `%r2`. Zeros are inserted on the 7 lowest-order bits of `%r2`.
+
+
+### slr
+`slr %rs1, %rs2, %rd`  
+`slr %rs1, imm5, %rd`  
+Shift Logical Right. Right-shift the bit array of `%rs1` of `%rs2` (or `simm13`) positions and put the result in register `%rd`.
+Zeros are inserted on the `%rs2 / imm5` highest-order bits of `%rd`.  
+If used, `imm5` must be in [0, 31]
+
+***Modified flags***: None
+
+***Example***:	`slr %r1, 7, %r2`  
+Right-shift the bits of `%r1` and put the result in `%r2`. Zeros are inserted on the 7 highest-order bits of `%r2`.
+
+
+### st
+`st %rd, [%rs1 + %rs2]`  
+`st %rd, [%rs1 + simm13]`  
+Store `%rd` into a memory location, whose address is obtained by adding `%rs1` and `%rs2` / `simm13`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***: None
+
+***Example***:	`ld %r3, [%r1 + %r2]`  
+Compute `%r1 + %r2` and store at this address the value of `%r3`.
+
+
+### sub
+idem	subcc, but no flags are modified
+
+### subcc
+`subcc %rs1, %rs2, %rd`  
+`subcc %rs1, simm13, %rd`  
+Subtract `%rs2 or simm13` from `%rs1` and put the result in register `%rd`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***	:	N,	Z,	V,	C
+
+***Example***:	`subcc %r1, 5, %r1`  
+Compute `%r1 - 5`, put the result into `%r1` and set flags N, Z, V, C
+
+
+### tst
+See ***Synthetic instructions*** section.
+
+
+### umulcc
+`umulcc %rs1, %rs2, %rd`  
+`umulcc %rs1, simm13, %rd`  
+Unsigned multiply. Take only the 16 lowest bits of `%rs1` and `%rs2 or simm13`, perform an unsigned multiplication
+between them, and put the result in register `%rd`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***	:	N,	Z
+
+***Example***:	`umulcc %r1, %r1, %r1`  
+Elevate `%r1` at power 2 and set flags N, Z
+
+
+### xor
+idem	xorcc, but no flags are modified
+
+### xorcc
+`xorcc %rs1, %rs2, %rd`  
+`xorcc %rs1, simm13, %rd`  
+Performs a bit-wise XOR between the two operands `%rs1` and `%rs2 / simm13` and put the result in register `%rd`.  
+If used, `simm13` must be in [-4096, +4095].
+
+***Modified flags***	:	N,	Z
+
+***Example***:	`xorcc %r1, %r2, %r3`  
+Performs a bit-wise XOR between `%r1` and `%r2` and put the result in `%r3`
+
+
+
+
+## Synthetic instructions
+
+Synthetic instructions are not real instructions; they are simpler and more legible ways to write common operations.
+For example, comparing `%r1` and `%r2` can be written `cmp %r1, %r2`. After assembling, this synthetic instruction is actually
+replaced by `subcc %r1, %r2, %r0`
+
+The complete set of synthetic instructions and their equivalent is listed in the following table:
+
+| Instruction        |      Description                 | Implementation                |
+|:------------------:|:--------------------------------:|:-----------------------------:|
+| `clr %ri`          |  clear %ri                       | `orcc %r0, %r0, %ri`          |
+| `mov %ri, %rj`     |  copy %ri to %rj                 | `orcc %ri, %r0, %rj`          |
+| `inc %ri`          |  increment %ri, no flag modified | `add %ri, 1, %rj`             |
+| `inccc %ri`        |  increment %ri, flags modified   | `addcc %ri, 1, %rj`           |
+| `dec %ri`          |  decrement %ri, no flag modified | `sub %ri, 1, %rj`             |
+| `deccc %ri`        |  decrement %ri, flags modified   | `subcc %ri, 1, %rj`           |
+| `set imm32, %ri`   |  copy imm32 to %ri               | `sethi imm32[31..8], %ri`     |
+|                    |                                  | `orcc %ri, imm32[7..0], %ri`  |
+| `setq simm13 %ri`  |  copy simm13 to %ri              | `orcc %r0, simm13, %ri`       |
+| `cmp %ri, %rj`     |  compare %ri to %rj              | `subcc %ri, %rj, %r0`         |
+| `cmp %ri, simm13`  |  compare %ri to simm13           | `subcc %ri, simm13, %r0`      |
+| `tst %ri`          |  test sign and zero of %ri       | `subcc %ri, %r0, %r0`         |
+| `negcc %ri`        |  replace %ri by its opposite     | `subcc %r0, %ri, %ri`         |
+| `nop`              |  no operation                    | `sethi 0, %r0`                |
+| `call label`       |  call terminal subprogram        | `or %r0, %r30, %r28`          |
+|                    |                                  | `ba label`                    |
+| `ret`              |  return from terminal subprogram | `orcc %r30, %r0, %r28`        |
+| `push %ri`         |  push %ri into memory stack      | `sub %r29, 1, %r29`           |
+|                    |                                  | `st %ri, [%r29+%r0]`          |
+| `pop %ri`          |  pop word from memory stack      | `ld [%r29+%r0], %ri`          |
+|                    |  and put it in %ri               | `add %r29, 1, %r29`           |
+|------------------------------------|--------------------------------------------------|---------------------------------------------|
+
