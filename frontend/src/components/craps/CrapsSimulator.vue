@@ -9,7 +9,6 @@
          <v-btn density="compact" icon="mdi-debug-step-over" variant="text"
             :disabled="inError || !stopped || !hasMemory" @click="step" title="Step"></v-btn>
          <span class="text-caption">{{ cycleCount }} cycles</span>
-         <v-btn density="compact" variant="outlined" size="x-small" @click="sendIT" :disabled="!hasMemory">IT</v-btn>
 
          <!-- Speed slider: 0 = max speed, 500 = very slow -->
          <div class="d-flex align-center" style="gap: 3px; margin-left: 6px; width: 110px;">
@@ -29,6 +28,10 @@
                {{ name }}
             </v-chip>
          </div>
+
+         <!-- IT interrupt button -->
+         <v-btn density="compact" icon="mdi-lightning-bolt" variant="text"
+            :disabled="!hasMemory" @click="sendIT" title="Interruption matérielle (IT)"></v-btn>
       </div>
 
       <!-- Error or status message -->
