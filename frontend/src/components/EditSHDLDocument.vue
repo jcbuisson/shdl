@@ -23,8 +23,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
 import ace from 'ace-builds'
-import 'ace-builds/src-noconflict/mode-json'
 import 'ace-builds/src-noconflict/theme-chrome'
+import '/src/lib/shdl/shdlAceMode.js'
 
 import router from '/src/router'
 
@@ -63,11 +63,8 @@ function initializeEditor() {
    if (!editor && editorContainer.value) {
       editor = ace.edit(editorContainer.value)
       editor.setTheme('ace/theme/chrome')
-      editor.session.setMode('ace/mode/json')
+      editor.session.setMode('ace/mode/shdl')
       editor.setOptions({
-         enableBasicAutocompletion: true,
-         enableLiveAutocompletion: true,
-         // behavioursEnabled: false,
          fontSize: 14,
          tabSize: 3,
          useSoftTabs: true,
@@ -274,3 +271,11 @@ function displayErrorMessageSHDL(err, currentModuleName) {
    }
 }
 </script>
+
+<style>
+/* Ace injects spans globally — no scoping possible */
+.ace_shdl.ace_opcode {
+   color: #c0392b;
+   font-weight: bold;
+}
+</style>
