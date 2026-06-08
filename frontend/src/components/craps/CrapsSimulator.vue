@@ -12,10 +12,12 @@
          <v-btn density="compact" variant="outlined" size="x-small" @click="sendIT" :disabled="!hasMemory">IT</v-btn>
 
          <!-- Speed slider: 0 = max speed, 500 = very slow -->
-         <div class="d-flex align-center" style="gap: 4px; margin-left: 8px; min-width: 140px;">
+         <div class="d-flex align-center" style="gap: 3px; margin-left: 6px; width: 110px;">
             <v-icon size="small" style="color: #aaa;">mdi-speedometer</v-icon>
             <v-slider v-model="sliderValue" :min="0" :max="100" :step="1"
-               density="compact" hide-details style="min-width: 100px;"
+               density="compact" hide-details
+               thumb-size="12" track-size="2"
+               style="min-width: 0;"
                :title="`Délai : ${stepDelay} ms/instruction (0 = max)`">
             </v-slider>
          </div>
