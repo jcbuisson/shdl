@@ -127,7 +127,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
 
          if (editor && doc.text !== undefined) {
             isUpdatingFromSubscription = true
-            editor.setValue(doc.text, -1) // -1 moves cursor to start
+            editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1) // -1 moves cursor to start
             isUpdatingFromSubscription = false
          }
       } else {
@@ -140,7 +140,7 @@ watch(() => props.document_uid, async (uid, previous_uid) => {
                // use a mutex because of the possible race conditions between multiple updates
                await mutex.acquire()
                const cursorPos = editor.getCursorPosition()
-               editor.setValue(doc.text, -1) // -1 moves cursor to start
+               editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1) // -1 moves cursor to start
                editor.moveCursorToPosition(cursorPos)
                mutex.release()
                isUpdatingFromSubscription = false
