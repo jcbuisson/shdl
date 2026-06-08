@@ -53,7 +53,7 @@ export function checkModule(module, name2module) {
       let lines
       try {
          lines = crapsParser.parse(module.text)
-         console.log('lines', lines)
+         // console.log('lines', lines)
       } catch(err) {
          let errorMsg = ''
          if (err.location) {
@@ -64,7 +64,7 @@ export function checkModule(module, name2module) {
       }
 
       // first pass to get all labels and constants, check statements and compute addresses
-      console.log('PASS1')
+      // console.log('PASS1')
       let currentAddress = 0
       let symbols = {}
       try {
@@ -105,7 +105,7 @@ export function checkModule(module, name2module) {
       }
    
       // second pass to compute all memory values
-      console.log('PASS2')
+      // console.log('PASS2')
       let memory = {}
       currentAddress = 0
       try {
