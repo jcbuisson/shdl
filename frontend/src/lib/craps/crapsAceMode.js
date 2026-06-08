@@ -54,19 +54,19 @@ ace.define('ace/mode/craps_highlight_rules', [
                token: 'variable.language',
                regex: '%(?:r\\d+|fp|sp|pc|ir)\\b',
             },
-            // Real instructions
+            // Real instructions — craps.opcode maps to .ace_craps.ace_opcode (custom CSS)
             {
-               token: 'keyword',
+               token: 'craps.opcode',
                regex: '\\b(?:' + realInstructions + ')\\b',
             },
             // Branch instructions
             {
-               token: 'keyword',
+               token: 'craps.opcode',
                regex: '\\b' + branchInstructions + '\\b',
             },
             // Synthetic instructions
             {
-               token: 'support.function',
+               token: 'craps.opcode',
                regex: '\\b(?:' + syntheticInstructions + ')\\b',
             },
             // Numbers: binary, hexadecimal, decimal (with optional leading minus)

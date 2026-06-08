@@ -161,3 +161,11 @@ async function onTextChange(text) {
 }
 const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
 </script>
+
+<style>
+/* Ace injects spans globally — no scoping possible */
+.ace_craps.ace_opcode {
+   color: #c0392b;
+   font-weight: bold;
+}
+</style>
