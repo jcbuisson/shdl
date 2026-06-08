@@ -8,6 +8,9 @@
             :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }"
             style="color: white; height: 48px; padding: 10px;">
          <h5>{{ message.text }}</h5>
+         <v-btn class="ml-auto" density="compact" icon="mdi-format-indent-increase"
+                variant="text" color="white" :disabled="props.readonly"
+                title="Formater" @click="formatSHDL"></v-btn>
       </div>
 
       <!-- Fills remaining vertical space -->
@@ -185,6 +188,23 @@ async function onTextChange(text) {
    }
 }
 const onTextChangeDebounced = useDebounceFn(onTextChange, 500);
+
+function formatSHDL() {
+   if (!editor) return
+   const lines = editor.getValue().split('\n')
+   let depth = 0
+   const formatted = lines.map(line => {
+      const trimmed = line.trim()
+      if (!trimmed) return ''
+      if (/^end\s+module\b/.test(trimmed)) depth--
+      const result = '   '.repeat(depth) + trimmed
+      if (/^module\b/.test(trimmed)) depth++
+      return result
+   })
+   const newText = formatted.join('\n')
+   editor.setValue(newText, -1)
+   onTextChangeDebounced(newText)
+}
 
 const analyzeSHDLDocumentDebounced = useDebounceFn(analyzeSHDLDocument, 2000);
 
