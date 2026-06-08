@@ -1,0 +1,209 @@
+start
+  = Lines
+
+Lines
+  = _ line:Line _ tail:Lines
+     { return [line].concat(tail); }
+  / _ line:Line _
+     { return [line]; }
+  / _
+     { return [] }
+
+Line
+  = directive:Directive
+    { return { lineno: location().start.line, label: null, directive: directive, instruction: null, synthetic: null }; }
+  / label:Label _ ':' _ directive:Directive
+    { return { lineno: location().start.line, label: label, directive: directive, instruction: null, synthetic: null }; }
+  / label:Label _ ':' _ instruction:Instruction
+    { return { lineno: location().start.line, label: label, directive: null, instruction: instruction, synthetic: null }; }
+  / instruction:Instruction
+    { return { lineno: location().start.line, label: null, directive: null, instruction: instruction, synthetic: null }; }
+  / label:Label _ ':' _ synthetic:Synthetic
+    { return { lineno: location().start.line, label: label, directive: null, instruction: null, synthetic: synthetic }; }
+   / synthetic:Synthetic
+    { return { lineno: location().start.line, label: null, directive: null, instruction: null, synthetic: synthetic }; }
+  / label:Label _ ':'
+    { return { lineno: location().start.line, label: label, directive: null, instruction: null, synthetic: null }; }
+    
+Directive
+  = '.org' _ address:NumExpr
+    { return { type: 'directive', code: 'org', address: address }; }
+  / '.word' _ head:NumExpr tail:(_ ',' _ NumExpr)*
+    { return { type: 'directive', code: 'word',
+        values: [head].concat(tail.map(function(elt) { return elt[3] })) }; }
+  / label:Label _ '=' _ value:NumExpr
+    { return { type: 'directive', code: 'equ', label: label, value: value }; }
+
+Instruction
+  = instructionArithLog1a:InstructionArithLog1a
+    { return instructionArithLog1a; }
+  / instructionArithLog1b:InstructionArithLog1b
+    { return instructionArithLog1b; }
+  / instructionLoad1a:InstructionLoad1a
+    { return instructionLoad1a; }
+  / instructionLoad1b:InstructionLoad1b
+    { return instructionLoad1b; }
+  / instructionStore1a:InstructionStore1a
+    { return instructionStore1a; }
+  / instructionStore1b:InstructionStore1b
+    { return instructionStore1b; }
+  / instructionSethi:InstructionSethi
+    { return instructionSethi; }
+  / instructionBcc:InstructionBcc
+    { return instructionBcc; }
+  / 'reti'
+    { return { type: 'instructionReti', text: text() }; }
+
+InstructionArithLog1a
+  = codeop:CodeOp _ rs1:Register _ ',' _ rs2:Register _ ',' _ rd:Register
+    { return { type: 'instructionArithLog1a', codeop: codeop, rs1: rs1, rs2: rs2, rd: rd, text: text() }; }
+
+InstructionArithLog1b
+  = codeop:CodeOp _ rs1:Register _ ',' _ simm13:NumExpr _ ',' _ rd:Register
+    { return { type: 'instructionArithLog1b', codeop: codeop, rs1: rs1, simm13: simm13, rd: rd, text: text() }; }
+
+CodeOp
+  = codeop:('addcc'/'add'/'subcc'/'sub'/'andcc'/'and'/'orcc'/'or'/'xorcc'/'xor'/'umulcc'/'slr'/'sll')
+    { return codeop; }
+
+InstructionLoad1a
+  = 'ld' _ '[' _ rs1:Register _ '+' _ rs2:Register _ ']' _ ',' _ rd:Register
+    { return { type: 'instructionLoad1a', rs1: rs1, rs2: rs2, rd: rd, text: text() }; }
+  / 'ld' _ '[' _ rs1:Register _']' _ ',' _ rd:Register
+    { return { type: 'instructionLoad1a', rs1: rs1, rs2: 0, rd: rd, text: text() }; }
+
+InstructionLoad1b
+  = 'ld' _ '[' _ rs1:Register _ plusMinus:('+'/'-') _ simm13:NumExpr _ ']' _ ',' _ rd:Register
+    { return { type: 'instructionLoad1b', rs1: rs1, plusMinus: plusMinus, simm13: simm13, rd: rd, text: text() }; }
+
+InstructionStore1a
+  = 'st' _ rd:Register _ ',' _ '[' _ rs1:Register _ '+' _ rs2:Register _ ']'
+    { return { type: 'instructionStore1a', rs1: rs1, rs2: rs2, rd: rd, text: text() }; }
+  / 'st' _ rd:Register _ ',' _ '[' _ rs1:Register _ ']'
+    { return { type: 'instructionStore1a', rs1: rs1, rs2: 0, rd: rd, text: text() }; }
+
+InstructionStore1b
+  = 'st' _ rd:Register _ ',' _ '[' _ rs1:Register _ plusMinus:('+'/'-') _ simm13:NumExpr _ ']'
+    { return { type: 'instructionStore1b', rs1: rs1, plusMinus: plusMinus, simm13: simm13, rd: rd, text: text() }; }
+
+InstructionSethi
+  = 'sethi' _ imm24:Integer _ ',' _ rd:Register
+    { return { type: 'instructionSethi', imm24: imm24, rd: rd, text: text() }; }
+
+InstructionBcc
+  = 'b' cond:Cond _ label:Label
+    { return { type: 'instructionBcc', cond: cond, label: label, text: text() }; }
+
+Cond
+  = cond:('leu'/'le'/'lu'/'lt'/'l'  /'neg'/'ne'/'nz'/'nn'/'n'  /'geu'/'ge'/'gt'/'gu'/'g'  /'a'/'z'/'pos'/'cs'/'cc'/'vs'/'vc'/'eq'/'e')
+    { return cond; }
+
+Synthetic
+  = 'clr' _ rd:Register
+    { return { type: 'clr', rd: rd, text: text() }; }
+  / 'mov' _ rs:Register _ ',' _ rd:Register
+    { return { type: 'mov', rs: rs, rd: rd, text: text() }; }
+  / 'inccc' _ rd:Register
+    { return { type: 'inccc', rd: rd, text: text() }; }
+  / 'inc' _ rd:Register
+    { return { type: 'inc', rd: rd, text: text() }; }
+  / 'deccc' _ rd:Register
+    { return { type: 'deccc', rd: rd, text: text() }; }
+  / 'dec' _ rd:Register
+    { return { type: 'dec', rd: rd, text: text() }; }
+  / 'setq' _ simm13:NumExpr _ ',' _ rd:Register
+    { return { type: 'setq', simm13: simm13, rd: rd, text: text() }; }
+  / 'set' _ simm32:NumExpr _ ',' _ rd:Register
+    { return { type: 'set', simm32: simm32, rd: rd, text: text() }; }
+  / 'cmp' _ rs:Register _ ',' _ rd:Register
+    { return { type: 'cmp', rs: rs, rd: rd, text: text() }; }
+  / 'cmp' _ rs:Register _ ',' _ simm13:NumExpr
+    { return { type: 'cmp', rs: rs, simm13: simm13, text: text() }; }
+  / 'tst' _ rs:Register
+    { return { type: 'tst', rs: rs, text: text() }; }
+  / 'negcc' _ rd:Register
+    { return { type: 'negcc', rd: rd, text: text() }; }
+  / 'nop'
+    { return { type: 'nop', text: text() }; }
+  / 'call' _ label:Label
+    { return { type: 'call', label: label, text: text() }; }
+  / 'ret'
+    { return { type: 'ret', text: text() }; }
+  / 'push' _ rs:Register
+    { return { type: 'push', rs: rs, text: text() }; }
+  / 'pop' _ rd:Register
+    { return { type: 'pop', rd: rd, text: text() }; }
+
+Register
+  = '%r' regnum:Integer
+    { return regnum; }
+  / '%fp'
+    { return 27; }
+  / '%sp'
+    { return 29; }
+  / '%pc'
+    { return 30; }
+  / '%ir'
+    { return 31; }
+
+NumExpr
+  = head:Term tail:(_ ("+" / "-") _ Term)* {
+      return tail.reduce(function(result, element) {
+        return { 'op': element[1], arg1: result, arg2: element[3] };
+      }, head);
+    }
+
+Term
+  = head:Factor tail:(_ ("*" / "/") _ Factor)* {
+      return tail.reduce(function(result, element) {
+        return { 'op': element[1], arg1: result, arg2: element[3] };
+      }, head);
+    }
+
+Factor
+  = "(" _ expr:NumExpr _ ")"
+    { return expr; }
+  / Integer
+  / Label
+
+Integer
+  = val:NaturalInteger
+    { return val; }
+  / '-' val:NaturalInteger
+    { return -val; }
+    
+NaturalInteger
+  = '0b'[0-1]+
+    { return parseInt(text().substring(2), 2); }
+  / '0x'[0-9a-fA-F]+
+    { return parseInt(text().substring(2), 16); }
+  / [0-9]+
+    { return parseInt(text(), 10); }
+
+Label
+  = chars:[a-zA-Z0-9_]+
+     { return chars.join(""); }
+
+separ
+  = ',' { return []; }
+  / ':' { return []; }
+
+_ "whitespace"
+  = ( whiteSpace / enclosedComment / lineComment / lineTerminator )*
+     { return []; }
+
+whiteSpace 
+  = [\t\v\f \u00A0\uFEFF] 
+
+lineTerminator 
+  = [\n\r] 
+
+enclosedComment 
+  = "/*" (!"*/" anyCharacter)* "*/" 
+
+lineComment 
+  = "//" (!lineTerminator anyCharacter)* 
+
+anyCharacter 
+  = . 
+

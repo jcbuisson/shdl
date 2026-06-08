@@ -115,6 +115,28 @@ const routes = [
                   ],
                },
                {
+                  path: 'craps/:document_uid',
+                  meta: {
+                     checks: ['same_document_user'],
+                  },
+                  props: true,
+                  component: () => import('/src/views/workshop/ManageCRAPSDocument.vue'),
+                  children: [
+                     {
+                        path: '',
+                        props: route => ({
+                           signedinUid: route.params.signedinUid,
+                           user_uid: route.params.signedinUid,
+                           document_uid: route.params.document_uid,
+                           readonly: false,
+                        }),
+                        components: {
+                           editor: () => import('/src/components/EditCRAPSDocument.vue'),
+                        }
+                     },
+                  ],
+               },
+               {
                   path: 'text/:document_uid',
                   meta: {
                      // check that document's owner is signed-in user
@@ -123,7 +145,7 @@ const routes = [
                   props: true,
                   component: () => import('/src/views/workshop/ManageTextDocument.vue'),
                },
-            ],      
+            ],
          },
          {
             path: 'followup',
@@ -169,6 +191,25 @@ const routes = [
                               ],     
                            },
                            {
+                              path: 'craps/:document_uid',
+                              props: true,
+                              component: () => import('/src/views/workshop/ManageCRAPSDocument.vue'),
+                              children: [
+                                 {
+                                    path: '',
+                                    props: route => ({
+                                       signedinUid: route.params.signedinUid,
+                                       user_uid: route.params.user_uid,
+                                       document_uid: route.params.document_uid,
+                                       readonly: true,
+                                    }),
+                                    components: {
+                                       editor: () => import('/src/components/EditCRAPSDocument.vue'),
+                                    }
+                                 },
+                              ],
+                           },
+                           {
                               path: 'text/:document_uid',
                               meta: {
                                  // check that document's owner is signed-in user
@@ -177,7 +218,7 @@ const routes = [
                               props: true,
                               component: () => import('/src/views/workshop/ManageTextDocument.vue'),
                            },
-                        ],      
+                        ],
                      },
                      {
                         path: 'grade',
