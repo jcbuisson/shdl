@@ -7,6 +7,9 @@
             :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }"
             style="color: white; height: 48px; padding: 10px;">
          <h5>{{ message.text }}</h5>
+         <v-btn class="ml-auto" density="compact" icon="mdi-format-indent-increase"
+                variant="text" color="white" :disabled="props.readonly"
+                title="Formater" @click="formatCRAPS"></v-btn>
       </div>
 
       <!-- Fills remaining vertical space -->
@@ -101,7 +104,7 @@ watch(() => props.document_uid, async (uid) => {
          initializeEditor()
          if (editor && doc.text !== undefined) {
             isUpdatingFromSubscription = true
-            editor.setValue(doc.text, -1)
+            editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1)
             isUpdatingFromSubscription = false
          }
       } else {
@@ -110,7 +113,7 @@ watch(() => props.document_uid, async (uid) => {
             if (editor) {
                isUpdatingFromSubscription = true
                const cursorPos = editor.getCursorPosition()
-               editor.setValue(doc.text, -1)
+               editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1)
                editor.moveCursorToPosition(cursorPos)
                isUpdatingFromSubscription = false
             }
@@ -160,6 +163,50 @@ async function onTextChange(text) {
    }
 }
 const onTextChangeDebounced = useDebounceFn(onTextChange, 500)
+
+function formatCRAPS() {
+   if (!editor) return
+   const COL_OPCODE  = 9   // column 10 → index 9
+   const COL_PARAMS  = 16  // column 17 → index 16
+
+   const lines = editor.getValue().split('\n')
+   const formatted = lines.map(line => {
+      const trimmed = line.trim()
+      if (!trimmed) return ''
+
+      // Comment-only lines — leave as-is
+      if (/^\/\//.test(trimmed)) return trimmed
+
+      // EQU directive: label = value  (no colon)
+      const equM = trimmed.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+)$/)
+      if (equM) {
+         const name = equM[1]
+         const val  = equM[2].trim()
+         const gap1 = ' '.repeat(Math.max(1, COL_OPCODE - name.length))
+         const mid  = name + gap1 + '='
+         const gap2 = ' '.repeat(Math.max(1, COL_PARAMS - mid.length))
+         return mid + gap2 + val
+      }
+
+      // General line: [label:]  [opcode  [params]]
+      // opcode may start with '.' (directives) or a letter (instructions)
+      const m = trimmed.match(/^([a-zA-Z0-9_]+\s*:)?\s*([.a-zA-Z][a-zA-Z0-9_]*)?\s*([\s\S]*)$/)
+      const label  = m ? (m[1] ?? '').replace(/\s+/, '') : ''  // normalise 'label :' → 'label:'
+      const opcode = m ? (m[2] ?? '').trim() : ''
+      const params = m ? (m[3] ?? '').trim() : ''
+
+      if (!opcode) return label   // label-only line
+
+      const gap1   = ' '.repeat(Math.max(1, COL_OPCODE - label.length))
+      const before = label + gap1 + opcode
+      const gap2   = params ? ' '.repeat(Math.max(1, COL_PARAMS - before.length)) : ''
+      return before + gap2 + params
+   })
+
+   const newText = formatted.join('\n')
+   editor.setValue(newText, -1)
+   onTextChangeDebounced(newText)
+}
 </script>
 
 <style>
