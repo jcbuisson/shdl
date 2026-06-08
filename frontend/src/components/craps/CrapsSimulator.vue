@@ -50,7 +50,7 @@
             <span v-for="i in 16" :key="'l'+i"
                :style="{ color: leds[16-i] ? '#e53935' : '#bdbdbd', fontSize: '26px', cursor: 'default' }">●</span>
          </div>
-         <div class="d-flex align-center" style="gap: 3px; margin-top: -4px;">
+         <div class="d-flex align-center" style="gap: 3px; margin-top: -8px;">
             <span style="width: 75px; color: #666;">Switches</span>
             <span v-for="i in 16" :key="'s'+i"
                :style="{ color: switches[16-i] ? '#1565c0' : '#bdbdbd', fontSize: '26px', cursor: 'pointer' }"
@@ -92,7 +92,7 @@
          <div class="overflow-auto" style="min-width: 200px; max-width: 240px; border-left: 1px solid #e0e0e0; font-family: monospace; font-size: 0.75em;">
             <div class="px-1 pt-1">
                <v-select v-model="registerBase" :items="bases" density="compact" variant="outlined" hide-details
-                  style="font-size: 0.85em;"></v-select>
+                  class="reg-base-select"></v-select>
             </div>
             <table style="width: 100%; border-collapse: collapse; margin-top: 4px;">
                <tr v-for="i in 32" :key="i-1">
@@ -603,3 +603,10 @@ function formatReg(bin32) {
    }
 }
 </script>
+
+<style>
+.reg-base-select .v-field__input,
+.reg-base-select .v-select__selection-text {
+   font-size: 0.87em;
+}
+</style>
