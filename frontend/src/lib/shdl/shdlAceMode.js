@@ -24,8 +24,12 @@ ace.define('ace/mode/shdl_highlight_rules', [
                regex: '\\b(?:module|end|on|reset|set|enabled|when|output|fsm|statemachine|asynchronous|synchronous|map)\\b',
             },
 
-            // Identifiers (signal / module names) — consumed as plain text so
-            // digits inside them don't get colored as numbers
+            // Module / submodule names — identifier immediately before '('
+            // covers both the definition name and all instantiations
+            { token: 'shdl.module', regex: '[a-zA-Z_][a-zA-Z0-9_]*(?=\\s*\\()' },
+
+            // Remaining identifiers (signal names) — plain text so digits
+            // inside them are not falsely colored as numbers
             { token: 'text', regex: '[a-zA-Z_][a-zA-Z0-9_]*' },
 
             // Predefined module prefix ($ram_..., $rom, ...)
@@ -34,15 +38,27 @@ ace.define('ace/mode/shdl_highlight_rules', [
             // Numbers: vector indices and standalone bit literals
             { token: 'constant.numeric', regex: '[0-9]+' },
 
+            // '[' opens vector index — enter dedicated state for coloring
+            { token: 'keyword.operator', regex: '\\[', next: 'vector_index' },
+
             // Multi-char operators — order matters (longer alternatives first)
             { token: 'keyword.operator', regex: ':=' },   // sequential assignment
             { token: 'keyword.operator', regex: '->' },   // FSM / map arrow
-            { token: 'keyword.operator', regex: '\\.\\.' }, // vector range (..)
 
             // Single-char operators and punctuation
             // /  NOT operator   *  AND / product   +  OR / sum
-            // &  concatenation  =  assignment       :  vector range (alt. to ..)
-            { token: 'keyword.operator', regex: '[=+*/&:()\\[\\],;]' },
+            // &  concatenation  =  assignment
+            // ':' and '..' are NOT listed here — they only appear inside [...]
+            { token: 'keyword.operator', regex: '[=+*/&()\\],;]' },
+         ],
+
+         // Inside [...]: numbers, '..' and ':' get a distinct index color
+         vector_index: [
+            { token: 'shdl.vector', regex: '[0-9]+' },
+            { token: 'shdl.vector', regex: '\\.\\.' },
+            { token: 'shdl.vector', regex: ':' },
+            { token: 'keyword.operator', regex: '\\]', next: 'start' },
+            { defaultToken: 'text' },
          ],
       }
    }

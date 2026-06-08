@@ -278,4 +278,12 @@ function displayErrorMessageSHDL(err, currentModuleName) {
    color: #c0392b;
    font-weight: bold;
 }
+.ace_shdl.ace_module {
+   color: #1565c0;
+   font-weight: bold;
+}
+.ace_shdl.ace_vector {
+   color: #00695c;
+   font-weight: bold;
+}
 </style>
