@@ -59,6 +59,7 @@ export const user_slot_excuse = pgTable('user_slot_excuse', {
 export const shdl_test = pgTable('shdl_test', {
    uid:              text('uid').notNull().unique(),
    name:             text('name').notNull(),
+   type:             text('type').notNull().default('shdl'), // 'shdl' or 'craps'
    weight:           integer('weight').notNull().default(1),
    test_statements:  text('test_statements'), // ex: "set rst 1\ncheck a 0"
    memory_contents:  text('memory_contents'), // ex: "[{ 0: 0, 1: 0xabc, 2: 123}]"
