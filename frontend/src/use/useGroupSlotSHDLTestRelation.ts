@@ -3,7 +3,7 @@ let modelInstance = null
 
 export function useGroupSlotSHDLTestRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('groupslot_shdltest_relation', ['group_slot_uid', 'shdl_test_uid'])
+      modelInstance = app.createOfflineModel('groupslot_test_relation', ['group_slot_uid', 'test_uid'])
    }
 
    /////////////          UTILITY          /////////////
@@ -13,7 +13,7 @@ export function useGroupSlotSHDLTestRelation(app) {
 
       const toAddTestUIDs = []
       const toRemoveRelationUIDs = []
-      // collect active group_slot <-> shdl_test relations with `group_slot_uid`
+      // collect active group_slot <-> test relations with `group_slot_uid`
       const currentRelations = []
       const allRelations = await db.values.filter(value => value.group_slot_uid === group_slot_uid).toArray()
       for (const relation of allRelations) {
@@ -22,14 +22,14 @@ export function useGroupSlotSHDLTestRelation(app) {
          currentRelations.push(relation)
       }
       // relations to add
-      for (const shdl_test_uid of newTestUIDs) {
-         if (!currentRelations.some(relation => relation.shdl_test_uid === shdl_test_uid)) {
-            toAddTestUIDs.push(shdl_test_uid)
+      for (const test_uid of newTestUIDs) {
+         if (!currentRelations.some(relation => relation.test_uid === test_uid)) {
+            toAddTestUIDs.push(test_uid)
          }
       }
       // relations to remove
       for (const relation of currentRelations) {
-         if (!newTestUIDs.includes(relation.shdl_test_uid)) {
+         if (!newTestUIDs.includes(relation.test_uid)) {
             toRemoveRelationUIDs.push(relation.uid)
          }
       }

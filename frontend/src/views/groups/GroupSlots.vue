@@ -207,7 +207,7 @@ watch(groupSlotToEdit, (groupSlot) => {
       selectedTestUIDs.value = []
    } else {
       slotSubscription = groupslotShdltestRelations$({ group_slot_uid: groupSlot.uid }).subscribe((relationList) => {
-         selectedTestUIDs.value = relationList.map(relation => relation.shdl_test_uid)
+         selectedTestUIDs.value = relationList.map(relation => relation.test_uid)
       })
    }
 })
@@ -236,19 +236,19 @@ const createSlot = async () => {
       start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
       end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
    })
-   // add group_slot <-> shdl_test relations
-   for (const shdl_test_uid of selectedTestUIDs.value) {
-      await createGroupSlotSHDLTestRelation({ group_slot_uid: createdGroupSlot.uid, shdl_test_uid })
+   // add group_slot <-> test relations
+   for (const test_uid of selectedTestUIDs.value) {
+      await createGroupSlotSHDLTestRelation({ group_slot_uid: createdGroupSlot.uid, test_uid })
    }
 }
 
 const updateSlot = async () => {
    console.log('update', slotData.value)
 
-   // update group_slot <-> shdl_test relations
+   // update group_slot <-> test relations
    const [toAddTestUIDs, toRemoveRelationUIDs] = await groupDifference(slotData.value.uid, selectedTestUIDs.value)
-   for (const shdl_test_uid of toAddTestUIDs) {
-      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.value.uid, shdl_test_uid })
+   for (const test_uid of toAddTestUIDs) {
+      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.value.uid, test_uid })
    }
    for (const relation_uid of toRemoveRelationUIDs) {
       await removeGroupSlotSHDLTestRelation(relation_uid)

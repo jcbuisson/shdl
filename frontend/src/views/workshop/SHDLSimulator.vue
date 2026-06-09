@@ -142,7 +142,7 @@ const filteredTestList = computed(() => {
    // filter user slots compatible with 'currentTime'
    const slotUIDs = userSlots.value.filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value).map(slot => slot.uid)
    // get associated tests using already loaded user test relation list and test list
-   const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.shdl_test_uid)
+   const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.test_uid)
    return testUIDs.map(testUID => userTestList.value.find(test => test.uid === testUID))
 })
 const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
@@ -692,7 +692,7 @@ async function stepTest() {
 
       // store failed test result
       if (!isTeacher.value) {
-         const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
+         const previousTest = userTestRelations.value.find(testRelation => testRelation.test_uid === selectedTest.value.uid)
          if (previousTest) {
             await updateUserTestRelation(previousTest.uid, {
                last_try_date: now,
@@ -700,7 +700,7 @@ async function stepTest() {
          } else {
             await createUserTestRelation({
                user_uid: props.user_uid,
-               shdl_test_uid: selectedTest.value.uid,
+               test_uid: selectedTest.value.uid,
                first_try_date: now,
                last_try_date: now,
             })
@@ -716,7 +716,7 @@ async function stepTest() {
          testStatusText.value = "SUCCÈS !"
          // store success test result
          if (!isTeacher.value) {
-            const previousTest = userTestRelations.value.find(testRelation => testRelation.shdl_test_uid === selectedTest.value.uid)
+            const previousTest = userTestRelations.value.find(testRelation => testRelation.test_uid === selectedTest.value.uid)
             if (previousTest) {
                await updateUserTestRelation(previousTest.uid, {
                   last_try_date: now,
@@ -726,7 +726,7 @@ async function stepTest() {
             } else {
                await createUserTestRelation({
                   user_uid: props.user_uid,
-                  shdl_test_uid: selectedTest.value.uid,
+                  test_uid: selectedTest.value.uid,
                   first_try_date: now,
                   last_try_date: now,
                   success_date: now,

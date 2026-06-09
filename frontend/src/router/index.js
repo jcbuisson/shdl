@@ -232,22 +232,22 @@ const routes = [
             ],      
          },
          {
-            path: 'shdl_tests',
+            path: 'tests',
             meta: {
-               roles: ['shdl_tests']
+               roles: ['tests']
             },
             props: true,
-            component: () => import('/src/views/shdl_tests/ManageSHDLTests.vue'),
+            component: () => import('/src/views/tests/ManageSHDLTests.vue'),
             children: [
                {
                   path: 'create',
                   props: true,
-                  component: () => import('/src/views/shdl_tests/CreateSHDLTest.vue'),
+                  component: () => import('/src/views/tests/CreateSHDLTest.vue'),
                },
                {
                   path: ':test_uid',
                   props: true,
-                  component: () => import('/src/views/shdl_tests/EditSHDLTest.vue'),
+                  component: () => import('/src/views/tests/EditSHDLTest.vue'),
                },
             ],      
          },

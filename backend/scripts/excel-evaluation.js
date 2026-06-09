@@ -33,10 +33,10 @@ async function createExcel() {
       const groupSlots = await db.select().from(schema.group_slot).where(eq(schema.group_slot.group_uid, group.uid))
       const groupTests = []
       for (const groupSlot of groupSlots) {
-         const gsRelations = await db.select().from(schema.groupslot_shdltest_relation)
-            .where(eq(schema.groupslot_shdltest_relation.group_slot_uid, groupSlot.uid))
+         const gsRelations = await db.select().from(schema.groupslot_test_relation)
+            .where(eq(schema.groupslot_test_relation.group_slot_uid, groupSlot.uid))
          for (const rel of gsRelations) {
-            const tests = await db.select().from(schema.shdl_test).where(eq(schema.shdl_test.uid, rel.shdl_test_uid)).limit(1)
+            const tests = await db.select().from(schema.test).where(eq(schema.test.uid, rel.test_uid)).limit(1)
             const shdlTest = tests[0]
             if (shdlTest && !groupTests.some(t => t.uid === shdlTest.uid) && acceptedTestNames.includes(shdlTest.name)) {
                groupTests.push(shdlTest)
@@ -109,8 +109,8 @@ async function createExcel() {
          let markSum = 0
          let markWeight = 0
          for (const test of groupTests) {
-            const relations = await db.select().from(schema.user_shdltest_relation)
-               .where(and(eq(schema.user_shdltest_relation.user_uid, user.uid), eq(schema.user_shdltest_relation.shdl_test_uid, test.uid)))
+            const relations = await db.select().from(schema.user_test_relation)
+               .where(and(eq(schema.user_test_relation.user_uid, user.uid), eq(schema.user_test_relation.test_uid, test.uid)))
             const userTestRelation = relations[0]
             let evaluation = 0
             if (userTestRelation) {

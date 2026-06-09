@@ -78,7 +78,7 @@ const filteredSortedTestList = computed(() => {
 
 
 async function addTest() {
-   router.push(`/home/${props.signedinUid}/shdl_tests/create`)
+   router.push(`/home/${props.signedinUid}/tests/create`)
 }
 
 // const route = useRoute()
@@ -99,7 +99,7 @@ const selectedTest = ref()
 function selectTest(test) {
    extendExpiration()
    selectedTest.value = test
-   router.push(`/home/${props.signedinUid}/shdl_tests/${test.uid}`)
+   router.push(`/home/${props.signedinUid}/tests/${test.uid}`)
 }
 
 async function deleteTest(test) {

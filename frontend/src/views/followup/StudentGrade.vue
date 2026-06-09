@@ -152,28 +152,28 @@ onUnmounted(() => {
    }
 })
 
-const testSuccessDate = computed(() => (shdl_test_uid) => {
+const testSuccessDate = computed(() => (test_uid) => {
    if (!testRelations.value) return null
-   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid)
    return testRelation?.success_date ? format(testRelation.success_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
 })
 
-const testEvaluation = computed(() => (shdl_test_uid) => {
+const testEvaluation = computed(() => (test_uid) => {
    if (!testRelations.value) return 0;
-   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid);
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid);
    return testRelation?.evaluation ?? (testRelation?.success_date ? 100 : 0);
 })
 
-const testUpdateCount = computed(() => (shdl_test_uid) => {
+const testUpdateCount = computed(() => (test_uid) => {
    if (!testRelations.value) return 0;
-   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid);
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid);
    return testRelation?.update_count;
 })
 
-async function onEvaluationChange(shdl_test_uid, evaluation) {
-   // console.log('shdl_test_uid, value', shdl_test_uid, value)
+async function onEvaluationChange(test_uid, evaluation) {
+   // console.log('test_uid, value', test_uid, value)
    if (!testRelations.value) return
-   const testRelation = testRelations.value.find(testRelation => testRelation.shdl_test_uid === shdl_test_uid)
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid)
    if (testRelation) {
       await updateUserTestEvent(testRelation.uid, {
          evaluation
@@ -181,7 +181,7 @@ async function onEvaluationChange(shdl_test_uid, evaluation) {
    } else {
       await createUserTestRelation({
          user_uid: props.user_uid,
-         shdl_test_uid,
+         test_uid,
          evaluation,
       })
    }

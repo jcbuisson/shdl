@@ -37,7 +37,7 @@ export default function(app) {
    app.service('user_document').publish(async (context) => roomsToPublish(context))
    app.service('user_document_event').publish(async (context) => roomsToPublish(context))
    app.service('user_slot_excuse').publish(async (context) => roomsToPublish(context))
-   app.service('shdl_test').publish(async (context) => roomsToPublish(context))
-   app.service('groupslot_shdltest_relation').publish(async (context) => roomsToPublish(context))
-   app.service('user_shdltest_relation').publish(async (context) => roomsToPublish(context))
+   app.service('test').publish(async (context) => roomsToPublish(context))
+   app.service('groupslot_test_relation').publish(async (context) => roomsToPublish(context))
+   app.service('user_test_relation').publish(async (context) => roomsToPublish(context))
 }

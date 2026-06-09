@@ -142,7 +142,7 @@ export function useBusinessObservables(app) {
                slotList.map(slot => groupSlotSHDLTestRelation$({ group_slot_uid: slot.uid }))
             )
          ),
-         map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []).map(relation => relation.shdl_test_uid))]),
+         map(listOfList => [...new Set(listOfList.reduce(((accu, list) => [...accu, ...list]), []).map(relation => relation.test_uid))]),
          switchMap(testUidList =>
             guardCombineLatest(
                testUidList.map(uid => shdlTest$(uid))
@@ -168,7 +168,7 @@ export function useBusinessObservables(app) {
          switchMap(testList =>
             guardCombineLatest(
                testList.map(test =>
-                  userSHDLTestRelations$({ user_uid, shdl_test_uid: test.uid })
+                  userSHDLTestRelations$({ user_uid, test_uid: test.uid })
                )
             )
          ),
@@ -209,7 +209,7 @@ export function useBusinessObservables(app) {
             let totalWeight = 0
             let testsWeight = 0
             for (const test of tests) {
-               const testRelation = testRelations.find(testRelation => testRelation.shdl_test_uid === test.uid)
+               const testRelation = testRelations.find(testRelation => testRelation.test_uid === test.uid)
                if (testRelation) {
                   const evaluation = testRelation.evaluation ?? (testRelation?.success_date ? 100 : 0);
                   testsWeight += test.weight * evaluation

@@ -102,7 +102,7 @@ shdl/
     │   │   ├── groups/               # Group management (admin)
     │   │   ├── workshop/             # SHDL/CRAPS editor (main workspace)
     │   │   ├── followup/             # Student progress tracking (teacher)
-    │   │   └── shdl_tests/           # Test definition (admin)
+    │   │   └── tests/           # Test definition (admin)
     │   ├── components/               # Reusable Vue components
     │   │   ├── EditSHDLDocument.vue  # SHDL code editor (Ace)
     │   │   ├── SHDLSimulator.vue     # SHDL simulator
@@ -162,7 +162,7 @@ app.createService('user', {
 Key entities defined in the Drizzle schema:
 
 - **User**: Core user entity (email, password, firstname, lastname, pict, notes)
-- **Tab**: Access control tabs (users, groups, shdl_tests, craps_tests, followup, workshop)
+- **Tab**: Access control tabs (users, groups, tests, craps_tests, followup, workshop)
 - **UserTabRelation**: Maps users to tabs (role-based access)
 - **Group**: Student groups/classes
 - **UserGroupRelation**: Many-to-many user-group membership
@@ -253,7 +253,7 @@ Routes are defined in `frontend/src/router/index.js`:
   - `groups` - Group management (admin only)
   - `workshop` - SHDL/text editor (students & teachers)
   - `followup` - Student progress tracking (teachers only)
-  - `shdl_tests` - Test management (admin only)
+  - `tests` - Test management (admin only)
 
 Access is controlled by `UserTabRelation` (which tabs a user can see).
 
@@ -270,7 +270,7 @@ SHDL is a hardware description language for defining digital circuits. The imple
    - Infers signal types (input/output/internal)
    - Processes module hierarchy (deepest modules first)
    - Detects unused signals and undefined references
-4. **Test Parser** (`shdl_test_line_parser.js`): Parses test statements (e.g., "set rst 1", "check a 0")
+4. **Test Parser** (`test_line_parser.js`): Parses test statements (e.g., "set rst 1", "check a 0")
 5. **Utilities** (`shdlUtilities.js`): Helper functions for arity, equipotentials, formulas
 
 ### Common SHDL Operations

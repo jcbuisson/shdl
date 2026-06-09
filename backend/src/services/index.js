@@ -33,9 +33,9 @@ export default function (app) {
       schema.user_document,
       schema.user_document_event,
       schema.user_slot_excuse,
-      schema.shdl_test,
-      schema.groupslot_shdltest_relation,
-      schema.user_shdltest_relation,
+      schema.test,
+      schema.groupslot_test_relation,
+      schema.user_test_relation,
    ])
 
    // metadata service (flat where, used by frontend rollback path)
@@ -65,9 +65,9 @@ export default function (app) {
    app.service('user_document').hooks(commonHooks)
    app.service('user_document_event').hooks(commonHooks)
    app.service('user_slot_excuse').hooks(commonHooks)
-   app.service('shdl_test').hooks(commonHooks)
-   app.service('groupslot_shdltest_relation').hooks(commonHooks)
-   app.service('user_shdltest_relation').hooks(commonHooks)
+   app.service('test').hooks(commonHooks)
+   app.service('groupslot_test_relation').hooks(commonHooks)
+   app.service('user_test_relation').hooks(commonHooks)
 
    // custom services
    app.configure(authService)
