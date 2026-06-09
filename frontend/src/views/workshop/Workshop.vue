@@ -8,11 +8,11 @@
             <v-toolbar color="red-darken-4">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable hide-details></v-text-field>
                <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
-                  <v-btn value="shdl" size="small" variant="text"
+                  <v-btn value="shdl" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
-                  <v-btn value="craps" size="small" variant="text"
+                  <v-btn value="craps" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'craps' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">CRAPS</v-btn>
-                  <v-btn value="text" size="small" variant="text"
+                  <v-btn value="text" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'text' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">Texte</v-btn>
                </v-btn-toggle>
                <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
@@ -53,15 +53,6 @@
             <v-row dense>
                <v-col cols="12" md="12">
                   <v-text-field label="Nom" required v-model="data.name"></v-text-field>
-                  <v-select
-                     variant="underlined"
-                     v-model="data.type"
-                     :items="types"
-                     item-title="name"
-                     item-value="uid"
-                     label="Type"
-                  ></v-select>
-
                </v-col>
             </v-row>
         </v-card-text>
@@ -81,7 +72,7 @@
             color="primary"
             text="OK"
             variant="tonal"
-            :disabled="!data.type || !data.name"
+            :disabled="!data.name"
             @click="addDocumentDialog = false; createDocument()"
           ></v-btn>
         </v-card-actions>
@@ -192,7 +183,7 @@ const addDocumentDialog = ref(false)
 const data = ref({})
 
 async function addDocument() {
-   data.value = {}
+   data.value = { type: typeFilter.value || 'shdl' }
    addDocumentDialog.value = true
 }
 
