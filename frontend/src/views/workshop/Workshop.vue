@@ -207,6 +207,7 @@ function selectDocument(document) {
 }
 
 async function createDocument() {
+   typeFilter.value = data.value.type
    const text = data.value.type === 'shdl' ? `module ${data.value.name}()\nend module` : '';
    const document = await createUserDocument({
       user_uid: props.signedinUid,
