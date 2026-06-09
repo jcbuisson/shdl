@@ -6,7 +6,12 @@
 
             <!-- Filter by name (does not grow) -->
             <v-toolbar color="red-darken-4">
-               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
+               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable hide-details></v-text-field>
+               <v-btn-toggle v-model="typeFilter" density="compact" variant="outlined" class="mx-2" style="flex-shrink: 0">
+                  <v-btn value="shdl" size="small">SHDL</v-btn>
+                  <v-btn value="craps" size="small">CRAPS</v-btn>
+                  <v-btn value="text" size="small">Texte</v-btn>
+               </v-btn-toggle>
                <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
             </v-toolbar>
          
@@ -130,6 +135,7 @@ const types = [
 ]
 
 const nameFilter = ref('')
+const typeFilter = ref(undefined)
 
 const sortedDocumentList = useObservable(documents$({user_uid: props.signedinUid}).pipe(
    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
@@ -139,6 +145,7 @@ const filteredSortedDocumentList = computed(() => {
    if (!sortedDocumentList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
    return sortedDocumentList.value.filter(doc => {
+      if (typeFilter.value && doc.type !== typeFilter.value) return false
       if (nameFilter_.length === 0) return true
       if (doc.name.toLowerCase().indexOf(nameFilter_) > -1) return true
       return false
