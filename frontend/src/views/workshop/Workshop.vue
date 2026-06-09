@@ -7,10 +7,13 @@
             <!-- Filter by name (does not grow) -->
             <v-toolbar color="red-darken-4">
                <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable hide-details></v-text-field>
-               <v-btn-toggle v-model="typeFilter" density="compact" variant="outlined" class="mx-2" style="flex-shrink: 0">
-                  <v-btn value="shdl" size="small">SHDL</v-btn>
-                  <v-btn value="craps" size="small">CRAPS</v-btn>
-                  <v-btn value="text" size="small">Texte</v-btn>
+               <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
+                  <v-btn value="shdl" size="small" variant="text"
+                     :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
+                  <v-btn value="craps" size="small" variant="text"
+                     :style="typeFilter === 'craps' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">CRAPS</v-btn>
+                  <v-btn value="text" size="small" variant="text"
+                     :style="typeFilter === 'text' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">Texte</v-btn>
                </v-btn-toggle>
                <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
             </v-toolbar>
@@ -90,6 +93,7 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import { useRoute} from 'vue-router'
 import { v7 as uuidv7 } from 'uuid'
 import { useObservable } from '@vueuse/rxjs'
@@ -135,7 +139,7 @@ const types = [
 ]
 
 const nameFilter = ref('')
-const typeFilter = ref(undefined)
+const typeFilter = useLocalStorage('shdl_selected_type', 'shdl')
 
 const sortedDocumentList = useObservable(documents$({user_uid: props.signedinUid}).pipe(
    map(documents => documents.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0))
