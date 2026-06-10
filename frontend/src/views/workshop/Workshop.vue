@@ -21,7 +21,10 @@
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
 
-                  <v-list-item three-line v-for="(document, index) in filteredSortedDocumentList" :key="index"
+                  <div v-if="!sortedDocumentList" class="d-flex flex-column flex-grow-1 align-center justify-center">
+                     <v-progress-circular indeterminate color="red-darken-4"></v-progress-circular>
+                  </div>
+                  <v-list-item v-else three-line v-for="(document, index) in filteredSortedDocumentList" :key="index"
                         :value="document"
                         @click="selectDocument(document)"
                         :active="selectedDocument?.uid === document?.uid">

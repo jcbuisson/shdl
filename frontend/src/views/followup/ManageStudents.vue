@@ -26,7 +26,10 @@
 
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(ugg, index) in filteredUserAndGroupList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
+               <div v-if="!userAndGroupsList" class="d-flex flex-column flex-grow-1 align-center justify-center">
+                  <v-progress-circular indeterminate color="red-darken-4"></v-progress-circular>
+               </div>
+               <v-list-item v-else three-line v-for="(ugg, index) in filteredUserAndGroupList" :key="index" :value="ugg?.user" @click="selectUser(ugg.user)" :active="selectedUser?.uid === ugg?.user.uid">
                   <template v-slot:prepend>
                      <v-avatar @click="onAvatarClick(ugg.user)">
                         <v-img :src="userPictPath(ugg.user)"></v-img>
