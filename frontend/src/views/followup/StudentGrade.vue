@@ -29,7 +29,7 @@
                   <th v-if="isTeacher" class="text-left" style="max-width: 50px;">Coefficient</th>
                   <th class="text-left">Réussite</th>
                   <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
-                  <th class="text-left">Note (%)</th>
+                  <th v-if="isTeacher" class="text-left">Note (%)</th>
                </tr>
             </thead>
             <tbody>
@@ -42,7 +42,7 @@
                         {{ testUpdateCount(test?.uid) }}
                      </v-chip>
                   </td>
-                  <td>
+                  <td v-if="isTeacher">
                      <v-slider
                         :disabled="!editable"
                         show-ticks="always"
@@ -66,6 +66,8 @@
 import { ref, onUnmounted, computed, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { combineLatest } from 'rxjs'
+import { debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
@@ -107,11 +109,20 @@ const userTests = ref()
 const testRelations = ref()
 
 const subscriptions = []
+const ready = ref(false)
 
 watch(
    () => props.user_uid,
 
    async (user_uid) => {
+
+      // unsubscribe from previous user's streams
+      while (subscriptions.length) {
+         subscriptions.pop().unsubscribe()
+      }
+
+      // back to "loading" while the new user's data settles
+      ready.value = false
 
       // À ESSAYER
       // groups = useObservable(groups$());
@@ -148,6 +159,21 @@ watch(
       subscriptions.push(userSHDLTestsRelations$(props.user_uid).subscribe(testRelations_ => {
          testRelations.value = testRelations_;
       }))
+
+      // On a cold cache, isTeacher$/userSHDLTests$/userSHDLTestsRelations$ first emit
+      // placeholder values (false/[]) synchronously, before the real sync completes.
+      // Wait until these streams stop changing before hiding the spinner.
+      subscriptions.push(
+         combineLatest([
+            isTeacher$(props.signedinUid),
+            userSHDLTests$(props.user_uid),
+            userSHDLTestsRelations$(props.user_uid),
+         ]).pipe(
+            debounceTime(300),
+         ).subscribe(() => {
+            ready.value = true
+         })
+      )
    },
    { immediate: true } // so that it's called on component mount
 )
@@ -157,8 +183,6 @@ onUnmounted(() => {
       subscription.unsubscribe()
    }
 })
-
-const ready = computed(() => isTeacher.value !== undefined && userTests.value !== undefined && testRelations.value !== undefined)
 
 const testSuccessDate = computed(() => (test_uid) => {
    if (!testRelations.value) return null
