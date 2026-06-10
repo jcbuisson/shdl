@@ -283,6 +283,11 @@ watch(() => [route.path, sortedDocumentList.value], async () => {
    selectedDocument.value = sortedDocumentList.value.find(module => module.uid === uid)
 }, { immediate: true })
 
+watch(typeFilter, () => {
+   selectedDocument.value = null
+   router.push(`/home/${props.signedinUid}/workshop`)
+})
+
 function onResize(width) {
    setWorkshopSplitWidth(width)
 }
