@@ -1,58 +1,64 @@
 <template>
    <div class="pa-8">
-      <!-- final grade -->
-      <template v-if="isTeacher">
-         <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
-         <v-divider :thickness="3" class="my-2" />
-      </template>
+      <div v-if="!ready" class="d-flex justify-center align-center" style="min-height: 200px;">
+         <v-progress-circular indeterminate color="red-darken-4"></v-progress-circular>
+      </div>
 
-      <!-- attendance (teachers only) -->
-       <template v-if="isTeacher">
-         <template v-for="group in userGroups" :key="group.uid">
-            <StudentGroupAttendance :user_uid="user_uid" :group="group" :editable="editable"/>
+      <template v-else>
+         <!-- final grade -->
+         <template v-if="isTeacher">
+            <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
+            <v-divider :thickness="3" class="my-2" />
          </template>
-         <h4>Taux de présence : {{ isNaN(attendanceGrade) ? '-' : attendanceGrade + ' %' }}</h4>
-         <v-divider :thickness="3" class="my-2" />
-       </template>
 
-      <!-- test results -->
-      <h3 class="my-2">Tests</h3>
-      <v-table density="compact">
-         <thead>
-            <tr>
-               <th class="text-left">Nom</th>
-               <th v-if="isTeacher" class="text-left" style="max-width: 50px;">Coefficient</th>
-               <th class="text-left">Réussite</th>
-               <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
-               <th class="text-left">Note (%)</th>
-            </tr>
-         </thead>
-         <tbody>
-            <tr v-for="test in userTests" :key="test?.uid">
-               <td style="max-width: 100px;">{{ test?.name }}</td>
-               <td v-if="isTeacher" style="max-width: 50px;">{{ test?.weight }}</td>
-               <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
-               <td v-if="isTeacher" style="max-width: 50px;">
-                  <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 && 'red'">
-                     {{ testUpdateCount(test?.uid) }}
-                  </v-chip>
-               </td>
-               <td>
-                  <v-slider
-                     :disabled="!editable"
-                     show-ticks="always"
-                     thumb-label
-                     step="25"
-                     tick-size="4"
-                     :model-value="testEvaluation(test?.uid)"
-                     @end="value => onEvaluationChange(test?.uid, value)"
-                  ></v-slider>
-               </td>
-            </tr>
-         </tbody>
-      </v-table>
-      <!-- <h4>Évaluation des tests : {{ testGrade + ' %' }}</h4> -->
-      <v-divider :thickness="3"/>
+         <!-- attendance (teachers only) -->
+         <template v-if="isTeacher">
+            <template v-for="group in userGroups" :key="group.uid">
+               <StudentGroupAttendance :user_uid="user_uid" :group="group" :editable="editable"/>
+            </template>
+            <h4>Taux de présence : {{ isNaN(attendanceGrade) ? '-' : attendanceGrade + ' %' }}</h4>
+            <v-divider :thickness="3" class="my-2" />
+         </template>
+
+         <!-- test results -->
+         <h3 class="my-2">Tests</h3>
+         <v-table density="compact">
+            <thead>
+               <tr>
+                  <th class="text-left">Nom</th>
+                  <th v-if="isTeacher" class="text-left" style="max-width: 50px;">Coefficient</th>
+                  <th class="text-left">Réussite</th>
+                  <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
+                  <th class="text-left">Note (%)</th>
+               </tr>
+            </thead>
+            <tbody>
+               <tr v-for="test in userTests" :key="test?.uid">
+                  <td style="max-width: 100px;">{{ test?.name }}</td>
+                  <td v-if="isTeacher" style="max-width: 50px;">{{ test?.weight }}</td>
+                  <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
+                  <td v-if="isTeacher" style="max-width: 50px;">
+                     <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 && 'red'">
+                        {{ testUpdateCount(test?.uid) }}
+                     </v-chip>
+                  </td>
+                  <td>
+                     <v-slider
+                        :disabled="!editable"
+                        show-ticks="always"
+                        thumb-label
+                        step="25"
+                        tick-size="4"
+                        :model-value="testEvaluation(test?.uid)"
+                        @end="value => onEvaluationChange(test?.uid, value)"
+                     ></v-slider>
+                  </td>
+               </tr>
+            </tbody>
+         </v-table>
+         <!-- <h4>Évaluation des tests : {{ testGrade + ' %' }}</h4> -->
+         <v-divider :thickness="3"/>
+      </template>
    </div>
 </template>
 
@@ -151,6 +157,8 @@ onUnmounted(() => {
       subscription.unsubscribe()
    }
 })
+
+const ready = computed(() => isTeacher.value !== undefined && userTests.value !== undefined && testRelations.value !== undefined)
 
 const testSuccessDate = computed(() => (test_uid) => {
    if (!testRelations.value) return null
