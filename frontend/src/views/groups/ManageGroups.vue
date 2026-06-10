@@ -12,7 +12,10 @@
 
             <!-- fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(groupAndUsers, index) in filteredSortedGroupAndUsersList":key="index"
+               <div v-if="!groupAndUsersList" class="d-flex flex-column flex-grow-1 align-center justify-center">
+                  <v-progress-circular indeterminate color="red-darken-4"></v-progress-circular>
+               </div>
+               <v-list-item v-else three-line v-for="(groupAndUsers, index) in filteredSortedGroupAndUsersList":key="index"
                      :value="groupAndUsers.group" @click="selectGroup(groupAndUsers.group)" :active="selectedGroup?.uid === groupAndUsers.group.uid">
                   <v-list-item-title>{{ groupAndUsers?.group?.name }}</v-list-item-title>
                   <v-list-item-subtitle>{{ groupAndUsers?.users.length }} membre{{ groupAndUsers?.users.length > 1 ? 's' : '' }}</v-list-item-subtitle>
@@ -77,7 +80,7 @@ const groupsAndUsers$ = combineLatest([
    ),
 )
 
-const groupAndUsersList = useObservable(groupsAndUsers$, [])
+const groupAndUsersList = useObservable(groupsAndUsers$)
 const sortedGroupAndUsersList = computed(() => groupAndUsersList.value ? groupAndUsersList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
 
 const filteredSortedGroupAndUsersList = computed(() => {
