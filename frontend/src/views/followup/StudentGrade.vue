@@ -7,7 +7,7 @@
       <template v-else>
          <!-- final grade -->
          <template v-if="isTeacher">
-            <h2 v-if="grade != null">Note finale : {{ grade }} / 20</h2>
+            <h2 v-if="grade != null && !isNaN(grade)">Note finale : {{ grade }} / 20</h2>
             <v-divider :thickness="3" class="my-2" />
          </template>
 
@@ -103,7 +103,7 @@ const groups = ref()
 const userGroups = ref([])
 const attendanceGrade = ref(-1)
 const testGrade = ref(-1)
-const grade = ref(-1)
+const grade = ref()
 const userSlots = ref()
 const userTests = ref()
 const testRelations = ref()
