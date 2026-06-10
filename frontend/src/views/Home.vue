@@ -67,31 +67,20 @@ import { expiresAt } from '/src/use/useAppState.js'
 import { tabs } from '/src/use/useTabs'
 import { useAuthentication } from "/src/use/useAuthentication"
 import { useUser, getFullname } from '/src/use/useUser'
-import { useGroup } from '/src/use/useGroup'
-import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
-import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
-import { useUserDocument } from '/src/use/useUserDocument'
-import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
-import { Observable, from, map, of, merge, combineLatest, firstValueFrom, debounceTime } from 'rxjs'
+import { map, debounceTime } from 'rxjs'
 import { useObservable } from '@vueuse/rxjs'
 
 import router from '/src/router'
 
 import GithubLink from '/src/components/GithubLink.vue'
-import OnlineButton from '/src/components/OnlineButton.vue'
 
 
 const { app } = useExpressXClient();
 const { restartApp } = useAuthentication(app);
 const { getObservable: user$, synchronizeAll: synchronizeAllUser } = useUser(app)
-const { synchronizeAll: synchronizeAllGroup } = useGroup(app)
-const { synchronizeAll: synchronizeAllGroupSlot } = useGroupSlot(app)
-const { getObservable: userTabRelation$, synchronizeAll: synchronizeAllUserTabRelation } = useUserTabRelation(app)
-const { synchronizeAll: synchronizeAllUserGroupRelation } = useUserGroupRelation(app)
-const { synchronizeAll: synchronizeAllUserDocument } = useUserDocument(app)
-const { synchronizeAll: synchronizeAllUserDocumentEvent } = useUserDocumentEvent(app)
+const { getObservable: userTabRelation$ } = useUserTabRelation(app)
 
 
 const props = defineProps({
@@ -122,11 +111,6 @@ const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
    )
 
-const debouncedUserTabs$ = userTabs$
-   .pipe(
-      debounceTime(300) // wait until no new value for 500ms
-   )
-
 const userTabs = useObservable(userTabs$)
 
 const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
@@ -136,10 +120,10 @@ const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
 const signedinUserFullname = computed(() => getFullname(signedinUser.value))
 
 
-const route = useRoute()
+// const route = useRoute()
 const routeTabUid = ref()
 let interval
-let subscription
+// let subscription
 
 onMounted(async () => {
    // const tabFromRoute = tabs.find(tab => route.path.includes(tab.uid))
