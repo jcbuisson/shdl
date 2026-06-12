@@ -12,6 +12,15 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
+               <v-col cols="12" md="3">
+                  <v-select
+                     label="Type"
+                     :model-value="test?.type"
+                     :items="['shdl', 'craps']"
+                     @update:modelValue="value => onFieldInputDebounced('type', value)"
+                     variant="underlined"
+                  ></v-select>
+               </v-col>
                <v-col cols="12" md="2">
                   <v-text-field
                      type="number"
