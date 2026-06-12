@@ -1,6 +1,6 @@
 import { pgTable, text, integer, timestamp, pgEnum, unique } from 'drizzle-orm/pg-core'
 
-export const tabEnum = pgEnum('Tab', ['users', 'groups', 'tests', 'craps_tests', 'followup', 'workshop', 'grade'])
+export const tabEnum = pgEnum('Tab', ['users', 'groups', 'tests', 'followup', 'workshop', 'grade'])
 
 export const metadata = pgTable('metadata', {
    uid:        text('uid').notNull().unique(),

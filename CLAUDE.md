@@ -162,7 +162,7 @@ app.createService('user', {
 Key entities defined in the Drizzle schema:
 
 - **User**: Core user entity (email, password, firstname, lastname, pict, notes)
-- **Tab**: Access control tabs (users, groups, tests, craps_tests, followup, workshop)
+- **Tab**: Access control tabs (users, groups, tests, followup, workshop)
 - **UserTabRelation**: Maps users to tabs (role-based access)
 - **Group**: Student groups/classes
 - **UserGroupRelation**: Many-to-many user-group membership

@@ -1,7 +1,6 @@
 
 export const tabs = [
-   { uid: 'tests', name: "Gestion des tests SHDL" },
-   { uid: 'craps_tests', name: "Gestion des tests CRAPS" },
+   { uid: 'tests', name: "Gestion des tests" },
    { uid: 'followup', name: "Suivi des étudiants" },
    { uid: 'workshop', name: "Mes documents" },
    { uid: 'users', name: "Gestion des utilisateurs" },
