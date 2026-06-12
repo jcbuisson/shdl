@@ -6,6 +6,7 @@ import { useAuthentication } from "/src/use/useAuthentication"
 
 
 let socket: Socket | null = null;
+let app: any = null;
 
 const socketOptions = {
    path: '/shdl-socket-io/',
@@ -18,41 +19,39 @@ const socketOptions = {
 };
 
 export default function useExpressXClient() {
-   if (!socket) {
+   if (!app) {
       socket = io(socketOptions);
-   }
-   const app = createClient(socket, { debug: false });
+      app = createClient(socket, { debug: false });
 
-   // offline-first plugin: adds app.createOfflineModel, app.isConnected, app.disconnectedDate
-   offlinePlugin(app);
+      // offline-first plugin: adds app.createOfflineModel, app.isConnected, app.disconnectedDate
+      offlinePlugin(app);
 
-   // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
-   reloadPlugin(app);
+      // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
+      reloadPlugin(app);
 
-   const { restartApp } = useAuthentication(app);
+      const { restartApp } = useAuthentication(app);
 
-   app.addErrorListener((socket, err) => {
-      console.log('CNX ERROR!!!', socket.id, err)
-   })
+      app.addErrorListener((socket: Socket, err: unknown) => {
+         console.log('CNX ERROR!!!', socket.id, err)
+      })
 
-   app.addConnectListener(async (socket) => {
-      socket.on('expiresAt', async (expiresAt) => {
+      socket.on('expiresAt', async (expiresAt: unknown) => {
          console.log("server sent 'expiresAt' event", expiresAt)
          setExpiresAt(expiresAt)
          if (!expiresAt) {
             await restartApp()
          }
       })
-   })
 
-   app.connect = () => {
-      console.log('connecting...')
-      socket && socket.connect()
-   }
+      app.connect = () => {
+         console.log('connecting...')
+         socket && socket.connect()
+      }
 
-   app.disconnect = () => {
-      console.log('disconnecting...')
-      socket && socket.disconnect()
+      app.disconnect = () => {
+         console.log('disconnecting...')
+         socket && socket.disconnect()
+      }
    }
 
    return { app };

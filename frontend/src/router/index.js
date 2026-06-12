@@ -281,10 +281,12 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
    console.log('from', from.path, 'to', to.path)
 
-   if (to.meta.requiresAuth) {
+   if (to.matched.some(record => record.meta.requiresAuth)) {
       try {
          // extend session at each route change
-         extendExpiration()
+         extendExpiration().catch(err => {
+            console.log('router.beforeEach err', err.code, err.message)
+         })
       } catch(err) {
          console.log('router.beforeEach err', err.code, err.message)
          // restartApp()
@@ -296,7 +298,7 @@ router.beforeEach(async (to, from, next) => {
       const relations = await findUserTabRelations({ user_uid: to.params.signedinUid })
       const tabs = relations.map(relation => relation.tab)
       if (to.meta.roles.some(role => !tabs.includes(role))) {
-         next('/')
+         return next('/')
       }
    }
 
@@ -307,7 +309,7 @@ router.beforeEach(async (to, from, next) => {
             // document is necessarily in cache since it is visible in the document list of ManageDocument.vue
             const userDocument = await findUserDocumentByUID(to.params.document_uid)
             if (userDocument.user_uid !== to.params.signedinUid) {
-               next('/')
+               return next('/')
             }
          }
       }
