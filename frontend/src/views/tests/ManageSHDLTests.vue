@@ -26,7 +26,9 @@
       </template>
 
       <template v-slot:right-panel>
-         <router-view></router-view>
+         <div class="d-flex flex-column fill-height overflow-hidden">
+            <router-view></router-view>
+         </div>
       </template>
    </SplitPanel>
 </template>
