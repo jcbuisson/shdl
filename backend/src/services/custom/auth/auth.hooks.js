@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import config from '#config'
 import { protect } from '#root/src/common-server.mjs'
@@ -12,12 +12,10 @@ async function afterSignin(context) {
    context.socket.data.expiresAt = new Date(now.getTime() + config.SESSION_EXPIRE_DELAY)
    console.log('socket.data.expiresAt set by afterSignin', context.socket.data.expiresAt)
    const db = context.app.get('db')
-   const followupRelations = await db.select().from(schema.user_tab_relation)
-      .where(and(
-         eq(schema.user_tab_relation.user_uid, context.socket.data.user.uid),
-         eq(schema.user_tab_relation.tab, 'followup')
-      ))
-   const isTeacher = (followupRelations.length > 0)
+   const tabRelations = await db.select().from(schema.user_tab_relation)
+      .where(eq(schema.user_tab_relation.user_uid, context.socket.data.user.uid))
+   const tabs = tabRelations.map(relation => relation.tab)
+   const isTeacher = tabs.includes('followup')
    if (isTeacher) {
       context.app.joinChannel('teachers', context.socket)
    } else {
@@ -27,7 +25,8 @@ async function afterSignin(context) {
    console.log('socket.rooms', context.socket.rooms)
    context.result = {
       user: context.socket.data.user,
-      expiresAt: context.socket.data.expiresAt
+      expiresAt: context.socket.data.expiresAt,
+      tabs,
    }
 }
 

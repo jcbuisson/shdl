@@ -1,6 +1,6 @@
 import { useDebounceFn } from '@vueuse/core'
 
-import { resetUseAppState, setExpiresAt } from '/src/use/useAppState'
+import { resetUseAppState, setExpiresAt, setAuthTabs } from '/src/use/useAppState'
 import { useGroup } from '/src/use/useGroup'
 import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
@@ -91,8 +91,9 @@ export function useAuthentication(app) {
    // throws an error 'wrong-credentials' if wrong email / password
    async function signin(email, password) {
       await clearCaches()
-      const { user, expiresAt } = await app.service('auth').signin(email, password)
+      const { user, expiresAt, tabs } = await app.service('auth').signin(email, password)
       setExpiresAt(expiresAt)
+      setAuthTabs(tabs)
       await putUser(user)      
       return user
    }

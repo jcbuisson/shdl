@@ -5,6 +5,7 @@ import { useSessionStorage } from '@vueuse/core'
 function initialState() {
    return {
       expiresAt: null,
+      authTabs: null,
       'user-manager-split-width': null,
       'student-manager-workshop-split-width': null,
    }
@@ -25,6 +26,14 @@ export const expiresAt = computed(() => {
    return state.value.expiresAt
 })
 
+
+/////////////////       auth tabs       /////////////////
+
+export function setAuthTabs(value) {
+   state.value.authTabs = value
+}
+
+export const authTabs = computed(() => state.value.authTabs)
 
 /////////////////       user-manager split width       /////////////////
 
@@ -73,4 +82,3 @@ export const workshopSplitWidth = computed(() => state.value['workshop-split-wid
 
 // const kvActivityGraphDateMax = useObservable(liveQuery(() => db.keyval.get('activity-graph-date-max')))
 // export const activityGraphDateMax = computed(() => kvActivityGraphDateMax?.value?.value)
-

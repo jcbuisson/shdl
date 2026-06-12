@@ -6,6 +6,7 @@ import useExpressXClient from '/src/use/useExpressXClient';
 import { useAuthentication } from "/src/use/useAuthentication"
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
 import { useUserDocument } from '/src/use/useUserDocument'
+import { authTabs } from '/src/use/useAppState'
 
 const { app } = useExpressXClient();
 const { extendExpiration } = useAuthentication(app)
@@ -295,8 +296,11 @@ router.beforeEach(async (to, from, next) => {
 
    if (to.meta.roles) {
       // check that signed-in user has tabs corresponding to roles
-      const relations = await findUserTabRelations({ user_uid: to.params.signedinUid })
-      const tabs = relations.map(relation => relation.tab)
+      let tabs = authTabs.value
+      if (!tabs || tabs.length === 0) {
+         const relations = await findUserTabRelations({ user_uid: to.params.signedinUid })
+         tabs = relations.map(relation => relation.tab)
+      }
       if (to.meta.roles.some(role => !tabs.includes(role))) {
          return next('/')
       }
