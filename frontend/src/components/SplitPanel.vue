@@ -27,7 +27,7 @@ const props = defineProps({
 
 const emit = defineEmits(['resize'])
 
-const leftWidth = ref(props.leftWidth) // Initial width of the left panel
+const leftWidth = ref(props.leftWidth ?? 300) // Initial width of the left panel
 const isResizing = ref(false)
 const parentElt = ref(null)
 
