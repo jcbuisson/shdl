@@ -22,8 +22,11 @@
 
       <!-- Toolbar (does not grow) -->
       <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
-         <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ testCurrentLine }}
+         <div class="d-flex align-center" style="overflow: hidden;">
+            <v-icon size="small" class="mr-2" @click="testTextDialog = true">mdi-text-box-search-outline</v-icon>
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+               {{ testCurrentLine }}
+            </div>
          </div>
 
          <v-sheet color="grey-lighten-4" rounded>
@@ -32,6 +35,24 @@
             <v-btn icon="mdi-replay" variant="text" :disabled="isTestRunning" @click="initTest"></v-btn>
          </v-sheet>
       </div>
+
+      <v-dialog v-model="testTextDialog" max-width="600">
+         <v-card :title="selectedTest?.name">
+            <v-card-text>
+               <div style="font-family: monospace;">
+                  <div v-for="(line, index) in testTextLines" :key="index" class="d-flex">
+                     <span style="display: inline-block; min-width: 2.5em; text-align: right; margin-right: 0.5em; color: grey;">{{ index + 1 }}</span>
+                     <span style="white-space: pre-wrap;">{{ line }}</span>
+                  </div>
+               </div>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions>
+               <v-spacer></v-spacer>
+               <v-btn text="Fermer" variant="plain" @click="testTextDialog = false"></v-btn>
+            </v-card-actions>
+         </v-card>
+      </v-dialog>
 
       <div v-if="!!selectedTest && testStatusCode >= 2" :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }" style="color: white; height: 40px; padding: 10px;">
          <h5>{{ testStatusText }}</h5>
@@ -642,6 +663,11 @@ const testStatusText = ref()
 const testCurrentLineNo = ref(0)
 const testStatementList = ref()
 const isTestRunning = ref(false)
+const testTextDialog = ref(false)
+
+const testTextLines = computed(() => {
+   return selectedTest.value?.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : []
+})
 
 const testCurrentLine = computed(() => {
    if (testStatementList.value.length === 0) return ''
