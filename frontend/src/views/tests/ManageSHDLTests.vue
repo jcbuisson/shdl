@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { useRoute} from 'vue-router'
+import { useRoute } from 'vue-router'
 import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
@@ -55,6 +55,7 @@ import SplitPanel from '/src/components/SplitPanel.vue'
 const { app } = useExpressXClient();
 const { getObservable: tests$, remove: removeTest } = useSHDLTest(app)
 const { extendExpiration } = useAuthentication(app)
+const route = useRoute()
 
 
 const props = defineProps({
@@ -64,7 +65,13 @@ const props = defineProps({
 })
 
 const testList = useObservable(tests$({}))
-const sortedTestList = computed(() => testList.value ? testList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+const sortedTestList = computed(() => testList.value
+   ? testList.value.toSorted((u1, u2) => {
+      const name1 = (u1.name || '').toLowerCase()
+      const name2 = (u2.name || '').toLowerCase()
+      return name1 > name2 ? 1 : name1 < name2 ? -1 : 0
+   })
+   : [])
 
 const nameFilter = ref('')
 
@@ -97,6 +104,20 @@ async function addTest() {
 // }, { immediate: true })
 
 const selectedTest = ref()
+
+watch(
+   () => [route.path, testList.value],
+   () => {
+      if (!testList.value) return
+      const test_uid = route.path.match(/\/home\/[^/]+\/tests\/([^/]+)/)?.[1]
+      if (!test_uid) {
+         selectedTest.value = null
+         return
+      }
+      selectedTest.value = testList.value.find(test => test.uid === test_uid) ?? null
+   },
+   { immediate: true }
+)
 
 function selectTest(test) {
    extendExpiration()

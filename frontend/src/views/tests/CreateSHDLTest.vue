@@ -10,6 +10,14 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
+               <v-col cols="12" sm="3">
+                  <v-select
+                     label="Type"
+                     v-model="data.type"
+                     :items="['shdl', 'craps']"
+                     variant="underlined"
+                  ></v-select>
+               </v-col>
             </v-row>
          </v-container>
          <div class="submit-block">
@@ -40,7 +48,9 @@ const props = defineProps({
    },
 })
 
-const data = ref({})
+const data = ref({
+   type: 'shdl',
+})
 
 const valid = ref()
 
@@ -53,7 +63,6 @@ async function submit() {
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
    }
-   router.back()
 }
 </script>
 
