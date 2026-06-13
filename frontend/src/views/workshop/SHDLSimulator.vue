@@ -62,23 +62,18 @@
       <div class="overflow-auto">
          <v-list density="compact">
             <template v-for="signalGroup in parameterGroups">
-               <v-list-item>
-                  <template v-slot:prepend>
-                     <v-icon size="small" :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
-                        {{ inputOutputIcon(signalGroup) }}
-                     </v-icon>
-                  </template>
-                  <v-list-item-title>
-                     {{ signalGroup.name }}
-                  </v-list-item-title>
-                  <template v-slot:append>
-                     <div>
-                        <template v-for="index in signalGroup.equipotentialIndexes">
-                           <v-icon size="small" @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
-                        </template>
-                     </div>
-                  </template>
-               </v-list-item>
+               <div class="d-flex align-center flex-wrap px-4" style="min-height: 40px; column-gap: 4px; row-gap: 2px;">
+                  <v-icon size="small" :color="inputOutputIconColor(signalGroup)" v-if="signalGroup.isInput || signalGroup.isOutput" @click="clear(signalGroup)">
+                     {{ inputOutputIcon(signalGroup) }}
+                  </v-icon>
+                  <span>{{ signalGroup.name }}</span>
+                  <v-spacer></v-spacer>
+                  <div class="d-flex flex-wrap justify-end">
+                     <template v-for="index in signalGroup.equipotentialIndexes">
+                        <v-icon size="small" @click="onIconClick(index)" :disabled="!signalGroup.isInput">{{ checkIcon(index, signalGroup.isInput) }}</v-icon>
+                     </template>
+                  </div>
+               </div>
             </template>
          </v-list>
 
@@ -86,21 +81,16 @@
             <v-divider :thickness="3"/>
             <v-list density="compact">
                <template v-for="signalGroup in otherGroups">
-                  <v-list-item>
-                  <template v-slot:prepend>
+                  <div class="d-flex align-center flex-wrap px-4" style="min-height: 40px; column-gap: 4px; row-gap: 2px;">
                      <v-icon size="small"></v-icon>
-                  </template>
-                     <v-list-item-title>
-                        {{ signalGroup.name }}
-                     </v-list-item-title>
-                     <template v-slot:append>
-                        <div>
-                           <template v-for="index in signalGroup.equipotentialIndexes">
-                              <v-icon size="small" disabled>{{ checkIcon(index, false) }}</v-icon>
-                           </template>
-                        </div>
-                     </template>
-                  </v-list-item>
+                     <span>{{ signalGroup.name }}</span>
+                     <v-spacer></v-spacer>
+                     <div class="d-flex flex-wrap justify-end">
+                        <template v-for="index in signalGroup.equipotentialIndexes">
+                           <v-icon size="small" disabled>{{ checkIcon(index, false) }}</v-icon>
+                        </template>
+                     </div>
+                  </div>
                </template>
             </v-list>
          </template>
