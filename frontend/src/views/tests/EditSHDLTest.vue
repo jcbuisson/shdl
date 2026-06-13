@@ -111,7 +111,7 @@ function initializeEditors() {
       })
       statementsEditor.session.on('change', () => {
          if (!isUpdatingFromSubscription) {
-            onFieldInputDebounced('test_statements', statementsEditor.getValue())
+            onFieldInputDebounced('test_statements', statementsEditor.getValue(), { silent: true })
          }
       })
    }
@@ -127,7 +127,7 @@ function initializeEditors() {
       })
       memoryEditor.session.on('change', () => {
          if (!isUpdatingFromSubscription) {
-            onFieldInputDebounced('memory_contents', memoryEditor.getValue())
+            onFieldInputDebounced('memory_contents', memoryEditor.getValue(), { silent: true })
          }
       })
    }
@@ -193,10 +193,12 @@ watch(() => editorTab.value, async () => {
 
 //////////////////////        TEXT FIELD EDITING        //////////////////////
 
-const onFieldInput = async (field, value) => {
+const onFieldInput = async (field, value, { silent = false } = {}) => {
    try {
       await updateTest(props.test_uid, { [field]: value })
-      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+      if (!silent) {
+         displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+      }
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
    }
