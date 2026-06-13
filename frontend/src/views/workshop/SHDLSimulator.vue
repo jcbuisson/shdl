@@ -27,9 +27,9 @@
          </div>
 
          <v-sheet color="grey-lighten-4" rounded>
-            <v-btn icon="mdi-play" variant="text" :disabled="testStatusCode >= 2" @click="runTest"></v-btn>
-            <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2" @click="stepTest"></v-btn>
-            <v-btn icon="mdi-replay" variant="text" @click="initTest"></v-btn>
+            <v-btn :icon="isTestRunning ? 'mdi-pause' : 'mdi-play'" variant="text" :disabled="testStatusCode >= 2" @click="toggleRunTest"></v-btn>
+            <v-btn icon="mdi-debug-step-over" variant="text" :disabled="testStatusCode >= 2 || isTestRunning" @click="stepTest"></v-btn>
+            <v-btn icon="mdi-replay" variant="text" :disabled="isTestRunning" @click="initTest"></v-btn>
          </v-sheet>
       </div>
 
@@ -184,6 +184,7 @@ watch(() => props.document_uid, async (document_uid) => {
 
 onUnmounted(() => {
    if (subscription) subscription.unsubscribe()
+   isTestRunning.value = false
 })
 
 const structure = computed(() => {
@@ -640,6 +641,7 @@ const testStatusCode = ref(0) // 0: closed, 1: open but not started, 2: started 
 const testStatusText = ref()
 const testCurrentLineNo = ref(0)
 const testStatementList = ref()
+const isTestRunning = ref(false)
 
 const testCurrentLine = computed(() => {
    if (testStatementList.value.length === 0) return ''
@@ -654,13 +656,24 @@ function delay(ms) {
 }
 
 async function runTest() {
-   while (testStatusCode.value < 2) {
+   isTestRunning.value = true
+   while (testStatusCode.value < 2 && isTestRunning.value) {
       await stepTest();
       await delay(50);
+   }
+   isTestRunning.value = false
+}
+
+function toggleRunTest() {
+   if (isTestRunning.value) {
+      isTestRunning.value = false
+   } else {
+      runTest()
    }
 }
 
 function initTest() {
+   isTestRunning.value = false
    // (re)initialize equipotentials
    initializeEquipotentials(module.value);
    // load memory
