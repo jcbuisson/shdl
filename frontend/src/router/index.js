@@ -238,17 +238,17 @@ const routes = [
                roles: ['tests']
             },
             props: true,
-            component: () => import('/src/views/tests/ManageSHDLTests.vue'),
+            component: () => import('/src/views/tests/ManageTests.vue'),
             children: [
                {
                   path: 'create',
                   props: true,
-                  component: () => import('/src/views/tests/CreateSHDLTest.vue'),
+                  component: () => import('/src/views/tests/CreateTest.vue'),
                },
                {
                   path: ':test_uid',
                   props: true,
-                  component: () => import('/src/views/tests/EditSHDLTest.vue'),
+                  component: () => import('/src/views/tests/EditTest.vue'),
                },
             ],      
          },
