@@ -33,6 +33,7 @@ import { useUserDocument } from '/src/use/useUserDocument'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { checkModule } from '/src/lib/craps/crapsChecker.js'
 import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
+import { installSessionClipboardGuard } from '/src/lib/sessionClipboardGuard'
 
 const { app } = useExpressXClient()
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
@@ -49,6 +50,7 @@ const props = defineProps({
 const editorContainer = ref(null)
 let editor = null
 let isUpdatingFromSubscription = false
+let removeClipboardGuard = null
 
 function initializeEditor() {
    if (!editor && editorContainer.value) {
@@ -61,6 +63,7 @@ function initializeEditor() {
          useSoftTabs: true,
       })
       editor.setReadOnly(props.readonly ?? false)
+      removeClipboardGuard = installSessionClipboardGuard(editor)
 
       editor.session.on('change', () => {
          if (!isUpdatingFromSubscription) {
@@ -75,6 +78,8 @@ function initializeEditor() {
 }
 
 onBeforeUnmount(() => {
+   removeClipboardGuard?.()
+   removeClipboardGuard = null
    if (editor) {
       editor.destroy()
       editor = null

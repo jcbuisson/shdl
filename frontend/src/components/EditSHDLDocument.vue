@@ -38,6 +38,7 @@ import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import { checkModuleMap } from '/src/lib/shdl/shdlAnalyzer'
 import { useSHDLModule } from '/src/use/useSHDLModule'
+import { installSessionClipboardGuard } from '/src/lib/sessionClipboardGuard'
 
 import { Mutex } from "/src/lib/utilities"
 
@@ -61,6 +62,7 @@ const props = defineProps({
 const editorContainer = ref(null)
 let editor = null
 let isUpdatingFromSubscription = false
+let removeClipboardGuard = null
 
 function initializeEditor() {
    if (!editor && editorContainer.value) {
@@ -73,6 +75,7 @@ function initializeEditor() {
          useSoftTabs: true,
       })
       editor.setReadOnly(props.readonly)
+      removeClipboardGuard = installSessionClipboardGuard(editor)
 
       // Listen for changes from user typing
       editor.session.on('change', () => {
@@ -88,6 +91,8 @@ function initializeEditor() {
 }
 
 onBeforeUnmount(() => {
+   removeClipboardGuard?.()
+   removeClipboardGuard = null
    if (editor) {
       editor.destroy()
       editor = null
