@@ -64,11 +64,11 @@
       </div>
 
       <!-- Controls -->
-      <div v-if="!selectedTest" class="d-flex align-center flex-wrap px-2 py-1" style="gap: 6px; border-bottom: 1px solid #e0e0e0;">
-         <v-btn density="compact" icon="mdi-restart" variant="text" @click="reset" title="Reset"></v-btn>
-         <v-btn density="compact" :icon="running ? 'mdi-pause' : 'mdi-play'" variant="text"
+      <div class="d-flex align-center flex-wrap px-2 py-1" style="gap: 6px; border-bottom: 1px solid #e0e0e0;">
+         <v-btn v-if="!selectedTest" density="compact" icon="mdi-restart" variant="text" @click="reset" title="Reset"></v-btn>
+         <v-btn v-if="!selectedTest" density="compact" :icon="running ? 'mdi-pause' : 'mdi-play'" variant="text"
             :disabled="inError || !hasMemory" @click="runStop" title="Run / Pause"></v-btn>
-         <v-btn density="compact" icon="mdi-debug-step-over" variant="text"
+         <v-btn v-if="!selectedTest" density="compact" icon="mdi-debug-step-over" variant="text"
             :disabled="inError || !stopped || !hasMemory" @click="step" title="Step"></v-btn>
          <span class="text-caption">{{ cycleCount }} cycles</span>
 
@@ -92,7 +92,7 @@
          </div>
 
          <!-- IT interrupt button -->
-         <v-btn density="compact" icon="mdi-lightning-bolt" variant="text"
+         <v-btn v-if="!selectedTest" density="compact" icon="mdi-lightning-bolt" variant="text"
             :disabled="!hasMemory" @click="sendIT" title="Interruption matérielle (IT)"></v-btn>
       </div>
 
@@ -355,8 +355,17 @@ async function stepTest() {
    }
 }
 
-function executeTestLine(_line) {
-   // CRAPS test statement semantics will be implemented incrementally.
+function executeTestLine(line) {
+   const stepsMatch = line?.match(/^\s*steps\s+([1-9]\d*)\s*$/)
+   if (stepsMatch) {
+      const stepCount = Number(stepsMatch[1])
+      for (let i = 0; i < stepCount; i++) {
+         step()
+         if (inError.value) return errorMsg.value
+      }
+   }
+
+   // Other CRAPS test statement semantics will be implemented incrementally.
    return ''
 }
 
