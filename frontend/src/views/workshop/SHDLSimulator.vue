@@ -6,10 +6,16 @@
       v-if="module?.is_valid">
 
       <!-- Test selector (does not grow) -->
-      <div class="px-2">
+      <div class="d-flex align-center px-2" style="column-gap: 16px;">
+         <div v-if="selectedTest" class="d-flex align-center" style="min-width: 0; max-width: 50%;">
+            <v-icon size="small" class="mr-2" @click="testTextDialog = true">mdi-text-box-search-outline</v-icon>
+            <span :title="selectedTest.name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+               {{ selectedTest.name }}
+            </span>
+         </div>
          <v-select
-            v-model="selectedTest"
-            @update:modelValue="() => selectedTest && initTest()"
+            v-model="testToSelect"
+            @update:modelValue="selectTest"
             :items="isTeacher ? testList : sortedTestList"
             item-title="name"
             :item-value="test => test"
@@ -17,13 +23,14 @@
             clearable
             persistent-hint
             variant="underlined"
+            class="ml-auto"
+            style="width: 50%; max-width: 50%;"
          ></v-select>
       </div>
 
       <!-- Toolbar (does not grow) -->
       <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
          <div class="d-flex align-center" style="overflow: hidden;">
-            <v-icon size="small" class="mr-2" @click="testTextDialog = true">mdi-text-box-search-outline</v-icon>
             <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                {{ testCurrentLine }}
             </div>
@@ -160,6 +167,7 @@ const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.
 
 
 const selectedTest = ref()
+const testToSelect = ref()
 
 const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
 
@@ -173,6 +181,7 @@ watch(() => props.document_uid, async (document_uid) => {
          // if (!module.value || !module_.structure) {
          //   console.log('NEXT simu', module_);
             selectedTest.value = null;
+            testToSelect.value = null;
             if (module_?.structure) {
                module.value = module_;
                initializeEquipotentials(module_);
@@ -661,10 +670,7 @@ const testTextLines = computed(() => {
 
 const testCurrentLine = computed(() => {
    if (testStatementList.value.length === 0) return ''
-   const currentStatement = testStatementList.value[testCurrentLineNo.value]
-   // const truncatedStatement = currentStatement.slice(0, 40) + (currentStatement.length > 40 ? '...' : '')
-   // return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${truncatedStatement}`
-   return `${testCurrentLineNo.value + 1}/${testStatementList.value.length} - ${currentStatement}`
+   return `Ligne ${testCurrentLineNo.value + 1}`
 })
 
 function delay(ms) {
@@ -686,6 +692,13 @@ function toggleRunTest() {
    } else {
       runTest()
    }
+}
+
+function selectTest(test) {
+   if (!test) return
+   selectedTest.value = test
+   initTest()
+   testToSelect.value = null
 }
 
 function initTest() {
