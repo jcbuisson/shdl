@@ -241,7 +241,7 @@ const testList = useObservable(tests$({ type: 'craps' }))
 const userTestList = useObservable(userSHDLTests$(props.user_uid))
 const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
 const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
-const document = useObservable(userDocument$(props.document_uid))
+const userDocument = useObservable(userDocument$(props.document_uid))
 
 const filteredTestList = computed(() => {
    if (!currentTime.value || !userSlots.value || !userTestList.value || !testRelationList.value) return []
@@ -380,7 +380,7 @@ async function storeTestResult(success) {
       last_try_date: now,
       ...(success ? {
          success_date: now,
-         update_count: document.value?.update_count ?? 0,
+         update_count: userDocument.value?.update_count ?? 0,
       } : {}),
    }
 
