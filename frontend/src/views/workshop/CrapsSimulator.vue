@@ -356,7 +356,10 @@ async function stepTest() {
 }
 
 function executeTestLine(line) {
-   const statement = line?.split('//', 1)[0] ?? ''
+   const statement = (line?.split('//', 1)[0] ?? '')
+      .replace(/[\s\u00a0\u202f]+/gu, ' ')
+      .trim()
+   if (statement.trim().length === 0) return ''
 
    // "steps <n>"
    const stepsMatch = statement.match(/^\s*steps\s+([1-9]\d*)\s*$/)
@@ -366,6 +369,7 @@ function executeTestLine(line) {
          step()
          if (inError.value) return errorMsg.value
       }
+      return ''
    }
 
    // "check stop"
@@ -375,15 +379,21 @@ function executeTestLine(line) {
       if (currentHexValue !== '30000000') {
          return `Instruction stop attendue à l'adresse ${hex8(currentAddress.value)}`
       }
+      return ''
    }
 
    // "check memory <address> <value>"
-   const memoryMatch = statement.match(
-      /^\s*check\s+memory\s+(0x[0-9a-f]+|[1-9]\d*)\s*(?:,\s*|\s+)([+-]?(?:0x[0-9a-f]+|\d+))\s*$/i
-   )
-   if (memoryMatch) {
-      const address = parseIntegerLiteral(memoryMatch[1])
-      const expectedValue = parseIntegerLiteral(memoryMatch[2])
+   const memoryTokens = statement.replace(/\s*,\s*/g, ' ').split(' ')
+   const memoryValueToken = memoryTokens[3]?.replace(/"$/, '')
+   if (
+      memoryTokens.length === 4 &&
+      memoryTokens[0].toLowerCase() === 'check' &&
+      memoryTokens[1].toLowerCase() === 'memory' &&
+      /^(?:0x[0-9a-f]+|[1-9]\d*)$/i.test(memoryTokens[2]) &&
+      /^[+-]?(?:0x[0-9a-f]+|\d+)$/i.test(memoryValueToken)
+   ) {
+      const address = parseIntegerLiteral(memoryTokens[2])
+      const expectedValue = parseIntegerLiteral(memoryValueToken)
       const currentValue = memoryDict.value[address]?.value
 
       if (!currentValue) {
@@ -394,10 +404,34 @@ function executeTestLine(line) {
       if (actualValue !== expectedValue) {
          return `Mémoire ${hex8(address)} : ${expectedValue} attendu, ${actualValue} obtenu`
       }
+      return ''
    }
 
-   // Other CRAPS test statement semantics will be implemented incrementally.
-   return ''
+   // "check register <regindex> <value>"
+   const registerTokens = statement.replace(/\s*,\s*/g, ' ').split(' ')
+   const registerIndexToken = registerTokens[2]?.replace(/^%r/i, '')
+   const registerValueToken = registerTokens[3]?.replace(/"$/, '')
+   if (
+      registerTokens.length === 4 &&
+      registerTokens[0].toLowerCase() === 'check' &&
+      registerTokens[1].toLowerCase() === 'register' &&
+      /^\d+$/.test(registerIndexToken) &&
+      /^[+-]?(?:0x[0-9a-f]+|\d+)$/i.test(registerValueToken)
+   ) {
+      const registerIndex = Number(registerIndexToken)
+      if (registerIndex > 31) {
+         return `Indice de registre invalide : ${registerIndex}`
+      }
+
+      const expectedValue = parseIntegerLiteral(registerValueToken)
+      const actualValue = bin32ToSigned(getReg(registerIndex))
+      if (actualValue !== expectedValue) {
+         return `Registre ${registerIndex} : ${expectedValue} attendu, ${actualValue} obtenu`
+      }
+      return ''
+   }
+
+   return `Syntaxe de test invalide : ${statement.trim()}`
 }
 
 function parseIntegerLiteral(literal) {
