@@ -356,8 +356,10 @@ async function stepTest() {
 }
 
 function executeTestLine(line) {
+   const statement = line?.split('//', 1)[0] ?? ''
+
    // "steps <n>"
-   const stepsMatch = line?.match(/^\s*steps\s+([1-9]\d*)\s*$/)
+   const stepsMatch = statement.match(/^\s*steps\s+([1-9]\d*)\s*$/)
    if (stepsMatch) {
       const stepCount = Number(stepsMatch[1])
       for (let i = 0; i < stepCount; i++) {
@@ -367,7 +369,7 @@ function executeTestLine(line) {
    }
 
    // "check stop"
-   if (/^\s*check\s+stop\s*$/.test(line)) {
+   if (/^\s*check\s+stop\s*$/.test(statement)) {
       const currentValue = memoryDict.value[currentAddress.value]?.value
       const currentHexValue = currentValue ? bin32ToHex8(currentValue) : null
       if (currentHexValue !== '30000000') {
@@ -376,7 +378,7 @@ function executeTestLine(line) {
    }
 
    // "check memory <address> <value>"
-   const memoryMatch = line?.match(
+   const memoryMatch = statement.match(
       /^\s*check\s+memory\s+(0x[0-9a-f]+|[1-9]\d*)\s*(?:,\s*|\s+)([+-]?(?:0x[0-9a-f]+|\d+))\s*$/i
    )
    if (memoryMatch) {
