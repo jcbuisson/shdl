@@ -5,6 +5,7 @@
       <div class="d-flex align-center px-2" style="column-gap: 16px;">
          <div v-if="selectedTest" class="d-flex align-center" style="min-width: 0; max-width: 50%;">
             <v-icon size="small" class="mr-2" @click="testTextDialog = true">mdi-text-box-search-outline</v-icon>
+            <v-icon size="small" class="mr-2" @click="clearSelectedTest">mdi-cancel</v-icon>
             <span :title="selectedTest.name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                {{ selectedTest.name }}
             </span>
@@ -42,8 +43,28 @@
          </v-card>
       </v-dialog>
 
+      <!-- Test controls -->
+      <div v-if="selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
+         <span>{{ testCurrentLine }}</span>
+
+         <v-sheet color="grey-lighten-4" rounded>
+            <v-btn :icon="isTestRunning ? 'mdi-pause' : 'mdi-play'" variant="text"
+               :disabled="testStatusCode >= 2" @click="toggleRunTest"></v-btn>
+            <v-btn icon="mdi-debug-step-over" variant="text"
+               :disabled="testStatusCode >= 2 || isTestRunning" @click="stepTest"></v-btn>
+            <v-btn icon="mdi-replay" variant="text"
+               :disabled="isTestRunning" @click="initTest"></v-btn>
+         </v-sheet>
+      </div>
+
+      <div v-if="selectedTest && testStatusCode >= 2"
+         :style="{ backgroundColor: testStatusCode === 3 ? '#E15241' : '#67AD5B' }"
+         style="color: white; height: 40px; padding: 10px;">
+         <h5>{{ testStatusText }}</h5>
+      </div>
+
       <!-- Controls -->
-      <div class="d-flex align-center flex-wrap px-2 py-1" style="gap: 6px; border-bottom: 1px solid #e0e0e0;">
+      <div v-if="!selectedTest" class="d-flex align-center flex-wrap px-2 py-1" style="gap: 6px; border-bottom: 1px solid #e0e0e0;">
          <v-btn density="compact" icon="mdi-restart" variant="text" @click="reset" title="Reset"></v-btn>
          <v-btn density="compact" :icon="running ? 'mdi-pause' : 'mdi-play'" variant="text"
             :disabled="inError || !hasMemory" @click="runStop" title="Run / Pause"></v-btn>
@@ -148,13 +169,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import { useObservable } from '@vueuse/rxjs'
 
 import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
 import useExpressXClient from '/src/use/useExpressXClient'
 import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import {
    add32, sub32, and32, or32, xor32, sll32, slr32,
@@ -165,7 +187,15 @@ import {
 const { assemblies } = useCRAPSAssembly()
 const { app } = useExpressXClient()
 const { getObservable: tests$ } = useSHDLTest(app)
-const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } = useBusinessObservables(app)
+const { create: createUserTestRelation, update: updateUserTestRelation } = useUserSHDLTestRelation(app)
+const {
+   userSlots$,
+   isTeacher$,
+   userSHDLTests$,
+   userGroupSlotSHDLTestRelation$,
+   userSHDLTestsRelations$,
+   userDocument$,
+} = useBusinessObservables(app)
 
 const props = defineProps({
    document_uid: String,
@@ -210,6 +240,8 @@ const isTeacher = useObservable(isTeacher$(props.signedinUid))
 const testList = useObservable(tests$({ type: 'craps' }))
 const userTestList = useObservable(userSHDLTests$(props.user_uid))
 const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
+const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
+const document = useObservable(userDocument$(props.document_uid))
 
 const filteredTestList = computed(() => {
    if (!currentTime.value || !userSlots.value || !userTestList.value || !testRelationList.value) return []
@@ -232,21 +264,128 @@ const availableTestList = computed(() => {
 const selectedTest = ref()
 const testToSelect = ref()
 const testTextDialog = ref(false)
+const testStatusCode = ref(0)
+const testStatusText = ref()
+const testCurrentLineNo = ref(0)
+const testStatementList = ref([])
+const isTestRunning = ref(false)
 
 const testTextLines = computed(() => {
    return selectedTest.value?.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : []
 })
 
+const testCurrentLine = computed(() => {
+   if (testStatementList.value.length === 0) return ''
+   return `Ligne ${testCurrentLineNo.value + 1}`
+})
+
 function selectTest(test) {
    if (!test) return
    selectedTest.value = test
+   initTest()
    testToSelect.value = null
 }
 
-watch(() => props.document_uid, () => {
+function clearSelectedTest() {
+   isTestRunning.value = false
    selectedTest.value = null
    testToSelect.value = null
+   testStatementList.value = []
+   testStatusCode.value = 0
+   testStatusText.value = null
+   testCurrentLineNo.value = 0
+}
+
+watch(() => props.document_uid, () => {
+   clearSelectedTest()
 })
+
+onUnmounted(() => {
+   isTestRunning.value = false
+})
+
+function delay(ms) {
+   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function runTest() {
+   isTestRunning.value = true
+   while (testStatusCode.value < 2 && isTestRunning.value) {
+      await stepTest()
+      await delay(50)
+   }
+   isTestRunning.value = false
+}
+
+function toggleRunTest() {
+   if (isTestRunning.value) {
+      isTestRunning.value = false
+   } else {
+      runTest()
+   }
+}
+
+function initTest() {
+   isTestRunning.value = false
+   applyReset()
+   testStatementList.value = selectedTest.value?.test_statements
+      ? selectedTest.value.test_statements.split(/\r?\n/)
+      : []
+   testStatusCode.value = 0
+   testStatusText.value = null
+   testCurrentLineNo.value = 0
+}
+
+async function stepTest() {
+   if (!selectedTest.value || testStatusCode.value >= 2) return
+
+   const currentStatement = testStatementList.value[testCurrentLineNo.value]
+   const error = executeTestLine(currentStatement)
+
+   if (error) {
+      testStatusCode.value = 3
+      testStatusText.value = error
+      await storeTestResult(false)
+   } else if (testCurrentLineNo.value < testStatementList.value.length - 1) {
+      testCurrentLineNo.value += 1
+   } else {
+      testStatusCode.value = 2
+      testStatusText.value = 'SUCCÈS !'
+      await storeTestResult(true)
+   }
+}
+
+function executeTestLine(_line) {
+   // CRAPS test statement semantics will be implemented incrementally.
+   return ''
+}
+
+async function storeTestResult(success) {
+   if (isTeacher.value) return
+
+   const now = new Date()
+   const previousTest = userTestRelations.value?.find(
+      testRelation => testRelation.test_uid === selectedTest.value.uid
+   )
+   const result = {
+      last_try_date: now,
+      ...(success ? {
+         success_date: now,
+         update_count: document.value?.update_count ?? 0,
+      } : {}),
+   }
+
+   if (previousTest) {
+      await updateUserTestRelation(previousTest.uid, result)
+   } else {
+      await createUserTestRelation({
+         user_uid: props.user_uid,
+         test_uid: selectedTest.value.uid,
+         first_try_date: now,
+         ...result,
+      })
+   }
+}
 
 // ── Assembly watcher ─────────────────────────────────────────────────────────
 
