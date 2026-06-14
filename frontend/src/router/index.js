@@ -133,7 +133,7 @@ const routes = [
                         }),
                         components: {
                            editor: () => import('/src/components/EditCRAPSDocument.vue'),
-                           simulator: () => import('/src/components/craps/CrapsSimulator.vue'),
+                           simulator: () => import('/src/views/workshop/CrapsSimulator.vue'),
                         }
                      },
                   ],
@@ -207,7 +207,7 @@ const routes = [
                                     }),
                                     components: {
                                        editor: () => import('/src/components/EditCRAPSDocument.vue'),
-                                       simulator: () => import('/src/components/craps/CrapsSimulator.vue'),
+                                       simulator: () => import('/src/views/workshop/CrapsSimulator.vue'),
                                     }
                                  },
                               ],
