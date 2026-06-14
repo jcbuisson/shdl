@@ -1,6 +1,47 @@
 <template>
    <v-card class="d-flex flex-column fill-height" style="overflow: hidden;">
 
+      <!-- Test selector -->
+      <div class="d-flex align-center px-2" style="column-gap: 16px;">
+         <div v-if="selectedTest" class="d-flex align-center" style="min-width: 0; max-width: 50%;">
+            <v-icon size="small" class="mr-2" @click="testTextDialog = true">mdi-text-box-search-outline</v-icon>
+            <span :title="selectedTest.name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+               {{ selectedTest.name }}
+            </span>
+         </div>
+         <v-select
+            v-model="testToSelect"
+            @update:modelValue="selectTest"
+            :items="availableTestList"
+            item-title="name"
+            :item-value="test => test"
+            label="Choisir un test"
+            clearable
+            persistent-hint
+            variant="underlined"
+            class="ml-auto"
+            style="width: 50%; max-width: 50%;"
+         ></v-select>
+      </div>
+
+      <v-dialog v-model="testTextDialog" max-width="600">
+         <v-card :title="selectedTest?.name">
+            <v-card-text>
+               <div style="font-family: monospace;">
+                  <div v-for="(line, index) in testTextLines" :key="index" class="d-flex">
+                     <span style="display: inline-block; min-width: 2.5em; text-align: right; margin-right: 0.5em; color: grey;">{{ index + 1 }}</span>
+                     <span style="white-space: pre-wrap;">{{ line }}</span>
+                  </div>
+               </div>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions>
+               <v-spacer></v-spacer>
+               <v-btn text="Fermer" variant="plain" @click="testTextDialog = false"></v-btn>
+            </v-card-actions>
+         </v-card>
+      </v-dialog>
+
       <!-- Controls -->
       <div class="d-flex align-center flex-wrap px-2 py-1" style="gap: 6px; border-bottom: 1px solid #e0e0e0;">
          <v-btn density="compact" icon="mdi-restart" variant="text" @click="reset" title="Reset"></v-btn>
@@ -108,8 +149,13 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { useIntervalFn } from '@vueuse/core'
+import { useObservable } from '@vueuse/rxjs'
 
 import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
+import useExpressXClient from '/src/use/useExpressXClient'
+import { useSHDLTest } from '/src/use/useSHDLTest'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import {
    add32, sub32, and32, or32, xor32, sll32, slr32,
    bin32ToUnsigned, bin32ToSigned, unsignedToBin32, signedToBin32,
@@ -117,6 +163,9 @@ import {
 } from '/src/lib/binutils.js'
 
 const { assemblies } = useCRAPSAssembly()
+const { app } = useExpressXClient()
+const { getObservable: tests$ } = useSHDLTest(app)
+const { userSlots$, isTeacher$, userSHDLTests$, userGroupSlotSHDLTestRelation$ } = useBusinessObservables(app)
 
 const props = defineProps({
    document_uid: String,
@@ -150,6 +199,54 @@ const bases = ['hexadécimal', 'décimal signé', 'décimal non signé', 'binair
 
 const hasMemory = computed(() => Object.keys(memoryDict.value).length > 0)
 const inError = computed(() => errorMsg.value !== null)
+
+// ── Tests ────────────────────────────────────────────────────────────────────
+
+const currentTime = ref((new Date()).toISOString())
+useIntervalFn(() => currentTime.value = (new Date()).toISOString(), 60000, { immediate: true })
+
+const userSlots = useObservable(userSlots$(props.user_uid))
+const isTeacher = useObservable(isTeacher$(props.signedinUid))
+const testList = useObservable(tests$({ type: 'craps' }))
+const userTestList = useObservable(userSHDLTests$(props.user_uid))
+const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
+
+const filteredTestList = computed(() => {
+   if (!currentTime.value || !userSlots.value || !userTestList.value || !testRelationList.value) return []
+   const slotUIDs = userSlots.value
+      .filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value)
+      .map(slot => slot.uid)
+   const testUIDs = testRelationList.value
+      .filter(relation => slotUIDs.includes(relation.group_slot_uid))
+      .map(relation => relation.test_uid)
+   return testUIDs
+      .map(testUID => userTestList.value.find(test => test.uid === testUID))
+      .filter(test => test?.type === 'craps')
+})
+
+const availableTestList = computed(() => {
+   const tests = isTeacher.value ? testList.value : filteredTestList.value
+   return tests ? [...tests].sort((test1, test2) => test1.name.localeCompare(test2.name)) : []
+})
+
+const selectedTest = ref()
+const testToSelect = ref()
+const testTextDialog = ref(false)
+
+const testTextLines = computed(() => {
+   return selectedTest.value?.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : []
+})
+
+function selectTest(test) {
+   if (!test) return
+   selectedTest.value = test
+   testToSelect.value = null
+}
+
+watch(() => props.document_uid, () => {
+   selectedTest.value = null
+   testToSelect.value = null
+})
 
 // ── Assembly watcher ─────────────────────────────────────────────────────────
 
