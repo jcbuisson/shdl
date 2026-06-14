@@ -73,7 +73,7 @@
          <span class="text-caption">{{ cycleCount }} cycles</span>
 
          <!-- Speed slider: 0 = max speed, 500 = very slow -->
-         <div class="d-flex align-center" style="gap: 3px; margin-left: 6px; width: 110px;">
+         <div v-if="!selectedTest" class="d-flex align-center" style="gap: 3px; margin-left: 6px; width: 110px;">
             <v-icon size="small" style="color: #aaa;">mdi-speedometer</v-icon>
             <v-slider v-model="sliderValue" :min="0" :max="100" :step="1"
                density="compact" hide-details
@@ -356,6 +356,7 @@ async function stepTest() {
 }
 
 function executeTestLine(line) {
+   // "steps <n>"
    const stepsMatch = line?.match(/^\s*steps\s+([1-9]\d*)\s*$/)
    if (stepsMatch) {
       const stepCount = Number(stepsMatch[1])
@@ -365,8 +366,42 @@ function executeTestLine(line) {
       }
    }
 
+   // "check stop"
+   if (/^\s*check\s+stop\s*$/.test(line)) {
+      const currentValue = memoryDict.value[currentAddress.value]?.value
+      const currentHexValue = currentValue ? bin32ToHex8(currentValue) : null
+      if (currentHexValue !== '30000000') {
+         return `Instruction stop attendue à l'adresse ${hex8(currentAddress.value)}`
+      }
+   }
+
+   // "check memory <address> <value>"
+   const memoryMatch = line?.match(
+      /^\s*check\s+memory\s+(0x[0-9a-f]+|[1-9]\d*)\s*(?:,\s*|\s+)([+-]?(?:0x[0-9a-f]+|\d+))\s*$/i
+   )
+   if (memoryMatch) {
+      const address = parseIntegerLiteral(memoryMatch[1])
+      const expectedValue = parseIntegerLiteral(memoryMatch[2])
+      const currentValue = memoryDict.value[address]?.value
+
+      if (!currentValue) {
+         return `Mémoire non initialisée à l'adresse ${hex8(address)}`
+      }
+
+      const actualValue = bin32ToSigned(currentValue)
+      if (actualValue !== expectedValue) {
+         return `Mémoire ${hex8(address)} : ${expectedValue} attendu, ${actualValue} obtenu`
+      }
+   }
+
    // Other CRAPS test statement semantics will be implemented incrementally.
    return ''
+}
+
+function parseIntegerLiteral(literal) {
+   const sign = literal.startsWith('-') ? -1 : 1
+   const unsignedLiteral = literal.replace(/^[+-]/, '')
+   return sign * parseInt(unsignedLiteral, unsignedLiteral.toLowerCase().startsWith('0x') ? 16 : 10)
 }
 
 async function storeTestResult(success) {
