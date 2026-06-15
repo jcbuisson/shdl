@@ -16,7 +16,7 @@
          <v-select
             v-model="testToSelect"
             @update:modelValue="selectTest"
-            :items="isTeacher ? testList : sortedTestList"
+            :items="availableTestList"
             item-title="name"
             :item-value="test => test"
             label="Choisir un test"
@@ -43,7 +43,7 @@
          </v-sheet>
       </div>
 
-      <v-dialog v-model="testTextDialog" max-width="600">
+      <v-dialog v-model="testTextDialog" max-width="900">
          <v-card :title="selectedTest?.name">
             <v-card-text>
                <div style="font-family: monospace;">
@@ -163,7 +163,12 @@ const filteredTestList = computed(() => {
    const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.test_uid)
    return testUIDs.map(testUID => userTestList.value.find(test => test.uid === testUID))
 })
-const sortedTestList = computed(() => filteredTestList.value ? filteredTestList.value.sort((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+const availableTestList = computed(() => {
+   const tests = isTeacher.value ? testList.value : filteredTestList.value
+   return tests
+      ? [...tests].sort((test1, test2) => test1.name.localeCompare(test2.name, undefined, { sensitivity: 'base' }))
+      : []
+})
 
 
 const selectedTest = ref()

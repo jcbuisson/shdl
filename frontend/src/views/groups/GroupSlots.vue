@@ -91,7 +91,7 @@
                         <v-select
                            multiple
                            label="Tests durant la période"
-                           :items="shdlTestList"
+                           :items="sortedTestList"
                            :item-value="test => test.uid"
                            :item-title="test => test.name"
                            v-model="selectedTestUIDs"
@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { ref, onUnmounted, watch } from 'vue'
+import { ref, computed, onUnmounted, watch } from 'vue'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useObservable } from '@vueuse/rxjs'
@@ -149,6 +149,12 @@ const props = defineProps({
 const groupMembers = useObservable(groupMembers$({ group_uid: props.group_uid }))
 
 const shdlTestList = useObservable(shdlTests$());
+const sortedTestList = computed(() => shdlTestList.value
+   ? [...shdlTestList.value].sort((test1, test2) =>
+      test1.name.localeCompare(test2.name, undefined, { sensitivity: 'base' })
+   )
+   : []
+)
 const slotList = ref([]);
 const groupMemberList = ref([]);
 

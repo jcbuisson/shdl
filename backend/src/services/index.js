@@ -14,6 +14,25 @@ const commonHooks = {
    before: { all: [isAuthenticated] },
 }
 
+const normalizeGroupSlotDates = (context) => {
+   const data = context.args?.[1]
+   if (!data) return
+
+   for (const field of ['start', 'end']) {
+      if (data[field] !== undefined && !(data[field] instanceof Date)) {
+         data[field] = new Date(data[field])
+      }
+   }
+}
+
+const groupSlotHooks = {
+   before: {
+      all: [isAuthenticated],
+      createWithMeta: [normalizeGroupSlotDates],
+      updateWithMeta: [normalizeGroupSlotDates],
+   },
+}
+
 const userHooks = {
    before: { all: [isAuthenticated] },
    after:  { all: [protect('password')] },
@@ -59,7 +78,7 @@ export default function (app) {
    // hooks
    app.service('user').hooks(userHooks)
    app.service('group').hooks(commonHooks)
-   app.service('group_slot').hooks(commonHooks)
+   app.service('group_slot').hooks(groupSlotHooks)
    app.service('user_tab_relation').hooks(commonHooks)
    app.service('user_group_relation').hooks(commonHooks)
    app.service('user_document').hooks(commonHooks)

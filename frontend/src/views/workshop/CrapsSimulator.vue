@@ -25,7 +25,7 @@
          ></v-select>
       </div>
 
-      <v-dialog v-model="testTextDialog" max-width="600">
+      <v-dialog v-model="testTextDialog" max-width="900">
          <v-card :title="selectedTest?.name">
             <v-card-text>
                <div style="font-family: monospace;">
@@ -258,7 +258,9 @@ const filteredTestList = computed(() => {
 
 const availableTestList = computed(() => {
    const tests = isTeacher.value ? testList.value : filteredTestList.value
-   return tests ? [...tests].sort((test1, test2) => test1.name.localeCompare(test2.name)) : []
+   return tests
+      ? [...tests].sort((test1, test2) => test1.name.localeCompare(test2.name, undefined, { sensitivity: 'base' }))
+      : []
 })
 
 const selectedTest = ref()
