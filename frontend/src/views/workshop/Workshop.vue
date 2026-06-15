@@ -4,19 +4,31 @@
          <!-- makes the layout a vertical stack filling the full height -->
          <div class="d-flex flex-column fill-height">
 
-            <!-- Filter by name (does not grow) -->
-            <v-toolbar color="red-darken-4">
-               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable hide-details></v-text-field>
-               <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
+            <!-- Document filters (do not grow) -->
+            <div class="d-flex flex-column bg-red-darken-4">
+               <div class="d-flex align-center">
+                  <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
                   <v-btn value="shdl" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
                   <v-btn value="craps" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'craps' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">CRAPS</v-btn>
                   <v-btn value="text" size="small" variant="text" rounded="lg"
                      :style="typeFilter === 'text' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">Texte</v-btn>
-               </v-btn-toggle>
-               <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
-            </v-toolbar>
+                  </v-btn-toggle>
+                  <v-spacer></v-spacer>
+                  <v-btn icon="mdi-plus" variant="text" @click="addDocument"></v-btn>
+               </div>
+               <v-text-field
+                  v-model="nameFilter"
+                  label="Recherche par nom..."
+                  class="px-2 pb-2"
+                  single-line
+                  clearable
+                  hide-details
+                  density="compact"
+                  variant="solo-filled"
+               ></v-text-field>
+            </div>
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
