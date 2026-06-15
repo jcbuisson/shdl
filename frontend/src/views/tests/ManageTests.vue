@@ -4,11 +4,29 @@
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
 
-            <!-- Toolbar (does not grow) -->
-            <v-toolbar color="red-darken-4" ddensity="compact">
-               <v-text-field v-model="nameFilter" label="Recherche par nom..." class="px-2" single-line clearable></v-text-field>
-               <v-btn icon="mdi-plus" variant="text" @click="addTest"></v-btn>
-            </v-toolbar>
+            <!-- Test filters (do not grow) -->
+            <div class="d-flex flex-column bg-red-darken-4">
+               <div class="d-flex align-center">
+                  <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
+                     <v-btn value="shdl" size="small" variant="text" rounded="lg"
+                        :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
+                     <v-btn value="craps" size="small" variant="text" rounded="lg"
+                        :style="typeFilter === 'craps' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">CRAPS</v-btn>
+                  </v-btn-toggle>
+                  <v-spacer></v-spacer>
+                  <v-btn icon="mdi-plus" variant="text" @click="addTest"></v-btn>
+               </div>
+               <v-text-field
+                  v-model="nameFilter"
+                  label="Recherche par nom..."
+                  class="px-2 pb-2"
+                  single-line
+                  clearable
+                  hide-details
+                  density="compact"
+                  variant="solo-filled"
+               ></v-text-field>
+            </div>
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
@@ -37,6 +55,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useLocalStorage } from '@vueuse/core'
 import { Observable, from, map, of, merge, combineLatest, forkJoin, firstValueFrom } from 'rxjs'
 import { mergeMap, switchMap, concatMap, scan, tap, catchError, take, debounceTime } from 'rxjs/operators'
 import { useObservable } from '@vueuse/rxjs'
@@ -74,11 +93,13 @@ const sortedTestList = computed(() => testList.value
    : [])
 
 const nameFilter = ref('')
+const typeFilter = useLocalStorage('shdl_selected_test_type', 'shdl')
 
 const filteredSortedTestList = computed(() => {
    if (!sortedTestList.value) return []
    const nameFilter_ = (nameFilter.value || '').toLowerCase()
    return sortedTestList.value.filter(test => {
+      if (test.type !== typeFilter.value) return false
       if (nameFilter_.length === 0) return true
       if (test.name.toLowerCase().indexOf(nameFilter_) > -1) return true
       return false
@@ -118,6 +139,11 @@ watch(
    },
    { immediate: true }
 )
+
+watch(typeFilter, () => {
+   selectedTest.value = null
+   router.push(`/home/${props.signedinUid}/tests`)
+})
 
 function selectTest(test) {
    extendExpiration()
