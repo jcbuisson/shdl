@@ -82,6 +82,7 @@ export const user_test_relation = pgTable('user_test_relation', {
    success_date:   timestamp('success_date'),
    update_count:   integer('update_count').notNull().default(0),
    evaluation:     integer('evaluation'),
+   last_module_name: text('last_module_name'),
 }, (table) => [
    unique().on(table.user_uid, table.test_uid),
 ])

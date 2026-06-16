@@ -733,6 +733,7 @@ async function stepTest() {
    }
 
    const now = new Date();
+   const last_module_name = module.value?.name ?? document.value?.name ?? null
    if (error) {
       testStatusCode.value = 3
       testStatusText.value = error
@@ -743,6 +744,7 @@ async function stepTest() {
          if (previousTest) {
             await updateUserTestRelation(previousTest.uid, {
                last_try_date: now,
+               last_module_name,
             })
          } else {
             await createUserTestRelation({
@@ -750,6 +752,7 @@ async function stepTest() {
                test_uid: selectedTest.value.uid,
                first_try_date: now,
                last_try_date: now,
+               last_module_name,
             })
          }
       }
@@ -768,7 +771,8 @@ async function stepTest() {
                await updateUserTestRelation(previousTest.uid, {
                   last_try_date: now,
                   success_date: now,
-                  update_count: document.update_count,
+                  update_count: document.value?.update_count ?? 0,
+                  last_module_name,
                })
             } else {
                await createUserTestRelation({
@@ -778,6 +782,7 @@ async function stepTest() {
                   last_try_date: now,
                   success_date: now,
                   update_count: document.value.update_count,
+                  last_module_name,
                })
             }
          }

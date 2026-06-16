@@ -451,6 +451,7 @@ async function storeTestResult(success) {
    )
    const result = {
       last_try_date: now,
+      last_module_name: userDocument.value?.name ?? null,
       ...(success ? {
          success_date: now,
          update_count: userDocument.value?.update_count ?? 0,
