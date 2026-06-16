@@ -1,152 +1,127 @@
+# SHDL
 
-# SHDL - Simple Hardware Description Language
+SHDL is an educational web platform for teaching digital hardware design and low-level programming. It lets students write, test, and simulate SHDL hardware modules and CRAPS assembly programs from a browser, while teachers can organize groups, assign tests, and follow student progress in real time.
 
-Credit: University of Toulouse, ENSEEIHT
+The project is split into a Vue 3 frontend and a Node.js backend backed by PostgreSQL. Client data is synchronized through WebSockets and cached locally in IndexedDB so the application can keep a responsive offline-first workflow.
 
+## Main Features
 
-# Prisma 6/7
-npx prisma@6.4.1 db push
+- SHDL document editor with parsing, syntax checks, semantic analysis, and simulation.
+- CRAPS assembly editor and simulator for an educational SPARC-inspired 32-bit processor.
+- Test definitions for SHDL and CRAPS exercises.
+- Student test tracking with attempts, success dates, update counts, and teacher evaluations.
+- User, group, lesson slot, and access-tab management.
+- Teacher follow-up views for workshop activity, attendance, and grades.
+- Real-time updates through Socket.io and the `express-x` service layer.
 
+## Technology Stack
 
-# Sync
-✅ Roll-your-own Sync Layer (manual sync)
+Backend:
 
-1. Store changes locally
+- Node.js with ES modules.
+- `@jcbuisson/express-x` for WebSocket services.
+- PostgreSQL with Drizzle ORM.
+- Socket.io for real-time communication.
+- JWT authentication and bcrypt password hashing.
 
-Add a changes table:
-```
-db.version(1).stores({
-  items: "id, updatedAt",
-  changes: "++localId, type, table, key, obj, timestamp"
-});
-```
+Frontend:
 
-2. Subscribe to Dexie changes
-```
-db.values.hook("updating", (changes, primaryKey, previousValue) => {
-    console.log("CHANGES", primaryKey, changes, previousValue);
-    db.changes.bulkAdd(changes);
-});
-```
+- Vue 3 with the Composition API.
+- Vite and Vuetify 3.
+- RxJS observables for reactive data flows.
+- `@jcbuisson/express-x-client` with IndexedDB offline cache.
+- Ace Editor for SHDL and CRAPS source editing.
+- D3 for activity visualizations.
+- Vite PWA service worker support.
 
-3. Push changes to your server when online
-```
-async function pushChanges() {
-  const toSend = await db.changes.toArray();
-  await fetch('/sync', { method: 'POST', body: JSON.stringify(toSend) });
-  await db.changes.clear();
-}
-```
+## Repository Layout
 
-4. Pull updates from the server
-```
-async function pullChanges() {
-  const updates = await fetch('/pull').then(r => r.json());
-  await db.items.bulkPut(updates);
-}
+```text
+.
+├── backend/      Node.js backend, services, database schema, scripts
+├── frontend/     Vue application, routes, views, composables, simulators
+└── synthesis/    Command-line SHDL synthesis tooling
 ```
 
-5. Resolve conflicts
+Important frontend areas:
 
-Typical strategies:
-- Last write wins (timestamp)
-- Server wins
-- Client wins
-- Custom merge logic
+- `frontend/src/views/workshop/`: student document workspace and simulators.
+- `frontend/src/views/followup/`: teacher follow-up, attendance, and grading views.
+- `frontend/src/views/tests/`: test creation and management.
+- `frontend/src/lib/shdl/`: SHDL parser, syntax checks, analyzer, and utilities.
+- `frontend/src/lib/craps/`: CRAPS parser and checker.
+- `frontend/src/use/`: data access composables and business observables.
 
-✔ Works with any backend
-✔ High flexibility
-❌ You must write conflict resolution
-❌ More code to maintain
+Important backend areas:
 
+- `backend/src/db/schema.js`: database schema.
+- `backend/src/services/database/`: CRUD services for persisted models.
+- `backend/src/services/custom/auth/`: authentication and session handling.
+- `backend/src/channels.js`: WebSocket publication channels.
+- `backend/scripts/create-admin.js`: admin account creation helper.
 
-# Utilisation des observables
+## Development
 
-## Analyse syntaxique
+Install dependencies separately for the backend and frontend:
 
-La méthode habituelle consisterait à faire un fetch du document racine, en faire l'analyse syntaxique, puis réitérer le processus
-avec les sous-modules. Cette méthode ne serait pas temps réel, et nous serait difficile car nous avons perdu la possibilité
-d'avoir la "dernière version" d'un objet de base de données. Tout ce que nous avons, c'est la possibilité d'avoir une nouvelle version
-d'un objet de base de données chaque fois qu'il est modifié.
-Pour procéder à l'analyse syntaxique d'un module et de ses sous-modules dans ce contexte temps-réel, il faut le faire directement
-en créant un observable qui renverra la structure syntaxique au fur et à mesure que les différentes sous-parties seront émises.
-Tant que des sous-modules seront en attente d'être émis, l'observable racine émettra une erreur "sous-module X indisponible"
-mais il finira par émettre la structure complète lorsque toutes les sous-parties auront été émises.
+```bash
+cd backend
+npm install
 
-Attention à ne pas utiliser de promesses dans le code des observables
+cd ../frontend
+npm install
+```
 
+The backend reads configuration from `.env` through `node --env-file=.env`. Key variables include:
 
-# Authentication expiration
+- `PORT`
+- `DATABASE_URL`
+- `CLIENT_URL`
+- `SESSION_EXPIRE_DELAY`
+- `JWT_PRIVATE_KEY`
+- mail settings used by password and account flows
+- avatar upload/static file paths
 
-A chaque action manuelle utilisateur (changement de route, clic sur bouton etc.), `app.service('auth').extendExpiration()` est appelé,
-qui publie un événement dont la valeur est la date d'expiration, ou null si elle est dépassée
+Start the backend:
 
+```bash
+cd backend
+npm run dev
+```
 
-# JWT private/public keys
+Start the frontend:
 
-// Generate a private key (2048 bits for security)
-openssl genpkey -algorithm RSA -out private.pem
+```bash
+cd frontend
+npm run dev
+```
 
-// Extract the public key from the private key
-openssl rsa -pubout -in private.pem -out public.pem
+In development, Vite serves the frontend on port `8080` and proxies `/shdl-socket-io/` and `/static/` requests to the backend, typically running on port `3000`.
 
+## Database
 
+Database access is defined with Drizzle. The backend exposes one service per model and stores audit metadata such as creation, update, and deletion timestamps in a shared `metadata` table.
 
-# Ajouts
+Useful backend commands:
 
-ne permettre le copier/coller qu’au sein d’un même module ?
-- raccourci clavier ‘format/beautify’ pour shdl et draps
-- raccourcis clavier pour la simulation
+```bash
+cd backend
+npm run db:generate
+npm run db:push
+npm run db:studio
+npm run create-admin
+```
 
-- mise à disposition de snippets / modules / programmes (en passant par les groupes ?)
-- l’étudiant doit pouvoir écrire des modules de texte libre, bloquables
+## Frontend Commands
 
-- montrer la présence sous forme d’un graphe d’activité, pour estimer l’assiduité rapidement
-- sur le graphe d’un étudiant, visualiser les séances, l’activité, les verrouillages et la réussite des tests - bref tous les événements pour l’évaluation
+```bash
+cd frontend
+npm run dev
+npm run build
+npm run preview
+npm run type-check
+```
 
-- tests: on doit pouvoir les jouer pas à pas, ou continue jusqu’à une erreur
+## License
 
-- on doit pouvoir facilement créer des groupes d’utilisateurs, qui partagent des designs. Qui peut créer des groupes ? Tuteur ?
-
-- meilleur éditeur de texte : Ctrl-F, Ctrl-Z etc.
-- freeze pour certaines circularités
-- quand on lock un module, ne pas changer la date de lock des sous-modules
-- ajouter $umul16x16
-- faire en sorte que ‘_’ soit anonyme
-- exporter une simulation sous forme d’un fichier test
-- exporter un fichier mémoire à partir d’un programme CRAPS
-- permettre aux fichier mémoire de contenir des commentaires
-
-- le simulateur doit montrer le contenu des RAMs en direct
-- doit pouvoir ajouter des contextes de simulation (= cartes) sous forme de plugins -> 7-segs, etc.
-- lorsqu’on passe d’édition à simulation, la simulation ne doit pas se réinitialiser si le code n’a pas changé
-- ajout d’une horloge automatique
-- synthèse : mode hybride ? Où on aurait les I/O réelles + des I/O à distance par le câble USB
-
-- ajouter une partie présentation bien référencée et un lien vers GitHub
-
-
-## Guillaume
-
-- j'aimerais bien que la liste des modules soit scrollable indépendamment de la fenêtre ; si je veux check un autre module qui est en bas pendant que j'écris mon module, je dois scroller tout, cliquer sur le module et remonter (c'est vivable mais bon ça pourrait être un peu mieux)
-- certains mots-clefs ne sont pas colorés (on, reset, enabled, when) ; typiquement ça m'a posé problème parce que j'oublie régulièrement si c'est "enable" ou "enabled"
-- on ne peut pas écrire de formule directement dans un appel de module (par ex. fulladder(a, b * /sub + /b * sub, cin : s, cout)) ; ça à la limite je comprends que c'est pour forcer à écrire les équipotentielles intermédiaires
-- j'aimerais bien pouvoir faire des dossiers pour ranger mes modules ; on en a rapidement beaucoup, pouvoir les ranger serait appréciable. Par contre ça signifie que soit le système de modules à de la qualification (dossier.module) soit qu'il ignore complètement l'architecture en sous-dossiers...
-- bon là c'est une feature qui demande deux stages au moins mais j'aimerais bien avoir des chronogrammes pour la logique séquentielle
-
-Questions par ailleurs, car je n'ai rien trouvé dans la doc :
-- existe-t-il un genre de "jocker" pour indiquer une sortie non utilisée ? Par ex:
-fulladder(a, b, cin : s, _) // Je n'ai pas besoin de cout (et je ne veux pas que ça soit un warning "unused"
-
-- peut-on définir un module dans un module ? Par ex:
-module test(a, b : out)
-module sousmodule(u, v : x, y)
-x = u * /v
-y = /u * v
-end module
-sousmodule(a, b : r, s)
-sousmodule(r, s : out, z)
-end module
-
-- quand on fait Tab dans l'éditeur ça insère une tabulation, ça serait mieux si ça insérait 3 espaces (d'autant que quand on va à la ligne et que l'éditeur reproduit l'indentation, il met bien 3 espaces).
-- j’aimerais pouvoir ajouter des notes concernant un étudiant
+The backend package declares the project license as AGPL version 3.0.
