@@ -27,15 +27,19 @@
                <tr>
                   <th class="text-left">Nom</th>
                   <th v-if="isTeacher" class="text-left" style="max-width: 50px;">Coefficient</th>
+                  <th class="text-left">Module</th>
+                  <th class="text-left">Premier essai</th>
                   <th class="text-left">Réussite</th>
                   <th v-if="isTeacher" class="text-left" style="max-width: 50px;"># maj</th>
                   <th v-if="isTeacher" class="text-left">Note (%)</th>
                </tr>
             </thead>
             <tbody>
-               <tr v-for="test in userTests" :key="test?.uid">
+               <tr v-for="test in sortedUserTests" :key="test?.uid">
                   <td style="max-width: 100px;">{{ test?.name }}</td>
                   <td v-if="isTeacher" style="max-width: 50px;">{{ test?.weight }}</td>
+                  <td style="max-width: 100px;">{{ testLastModuleName(test?.uid) ?? '-' }}</td>
+                  <td style="max-width: 100px;">{{ testFirstTryDate(test?.uid) ?? '-' }}</td>
                   <td v-if="testSuccessDate(test?.uid)" style="max-width: 100px;">{{ testSuccessDate(test?.uid) }}</td><td v-else><v-icon>mdi-close</v-icon></td>
                   <td v-if="isTeacher" style="max-width: 50px;">
                      <v-chip size="x-small" v-if="testUpdateCount(test?.uid)" :color="testUpdateCount(test?.uid) < 20 && 'red'">
@@ -110,6 +114,12 @@ const testRelations = ref()
 
 const subscriptions = []
 const ready = ref(false)
+
+const sortedUserTests = computed(() => {
+   return userTests.value
+      ? [...userTests.value].sort((test1, test2) => test1.name.localeCompare(test2.name, undefined, { sensitivity: 'base' }))
+      : []
+})
 
 watch(
    () => props.user_uid,
@@ -188,6 +198,18 @@ const testSuccessDate = computed(() => (test_uid) => {
    if (!testRelations.value) return null
    const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid)
    return testRelation?.success_date ? format(testRelation.success_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
+})
+
+const testLastModuleName = computed(() => (test_uid) => {
+   if (!testRelations.value) return null
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid)
+   return testRelation?.last_module_name || null
+})
+
+const testFirstTryDate = computed(() => (test_uid) => {
+   if (!testRelations.value) return null
+   const testRelation = testRelations.value.find(testRelation => testRelation.test_uid === test_uid)
+   return testRelation?.first_try_date ? format(testRelation.first_try_date, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) : null
 })
 
 const testEvaluation = computed(() => (test_uid) => {

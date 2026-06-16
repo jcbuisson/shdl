@@ -25,6 +25,17 @@ const normalizeGroupSlotDates = (context) => {
    }
 }
 
+const normalizeUserTestRelationDates = (context) => {
+   const data = context.args?.[1]
+   if (!data) return
+
+   for (const field of ['first_try_date', 'last_try_date', 'success_date']) {
+      if (data[field] !== undefined && data[field] !== null && !(data[field] instanceof Date)) {
+         data[field] = new Date(data[field])
+      }
+   }
+}
+
 const groupSlotHooks = {
    before: {
       all: [isAuthenticated],
@@ -36,6 +47,14 @@ const groupSlotHooks = {
 const userHooks = {
    before: { all: [isAuthenticated] },
    after:  { all: [protect('password')] },
+}
+
+const userTestRelationHooks = {
+   before: {
+      all: [isAuthenticated],
+      createWithMeta: [normalizeUserTestRelationDates],
+      updateWithMeta: [normalizeUserTestRelationDates],
+   },
 }
 
 
@@ -86,7 +105,7 @@ export default function (app) {
    app.service('user_slot_excuse').hooks(commonHooks)
    app.service('test').hooks(commonHooks)
    app.service('groupslot_test_relation').hooks(commonHooks)
-   app.service('user_test_relation').hooks(commonHooks)
+   app.service('user_test_relation').hooks(userTestRelationHooks)
 
    // custom services
    app.configure(authService)
