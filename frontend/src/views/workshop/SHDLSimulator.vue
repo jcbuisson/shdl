@@ -743,6 +743,7 @@ async function stepTest() {
          const previousTest = userTestRelations.value.find(testRelation => testRelation.test_uid === selectedTest.value.uid)
          if (previousTest) {
             await updateUserTestRelation(previousTest.uid, {
+               ...(!previousTest.first_try_date ? { first_try_date: now } : {}),
                last_try_date: now,
                last_module_name,
             })
@@ -769,6 +770,7 @@ async function stepTest() {
             const previousTest = userTestRelations.value.find(testRelation => testRelation.test_uid === selectedTest.value.uid)
             if (previousTest) {
                await updateUserTestRelation(previousTest.uid, {
+                  ...(!previousTest.first_try_date ? { first_try_date: now } : {}),
                   last_try_date: now,
                   success_date: now,
                   update_count: document.value?.update_count ?? 0,

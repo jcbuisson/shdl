@@ -450,6 +450,7 @@ async function storeTestResult(success) {
       testRelation => testRelation.test_uid === selectedTest.value.uid
    )
    const result = {
+      ...(previousTest && !previousTest.first_try_date ? { first_try_date: now } : {}),
       last_try_date: now,
       last_module_name: userDocument.value?.name ?? null,
       ...(success ? {

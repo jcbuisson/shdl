@@ -5,6 +5,10 @@ import * as schema from './db/schema.js'
 
 export default function(app) {
 
+   function resultValue(context) {
+      return Array.isArray(context.result) ? context.result[0] : context.result
+   }
+
    async function isTeacher(context) {
       const db = context.app.get('db')
       const rows = await db.select().from(schema.user_tab_relation)
@@ -15,15 +19,30 @@ export default function(app) {
       return rows.length > 0
    }
 
+   async function ownerUid(context) {
+      const value = resultValue(context)
+      if (!value) return null
+
+      if (value.user_uid) return value.user_uid
+      if (context.serviceName === 'user' && value.uid) return value.uid
+
+      if (context.serviceName === 'user_document_event' && value.document_uid) {
+         const db = context.app.get('db')
+         const rows = await db.select().from(schema.user_document)
+            .where(eq(schema.user_document.uid, value.document_uid))
+            .limit(1)
+         return rows[0]?.user_uid ?? null
+      }
+
+      return null
+   }
+
    async function roomsToPublish(context) {
       if (context.methodName.startsWith('find')) return []
       const teacher = await isTeacher(context)
       if (teacher) {
-         if (context.serviceName === 'user_document_event') {
-            return []
-         } else {
-            return ['teachers', 'students']
-         }
+         const uid = await ownerUid(context)
+         return uid ? ['teachers', uid] : ['teachers', 'students']
       } else {
          return [context.socket.data.user.uid, 'teachers']
       }
