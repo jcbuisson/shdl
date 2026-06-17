@@ -217,11 +217,11 @@ export function checkModule(module, name2module) {
             try {
                instruction.simm13 = numExprValue(instruction.simm13, symbols)
             } catch(error) {
-               let message = `*** error line ${lineno}: ${error.message}`
+               let message = `*** error line ${line.lineno}: ${error.message}`
                throw new Error(message)
             }
             if (instruction.simm13 < -4096 || instruction.simm13 > 4095) {
-               let message = `*** error line ${lineno}: 13-bit immediate value '${instruction.simm13}' must be in [-4096..4095]`
+               let message = `*** error line ${line.lineno}: 13-bit immediate value '${instruction.simm13}' must be in [-4096..4095]`
                throw new Error(message)
             }
          }
@@ -230,11 +230,11 @@ export function checkModule(module, name2module) {
                // replace instruction.imm24 by its evaluation, so that the simulator won't have to compute it
                instruction.imm24 = numExprValue(instruction.imm24, symbols)
             } catch(error) {
-               let message = `*** error line ${lineno}: ${error.message}`
+               let message = `*** error line ${line.lineno}: ${error.message}`
                throw new Error(message)
             }
             if (instruction.imm24 < 0 || instruction.imm24 > 16777216) {
-               let message = `*** error line ${lineno}: 24-bit value '${instruction.imm24}' must be in [0..16777216]`
+               let message = `*** error line ${line.lineno}: 24-bit value '${instruction.imm24}' must be in [0..16777216]`
                throw new Error(message)
             }
          }
@@ -568,6 +568,8 @@ export function checkModule(module, name2module) {
             let symbolEntry = symbols[numexpr]
             if (symbolEntry) {
                return symbolEntry.value
+            } else if (/^[oO]x[0-9a-fA-F]+$/.test(numexpr)) {
+               throw new Error(`invalid hexadecimal literal '${numexpr}'; use '0x${numexpr.substring(2)}'`)
             } else {
                throw new Error(`symbol ${numexpr} is undefined`)
             }
