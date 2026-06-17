@@ -50,7 +50,32 @@ const props = defineProps({
 const editorContainer = ref(null)
 let editor = null
 let isUpdatingFromSubscription = false
+let hasPendingLocalEdit = false
 let removeClipboardGuard = null
+
+function normalizedEditorText(text) {
+   return (text ?? '').replace(/\t/g, '   ')
+}
+
+function setEditorText(text, { preserveCursor = false } = {}) {
+   if (!editor) return
+
+   const cursorPos = editor.getCursorPosition()
+   const scrollTop = editor.session.getScrollTop()
+   const scrollLeft = editor.session.getScrollLeft()
+
+   isUpdatingFromSubscription = true
+   try {
+      editor.setValue(normalizedEditorText(text), -1)
+      if (preserveCursor) {
+         editor.moveCursorToPosition(cursorPos)
+         editor.session.setScrollTop(scrollTop)
+         editor.session.setScrollLeft(scrollLeft)
+      }
+   } finally {
+      isUpdatingFromSubscription = false
+   }
+}
 
 function initializeEditor() {
    if (!editor && editorContainer.value) {
@@ -69,6 +94,7 @@ function initializeEditor() {
          if (!isUpdatingFromSubscription) {
             const text = editor.getValue()
             if (currentDocument.value) {
+               hasPendingLocalEdit = true
                currentDocument.value.text = text
                onTextChangeDebounced(text)
             }
@@ -102,25 +128,26 @@ watch(() => props.document_uid, async (uid) => {
    subscription = userDocument$(uid).subscribe(async doc => {
       if (!doc) return
       const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
+      const docText = normalizedEditorText(doc.text)
 
       if (isNewDocument) {
          currentDocument.value = doc
+         hasPendingLocalEdit = false
          await nextTick()
          initializeEditor()
          if (editor && doc.text !== undefined) {
-            isUpdatingFromSubscription = true
-            editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1)
-            isUpdatingFromSubscription = false
+            setEditorText(doc.text)
          }
       } else {
-         if (currentDocument.value.text !== doc.text) {
-            currentDocument.value = doc
+         if (editor && editor.getValue() === docText) {
+            hasPendingLocalEdit = false
+            currentDocument.value = { ...currentDocument.value, ...doc, text: docText }
+         } else if (hasPendingLocalEdit) {
+            currentDocument.value = { ...currentDocument.value, ...doc, text: editor?.getValue() ?? currentDocument.value.text }
+         } else if (currentDocument.value.text !== docText) {
+            currentDocument.value = { ...doc, text: docText }
             if (editor) {
-               isUpdatingFromSubscription = true
-               const cursorPos = editor.getCursorPosition()
-               editor.setValue((doc.text ?? '').replace(/\t/g, '   '), -1)
-               editor.moveCursorToPosition(cursorPos)
-               isUpdatingFromSubscription = false
+               setEditorText(doc.text, { preserveCursor: true })
             }
          } else {
             currentDocument.value = { ...currentDocument.value, ...doc }
@@ -155,6 +182,7 @@ async function onTextChange(text) {
       text,
       update_count: currentDocument.value.update_count + 1,
    })
+   hasPendingLocalEdit = editor ? editor.getValue() !== text : false
    if (updateUid) {
       await updateUserDocumentEvent(updateUid, { end: new Date() })
    } else {

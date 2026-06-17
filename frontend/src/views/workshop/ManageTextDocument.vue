@@ -52,6 +52,27 @@ const props = defineProps({
 const editorContainer = ref(null)
 let editor = null
 let isUpdatingFromSubscription = false
+let hasPendingLocalEdit = false
+
+function setEditorText(text, { preserveCursor = false } = {}) {
+   if (!editor) return
+
+   const cursorPos = editor.getCursorPosition()
+   const scrollTop = editor.session.getScrollTop()
+   const scrollLeft = editor.session.getScrollLeft()
+
+   isUpdatingFromSubscription = true
+   try {
+      editor.setValue(text ?? '', -1)
+      if (preserveCursor) {
+         editor.moveCursorToPosition(cursorPos)
+         editor.session.setScrollTop(scrollTop)
+         editor.session.setScrollLeft(scrollLeft)
+      }
+   } finally {
+      isUpdatingFromSubscription = false
+   }
+}
 
 function initializeEditor() {
    if (!editor && editorContainer.value) {
@@ -71,6 +92,7 @@ function initializeEditor() {
          if (!isUpdatingFromSubscription) {
             const text = editor.getValue()
             if (currentDocument.value) {
+               hasPendingLocalEdit = true
                currentDocument.value.text = text
                onTextChangeDebounced(text)
             }
@@ -104,33 +126,35 @@ function userDocument$(uid) {
 watch(() => props.document_uid, async (uid, previous_uid) => {
    if (subscription) subscription.unsubscribe()
    subscription = userDocument$(uid).subscribe(async doc => {
+      if (!doc) return
       // handle document content change
       const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
+      const docText = doc.text ?? ''
 
       if (isNewDocument) {
          // New document - update everything including editor content
          currentDocument.value = doc
+         hasPendingLocalEdit = false
 
          // Wait for DOM to update, then initialize editor if needed
          await nextTick()
          initializeEditor()
 
          if (editor && doc.text !== undefined) {
-            isUpdatingFromSubscription = true
-            editor.setValue(doc.text, -1) // -1 moves cursor to start
-            isUpdatingFromSubscription = false
+            setEditorText(doc.text)
          }
       } else {
          // Same document - only update if text actually changed from external source
-         if (currentDocument.value.text !== doc.text) {
+         if (editor && editor.getValue() === docText) {
+            hasPendingLocalEdit = false
+            currentDocument.value = { ...currentDocument.value, ...doc, text: docText }
+         } else if (hasPendingLocalEdit) {
+            currentDocument.value = { ...currentDocument.value, ...doc, text: editor?.getValue() ?? currentDocument.value.text }
+         } else if (currentDocument.value.text !== docText) {
             // External change (from another user or server)
-            currentDocument.value = doc
+            currentDocument.value = { ...doc, text: docText }
             if (editor) {
-               isUpdatingFromSubscription = true
-               const cursorPos = editor.getCursorPosition()
-               editor.setValue(doc.text, -1)
-               editor.moveCursorToPosition(cursorPos)
-               isUpdatingFromSubscription = false
+               setEditorText(doc.text, { preserveCursor: true })
             }
          } else {
             // Text is same, just update metadata
@@ -159,6 +183,7 @@ async function onTextChange(text) {
       text,
       update_count: currentDocument.value.update_count + 1,
    })
+   hasPendingLocalEdit = editor ? editor.getValue() !== text : false
    // create or update document event
    if (updateUid) {
       await updateUserDocumentEvent(updateUid, {
