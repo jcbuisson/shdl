@@ -1,5 +1,6 @@
 import express from 'express'
-import { expressX, reloadPlugin } from '@jcbuisson/express-x'
+import { expressX } from '@jcbuisson/express-x/server'
+import { reloadPlugin } from '@jcbuisson/express-x-plugins/reload-server'
 
 import config from '#config'
 import { createDB } from './db/index.js'

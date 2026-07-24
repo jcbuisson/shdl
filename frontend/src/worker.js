@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import Dexie from "dexie";
-import expressXClient from '@jcbuisson/express-x-client';
+import { createClient } from '@jcbuisson/express-x/client';
 
 import { synchronize } from '/src/lib/synchronize.js';
 
@@ -13,7 +13,7 @@ const socketOptions = {
 };
 const socket = io(socketOptions);
 
-const app = expressXClient(socket, { debug: true });
+const app = createClient(socket, { debug: true });
 
 let db, modelName;
 

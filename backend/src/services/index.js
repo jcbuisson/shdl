@@ -1,4 +1,4 @@
-import { drizzleOfflinePlugin } from '@jcbuisson/express-x-drizzle'
+import { electricOfflinePlugin } from '@jcbuisson/express-x-plugins/electric-server'
 import { eq, and } from 'drizzle-orm'
 
 import * as schema from '#root/src/db/schema.js'
@@ -62,19 +62,26 @@ export default function (app) {
    const db = app.get('db')
 
    // model services + sync service
-   drizzleOfflinePlugin(app, db, schema.metadata, [
-      schema.user,
-      schema.group,
-      schema.group_slot,
-      schema.user_tab_relation,
-      schema.user_group_relation,
-      schema.user_document,
-      schema.user_document_event,
-      schema.user_slot_excuse,
-      schema.test,
-      schema.groupslot_test_relation,
-      schema.user_test_relation,
-   ])
+   electricOfflinePlugin(app, db.$client, [
+      'user',
+      'group',
+      'group_slot',
+      'user_tab_relation',
+      'user_group_relation',
+      'user_document',
+      'user_document_event',
+      'user_slot_excuse',
+      'test',
+      'groupslot_test_relation',
+      'user_test_relation',
+   ], {
+      electricUrl: process.env.ELECTRIC_URL ?? 'http://localhost:3002/v1/shape',
+      sourceId: process.env.ELECTRIC_SOURCE_ID,
+      sourceSecret: process.env.ELECTRIC_SOURCE_SECRET,
+      authorize: async (context, { action }) => (
+         action === 'shape' || Boolean(context.socket?.data?.user)
+      ),
+   })
 
    // metadata service (flat where, used by frontend rollback path)
    app.createService('metadata', {

@@ -3,14 +3,14 @@ import { pgTable, text, integer, timestamp, pgEnum, unique } from 'drizzle-orm/p
 export const tabEnum = pgEnum('Tab', ['users', 'groups', 'tests', 'followup', 'workshop', 'grade'])
 
 export const metadata = pgTable('metadata', {
-   uid:        text('uid').notNull().unique(),
+   uid:        text('uid').primaryKey(),
    created_at: timestamp('created_at'),
    updated_at: timestamp('updated_at'),
    deleted_at: timestamp('deleted_at'),
 })
 
 export const user = pgTable('user', {
-   uid:       text('uid').notNull().unique(),
+   uid:       text('uid').primaryKey(),
    email:     text('email').unique(),
    password:  text('password'),
    firstname: text('firstname'),
@@ -20,7 +20,7 @@ export const user = pgTable('user', {
 })
 
 export const user_tab_relation = pgTable('user_tab_relation', {
-   uid:      text('uid').notNull().unique(),
+   uid:      text('uid').primaryKey(),
    user_uid: text('user_uid').notNull(),
    tab:      tabEnum('tab').notNull(),
 }, (table) => [
@@ -28,12 +28,12 @@ export const user_tab_relation = pgTable('user_tab_relation', {
 ])
 
 export const group = pgTable('group', {
-   uid:  text('uid').notNull().unique(),
+   uid:  text('uid').primaryKey(),
    name: text('name').notNull(),
 })
 
 export const user_group_relation = pgTable('user_group_relation', {
-   uid:       text('uid').notNull().unique(),
+   uid:       text('uid').primaryKey(),
    user_uid:  text('user_uid').notNull(),
    group_uid: text('group_uid').notNull(),
 }, (table) => [
@@ -41,7 +41,7 @@ export const user_group_relation = pgTable('user_group_relation', {
 ])
 
 export const group_slot = pgTable('group_slot', {
-   uid:       text('uid').notNull().unique(),
+   uid:       text('uid').primaryKey(),
    group_uid: text('group_uid').notNull(),
    name:      text('name').notNull(),
    start:     timestamp('start').notNull(),
@@ -49,7 +49,7 @@ export const group_slot = pgTable('group_slot', {
 })
 
 export const user_slot_excuse = pgTable('user_slot_excuse', {
-   uid:            text('uid').notNull().unique(),
+   uid:            text('uid').primaryKey(),
    user_uid:       text('user_uid').notNull(),
    group_slot_uid: text('group_slot_uid').notNull(),
 }, (table) => [
@@ -57,7 +57,7 @@ export const user_slot_excuse = pgTable('user_slot_excuse', {
 ])
 
 export const test = pgTable('test', {
-   uid:              text('uid').notNull().unique(),
+   uid:              text('uid').primaryKey(),
    name:             text('name').notNull(),
    type:             text('type').notNull().default('shdl'), // 'shdl' or 'craps'
    weight:           integer('weight').notNull().default(1),
@@ -66,7 +66,7 @@ export const test = pgTable('test', {
 })
 
 export const groupslot_test_relation = pgTable('groupslot_test_relation', {
-   uid:              text('uid').notNull().unique(),
+   uid:              text('uid').primaryKey(),
    group_slot_uid:   text('group_slot_uid').notNull(),
    test_uid:         text('test_uid').notNull(),
 }, (table) => [
@@ -74,7 +74,7 @@ export const groupslot_test_relation = pgTable('groupslot_test_relation', {
 ])
 
 export const user_test_relation = pgTable('user_test_relation', {
-   uid:            text('uid').notNull().unique(),
+   uid:            text('uid').primaryKey(),
    user_uid:       text('user_uid').notNull(),
    test_uid:       text('test_uid').notNull(),
    first_try_date: timestamp('first_try_date'),
@@ -88,7 +88,7 @@ export const user_test_relation = pgTable('user_test_relation', {
 ])
 
 export const user_document = pgTable('user_document', {
-   uid:          text('uid').notNull().unique(),
+   uid:          text('uid').primaryKey(),
    user_uid:     text('user_uid').notNull(),
    type:         text('type').notNull(), // 'shdl', 'craps', 'text'
    name:         text('name').notNull(),
@@ -97,7 +97,7 @@ export const user_document = pgTable('user_document', {
 })
 
 export const user_document_event = pgTable('user_document_event', {
-   uid:          text('uid').notNull().unique(),
+   uid:          text('uid').primaryKey(),
    document_uid: text('document_uid').notNull(),
    type:         text('type').notNull(), // 'create', 'edit', 'delete', 'pass_test'
    start:        timestamp('start').notNull(),

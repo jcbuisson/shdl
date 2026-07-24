@@ -1,4 +1,4 @@
-import { expressX } from '@jcbuisson/express-x'
+import { expressX } from '@jcbuisson/express-x/server'
 
 import inquirer from 'inquirer'
 import bcrypt from 'bcryptjs'

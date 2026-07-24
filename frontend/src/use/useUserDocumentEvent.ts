@@ -3,7 +3,7 @@ let modelInstance = null
 
 export function useUserDocumentEvent(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user_document_event', ['document_uid', 'type', 'start', 'end'])
+      modelInstance = app.createElectricModel('user_document_event')
    }
    return modelInstance
 }

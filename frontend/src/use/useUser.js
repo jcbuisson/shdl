@@ -3,15 +3,17 @@ let modelInstance = null
 
 export function useUser(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user', ['email', 'firstname', 'lastname'])
+      modelInstance = app.createElectricModel('user', {
+         streamOptions: {
+            params: {
+               columns: ['uid', 'email', 'firstname', 'lastname', 'pict', 'notes'],
+            },
+         },
+      })
    }
 
-   // special case of signin: create/update record of user
-   const putUser = async (value) => {
-      const db = modelInstance.db
-      // put: create (if new) or update
-      return await db.values.put(value)
-   }
+   // Electric streams the signed-in user from PostgreSQL; no local cache write is needed.
+   const putUser = async (value) => value
 
    return { ...modelInstance, putUser }
 }

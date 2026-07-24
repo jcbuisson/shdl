@@ -70,6 +70,7 @@ export default defineConfig({
             changeOrigin: true,
          },
          '^/static/.*': 'http://localhost:3000',
+         '^/electric/.*': 'http://localhost:3000',
       }
    },
 })

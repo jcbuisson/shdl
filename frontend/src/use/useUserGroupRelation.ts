@@ -3,24 +3,16 @@ let modelInstance = null
 
 export function useUserGroupRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user_group_relation', ['user_uid', 'group_uid'])
+      modelInstance = app.createElectricModel('user_group_relation')
    }
 
    /////////////          UTILITY          /////////////
 
    async function groupDifference(user_uid, newGroupUIDs) {
-      const db = modelInstance.db
-
       const toAddGroupUIDs = []
       const toRemoveRelationUIDs = []
       // collect active user-group relations with `user_uid`
-      const allUserRelations = await db.values.filter(value => value.user_uid === user_uid).toArray()
-      const currentUserRelations = []
-      for (const relation of allUserRelations) {
-         const metadata = await db.metadata.get(relation.uid)
-         if (metadata.deleted_at) continue
-         currentUserRelations.push(relation)
-      }
+      const currentUserRelations = await modelInstance.findMany({ user_uid })
       // relations to add
       for (const group_uid of newGroupUIDs) {
          if (!currentUserRelations.some(relation => relation.group_uid === group_uid)) {

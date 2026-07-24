@@ -4,24 +4,16 @@ let modelInstance = null
 
 export function useUserTabRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user_tab_relation', ['user_uid', 'tab'])
+      modelInstance = app.createElectricModel('user_tab_relation')
    }
    
    /////////////          UTILITY          /////////////
 
    async function tabDifference(user_uid, newTabs) {
-      const db = modelInstance.db
-
       const toAddTabs = []
       const toRemoveRelationUIDs = []
       // collect active user-group relations with `user_uid`
-      const allUserRelations = await db.values.filter(value => value.user_uid === user_uid).toArray()
-      const currentUserRelations = []
-      for (const relation of allUserRelations) {
-         const metadata = await db.metadata.get(relation.uid)
-         if (metadata.deleted_at) continue
-         currentUserRelations.push(relation)
-      }
+      const currentUserRelations = await modelInstance.findMany({ user_uid })
       // relations to add
       for (const tab of newTabs) {
          if (!currentUserRelations.some(relation => relation.tab === tab)) {
@@ -39,5 +31,4 @@ export function useUserTabRelation(app) {
 
    return { ...modelInstance, tabDifference }
 }
-
 

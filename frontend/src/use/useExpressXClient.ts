@@ -1,5 +1,6 @@
 import { io, Socket } from "socket.io-client";
-import { createClient, reloadPlugin, offlinePlugin } from "@jcbuisson/express-x-client";
+import { createClient } from "@jcbuisson/express-x/client";
+import { electricClientPlugin } from "@jcbuisson/express-x-plugins/electric-client";
 
 import { setExpiresAt } from "/src/use/useAppState"
 import { useAuthentication } from "/src/use/useAuthentication"
@@ -23,11 +24,28 @@ export default function useExpressXClient() {
       socket = io(socketOptions);
       app = createClient(socket, { debug: false });
 
-      // offline-first plugin: adds app.createOfflineModel, app.isConnected, app.disconnectedDate
-      offlinePlugin(app);
-
-      // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
-      reloadPlugin(app);
+      const shapePath = new URL('/electric/v1/shape', window.location.origin).href;
+      electricClientPlugin(app, { shapePath });
+      const createElectricModel = app.createElectricModel.bind(app);
+      app.createElectricModel = (modelName: string, modelOptions = {}) => {
+         const model = createElectricModel(modelName, modelOptions);
+         return {
+            ...model,
+            // Compatibility with callers that previously read the IndexedDB cache.
+            findWhere: model.findMany,
+            findByUID: async (uid: string) => (await model.findMany({ uid }))[0],
+            // Electric owns its Shape cache and subscriptions.
+            reset: async () => {},
+            synchronizeAll: async () => {},
+         };
+      };
+      app.isConnected = socket.connected;
+      app.addConnectListener(() => {
+         app.isConnected = true;
+      });
+      app.addDisconnectListener(() => {
+         app.isConnected = false;
+      });
 
       const { restartApp } = useAuthentication(app);
 
