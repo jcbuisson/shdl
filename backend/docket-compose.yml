@@ -1,0 +1,8 @@
+services:
+  electric-shdl:
+    image: electricsql/electric:1.7.7
+    environment:
+      DATABASE_URL: postgresql://chris:eureka31@host.docker.internal:5432/shdl
+      ELECTRIC_INSECURE: "true"
+    ports:
+      - "3002:3000"

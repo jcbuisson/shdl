@@ -1,7 +1,7 @@
-import { drizzleOfflinePlugin } from '@jcbuisson/express-x-drizzle'
-import { eq, and } from 'drizzle-orm'
+// import { drizzleOfflinePlugin } from '@jcbuisson/express-x-drizzle'
+// import { eq, and } from 'drizzle-orm'
 
-import * as schema from '#root/src/db/schema.js'
+// import * as schema from '#root/src/db/schema.js'
 import { isAuthenticated } from '#root/src/hooks.mjs'
 import { protect } from '#root/src/common-server.mjs'
 
@@ -59,40 +59,40 @@ const userTestRelationHooks = {
 
 
 export default function (app) {
-   const db = app.get('db')
+   // const db = app.get('db')
 
-   // model services + sync service
-   drizzleOfflinePlugin(app, db, schema.metadata, [
-      schema.user,
-      schema.group,
-      schema.group_slot,
-      schema.user_tab_relation,
-      schema.user_group_relation,
-      schema.user_document,
-      schema.user_document_event,
-      schema.user_slot_excuse,
-      schema.test,
-      schema.groupslot_test_relation,
-      schema.user_test_relation,
-   ])
+   // // model services + sync service
+   // drizzleOfflinePlugin(app, db, schema.metadata, [
+   //    schema.user,
+   //    schema.group,
+   //    schema.group_slot,
+   //    schema.user_tab_relation,
+   //    schema.user_group_relation,
+   //    schema.user_document,
+   //    schema.user_document_event,
+   //    schema.user_slot_excuse,
+   //    schema.test,
+   //    schema.groupslot_test_relation,
+   //    schema.user_test_relation,
+   // ])
 
-   // metadata service (flat where, used by frontend rollback path)
-   app.createService('metadata', {
-      findUnique: async (where = {}) => {
-         const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
-         if (conditions.length === 0) return null
-         const rows = await db.select().from(schema.metadata)
-            .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-            .limit(1)
-         return rows[0] ?? null
-      },
-      findMany: async (where = {}) => {
-         const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
-         if (conditions.length === 0) return db.select().from(schema.metadata)
-         return db.select().from(schema.metadata)
-            .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      },
-   })
+   // // metadata service (flat where, used by frontend rollback path)
+   // app.createService('metadata', {
+   //    findUnique: async (where = {}) => {
+   //       const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
+   //       if (conditions.length === 0) return null
+   //       const rows = await db.select().from(schema.metadata)
+   //          .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+   //          .limit(1)
+   //       return rows[0] ?? null
+   //    },
+   //    findMany: async (where = {}) => {
+   //       const conditions = Object.entries(where).map(([k, v]) => eq(schema.metadata[k], v))
+   //       if (conditions.length === 0) return db.select().from(schema.metadata)
+   //       return db.select().from(schema.metadata)
+   //          .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+   //    },
+   // })
 
    // hooks
    app.service('user').hooks(userHooks)

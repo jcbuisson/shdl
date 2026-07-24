@@ -33,12 +33,16 @@
     "create-admin": "node --env-file=.env scripts/create-admin.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "electric:up": "docker compose up -d --wait",
+    "electric:down": "docker compose down",
+    "electric:reset": "docker compose down --volumes"
   },
   "dependencies": {
-    "@jcbuisson/express-x": "^3.1.6",
-    "@jcbuisson/express-x-drizzle": "^3.1.6",
-    "bcryptjs": "^3.0.2",
+    "@electric-sql/client": "^1.5.24",
+    "@jcbuisson/express-x": "^4.0.4",
+    "@jcbuisson/express-x-plugins": "^4.0.5",
+    "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "inquirer": "^12.5.2",
