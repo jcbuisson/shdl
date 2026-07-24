@@ -84,7 +84,7 @@ import StudentGroupAttendance from '/src/views/followup/StudentGroupAttendance.v
 
 const { app } = useExpressXClient();
 
-const { getObservable: groups$ } = useGroup(app);
+const { getObservable: groups$/*, findMany: findManyGroup*/ } = useGroup(app);
 const { create: createUserTestRelation, update: updateUserTestEvent } = useUserSHDLTestRelation(app);
 const { isTeacher$, userGroups$, userSlots$, userSHDLTests$, userSHDLTestsRelations$, userAttendanceGrade$, userTestGrade$, userGrade$ } = useBusinessObservables(app);
 
@@ -135,7 +135,7 @@ watch(
       ready.value = false
 
       // À ESSAYER
-      // groups = useObservable(groups$());
+      // groups = await findManyGroup({})
       subscriptions.push(groups$({}).subscribe(groups_ => {
          groups.value = groups_;
       }))
