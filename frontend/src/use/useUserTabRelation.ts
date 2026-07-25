@@ -4,7 +4,7 @@ let modelInstance = null
 
 export function useUserTabRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user_tab_relation', ['user_uid', 'tab'])
+      modelInstance = app.createElectricModel('user_tab_relation')
    }
    
    /////////////          UTILITY          /////////////

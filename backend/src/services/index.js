@@ -1,6 +1,3 @@
-// import { drizzleOfflinePlugin } from '@jcbuisson/express-x-drizzle'
-// import { eq, and } from 'drizzle-orm'
-
 // import * as schema from '#root/src/db/schema.js'
 import { isAuthenticated } from '#root/src/hooks.mjs'
 import { protect } from '#root/src/common-server.mjs'

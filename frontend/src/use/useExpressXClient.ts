@@ -1,5 +1,7 @@
 import { io, Socket } from "socket.io-client";
-import { createClient, reloadPlugin, offlinePlugin } from "@jcbuisson/express-x-client";
+import { createClient } from '@jcbuisson/express-x/client'
+import {  electricClientPlugin } from '@jcbuisson/express-x-plugins/electric-client'
+import { reloadPlugin } from '@jcbuisson/express-x-plugins/reload-client'
 
 import { setExpiresAt } from "/src/use/useAppState"
 import { useAuthentication } from "/src/use/useAuthentication"
@@ -23,11 +25,13 @@ export default function useExpressXClient() {
       socket = io(socketOptions);
       app = createClient(socket, { debug: false });
 
-      // offline-first plugin: adds app.createOfflineModel, app.isConnected, app.disconnectedDate
-      offlinePlugin(app);
+      app.configure(electricClientPlugin, {
+         // Electric's client constructs a URL directly, so it requires an absolute URL
+         shapePath: new URL('/electric/v1/shape', window.location.origin).href,
+      })
 
       // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
-      reloadPlugin(app);
+      // reloadPlugin(app);
 
       const { restartApp } = useAuthentication(app);
 

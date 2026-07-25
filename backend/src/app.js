@@ -1,4 +1,6 @@
 import express from 'express'
+import pg from 'pg'
+
 import { expressX } from '@jcbuisson/express-x/server'
 import { reloadPlugin } from '@jcbuisson/express-x-plugins/reload-server'
 import { electricOfflinePlugin } from '@jcbuisson/express-x-plugins/electric-server'

@@ -3,7 +3,7 @@ let modelInstance = null
 
 export function useUser(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user', ['email', 'firstname', 'lastname'])
+      modelInstance = app.createElectricModel('user')
    }
 
    // special case of signin: create/update record of user

@@ -3,7 +3,7 @@ let modelInstance = null
 
 export function useUserGroupRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('user_group_relation', ['user_uid', 'group_uid'])
+      modelInstance = app.createElectricModel('user_group_relation')
    }
 
    /////////////          UTILITY          /////////////

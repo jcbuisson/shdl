@@ -49,18 +49,7 @@ export function useAuthentication(app) {
       // Run all resets in parallel with timeout protection
       const resetPromises = [
          withTimeout(resetUseAppState(), 'AppState'),
-         withTimeout(resetUseGroup(), 'Group'),
-         withTimeout(resetUseGroupSlot(), 'GroupSlot'),
-         withTimeout(resetUseGroupSlotSHDLTestRelation(), 'GroupSlotSHDLTestRelation'),
          withTimeout(resetSHDLModule(), 'SHDLModule'),
-         withTimeout(resetUseSHDLTest(), 'SHDLTest'),
-         withTimeout(resetUseUser(), 'User'),
-         withTimeout(resetUseUserDocument(), 'UserDocument'),
-         withTimeout(resetUseUserDocumentEvent(), 'UserDocumentEvent'),
-         withTimeout(resetUseUserGroupRelation(), 'UserGroupRelation'),
-         withTimeout(resetUseUserSHDLTestEvent(), 'UserSHDLTestEvent'),
-         withTimeout(resetUseUserSlotExcuse(), 'UserSlotExcuse'),
-         withTimeout(resetUseUserTabRelation(), 'UserTabRelation'),
       ]
 
       const results = await Promise.allSettled(resetPromises)

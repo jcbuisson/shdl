@@ -3,7 +3,7 @@ let modelInstance = null
 
 export function useGroupSlotSHDLTestRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createOfflineModel('groupslot_test_relation', ['group_slot_uid', 'test_uid'])
+      modelInstance = app.createElectricModel('groupslot_test_relation')
    }
 
    /////////////          UTILITY          /////////////
