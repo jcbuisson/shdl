@@ -45,8 +45,14 @@ export default function useExpressXClient() {
       app = createClient(socket, { debug: false });
 
       app.configure(electricClientPlugin, {
-         // Electric's client constructs a URL directly, so it requires an absolute URL
-         shapePath: new URL('/electric/v1/shape', window.location.origin).href,
+         // Keep Electric's long-polling requests out of Vite's HTTP/1.1
+         // connection pool so that page navigations cannot be starved.
+         shapePath: new URL(
+            '/electric/v1/shape',
+            import.meta.env.DEV
+               ? `${window.location.protocol}//${window.location.hostname}:3000`
+               : window.location.origin,
+         ).href,
       })
 
       // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)

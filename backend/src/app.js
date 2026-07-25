@@ -19,6 +19,15 @@ app.set('db', db)
 const { Pool } = pg
 const pgDB = new Pool({ connectionString: process.env.DATABASE_URL })
 
+app.use('/electric/v1', (_request, response, next) => {
+   response.setHeader('Access-Control-Allow-Origin', '*')
+   response.setHeader(
+      'Access-Control-Expose-Headers',
+      'electric-offset, electric-handle, electric-schema, electric-cursor',
+   )
+   next()
+})
+
 app.configure(electricOfflinePlugin, pgDB, [
    'user',
    'group',
