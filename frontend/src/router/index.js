@@ -12,7 +12,7 @@ const { app } = useExpressXClient();
 const { extendExpiration } = useAuthentication(app)
 
 const { findWhere: findUserTabRelations } = useUserTabRelation(app)
-const { findByUID: findUserDocumentByUID } = useUserDocument(app)
+const { findMany: findManyUserDocument } = useUserDocument(app)
 
 
 const routes = [
@@ -310,11 +310,10 @@ router.beforeEach(async (to, from, next) => {
       for (const check of to.meta.checks) {
          if (check === 'same_document_user') {
             // check that document's owner is signed-in user
-            // document is necessarily in cache since it is visible in the document list of ManageDocument.vue
-            // const userDocument = await findUserDocumentByUID(to.params.document_uid)
-            // if (userDocument.user_uid !== to.params.signedinUid) {
-            //    return next('/')
-            // }
+            const [userDocument] = await findManyUserDocument({ uid: to.params.document_uid })
+            if (userDocument.user_uid !== to.params.signedinUid) {
+               return next('/')
+            }
          }
       }
    }

@@ -20,9 +20,8 @@ Backend:
 
 - Node.js with ES modules.
 - `@jcbuisson/express-x` for WebSocket services.
-- PostgreSQL with Drizzle ORM.
-- Socket.io for real-time communication.
-- JWT authentication and bcrypt password hashing.
+- PostgreSQL with Drizzle ORM for creating database
+- ElectricSQL for CRUD database access, online & local-first
 
 Frontend:
 
