@@ -20,6 +20,7 @@ import router from '/src/router'
 export function useAuthentication(app) {
 
    const { reset: resetSHDLModule } = useSHDLModule(app)
+   const { putUser } = useUser(app)
 
    async function clearCaches() {
       console.log('clearCaches - starting')

@@ -7,10 +7,11 @@ export function useUser(app) {
    }
 
    // special case of signin: create/update record of user
+   // ???
    const putUser = async (value) => {
-      const db = modelInstance.db
-      // put: create (if new) or update
-      return await db.values.put(value)
+      // const db = modelInstance.db
+      // // put: create (if new) or update
+      // return await db.values.put(value)
    }
 
    return { ...modelInstance, putUser }
