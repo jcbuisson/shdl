@@ -6,20 +6,20 @@ import { reloadPlugin } from '@jcbuisson/express-x-plugins/reload-server'
 import { electricOfflinePlugin } from '@jcbuisson/express-x-plugins/electric-server'
 
 import config from '#config'
-// import { createDB } from './db/index.js'
+import { createDB } from './db/index.js'
 import services from './services/index.js'
 import channels from './channels.js'
 
 
 const app = expressX(config)
 
-// const db = createDB(config.DATABASE_URL)
-
-const { Pool } = pg
-const db = new Pool({ connectionString: process.env.DATABASE_URL })
+const db = createDB(config.DATABASE_URL)
 app.set('db', db)
 
-app.configure(electricOfflinePlugin, db, [
+const { Pool } = pg
+const pgDB = new Pool({ connectionString: process.env.DATABASE_URL })
+
+app.configure(electricOfflinePlugin, pgDB, [
    'user',
    'group',
    'group_slot',

@@ -19,19 +19,7 @@ import router from '/src/router'
 
 export function useAuthentication(app) {
 
-   const { reset: resetUseGroup } = useGroup(app)
-   const { reset: resetUseGroupSlot } = useGroupSlot(app)
-   const { reset: resetUseGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
-   const { reset: resetUseSHDLTest } = useSHDLTest(app)
-   const { reset: resetUseUser, putUser } = useUser(app)
-   const { reset: resetUseUserDocument } = useUserDocument(app)
-   const { reset: resetUseUserDocumentEvent } = useUserDocumentEvent(app)
-   const { reset: resetUseUserGroupRelation } = useUserGroupRelation(app)
-   const { reset: resetUseUserSHDLTestEvent } = useUserSHDLTestRelation(app)
-   const { reset: resetUseUserSlotExcuse } = useUserSlotExcuse(app)
-   const { reset: resetUseUserTabRelation } = useUserTabRelation(app)
    const { reset: resetSHDLModule } = useSHDLModule(app)
-
 
    async function clearCaches() {
       console.log('clearCaches - starting')
