@@ -46,6 +46,10 @@ app.use('/static', express.static('./static'))
 
 app.configure(channels)
 
-app.configure(reloadPlugin)
+app.configure(reloadPlugin, {
+   // The reload plugin validates the previous socket's one-time transfer token
+   // before attempting to restore any cached rooms.
+   authorizeRoomRestore: async () => true,
+})
 
 app.httpServer.listen(config.PORT, () => console.log(`App listening at http://localhost:${config.PORT}`))

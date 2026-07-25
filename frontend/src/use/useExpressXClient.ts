@@ -31,7 +31,7 @@ export default function useExpressXClient() {
       })
 
       // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
-      // reloadPlugin(app);
+      reloadPlugin(app);
 
       const { restartApp } = useAuthentication(app);
 

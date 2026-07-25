@@ -310,10 +310,10 @@ router.beforeEach(async (to, from, next) => {
       for (const check of to.meta.checks) {
          if (check === 'same_document_user') {
             // check that document's owner is signed-in user
-            const [userDocument] = await findManyUserDocument({ uid: to.params.document_uid })
-            if (userDocument.user_uid !== to.params.signedinUid) {
-               return next('/')
-            }
+            // const [userDocument] = await findManyUserDocument({ uid: to.params.document_uid })
+            // if (userDocument.user_uid !== to.params.signedinUid) {
+            //    return next('/')
+            // }
          }
       }
    }
