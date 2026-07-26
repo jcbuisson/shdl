@@ -6,8 +6,8 @@
                <v-col cols="12" md="6">
                   <v-text-field
                      label="Nom"
-                     :modelValue="group?.name"
-                     @input="(e) => onFieldInputDebounced('name', e.target.value)"
+                     v-model="groupName"
+                     @update:modelValue="onNameInput"
                      variant="underlined"
                   ></v-text-field>
                </v-col>
@@ -22,7 +22,7 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { Observable, from, map, of, merge, combineLatest, firstValueFrom } from 'rxjs'
+import { map } from 'rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
@@ -45,6 +45,7 @@ const props = defineProps({
 })
 
 const group = ref()
+const groupName = ref('')
 
 let groupSubscription
 
@@ -59,8 +60,10 @@ onUnmounted(() => {
 })
 
 watch(() => props.group_uid, async (group_uid) => {
+   if (groupSubscription) groupSubscription.unsubscribe()
    groupSubscription = group$(group_uid).subscribe(grp => {
       group.value = grp
+      groupName.value = grp?.name ?? ''
    })
 }, { immediate: true })
 
@@ -72,8 +75,13 @@ const onFieldInput = async (field, value) => {
       await updateGroup(props.group_uid, { [field]: value })
       displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
    } catch(err) {
+      groupName.value = group.value?.name ?? ''
       displaySnackbar({ text: "Erreur lors de la sauvegarde...", color: 'error', timeout: 4000 })
    }
 }
 const onFieldInputDebounced = useDebounceFn(onFieldInput, 500)
+
+function onNameInput(value) {
+   onFieldInputDebounced('name', value)
+}
 </script>

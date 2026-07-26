@@ -176,12 +176,16 @@ export function useBusinessObservables(app) {
       )
    }
 
-   function groupMembers$(group_uid: string) {
-      return userGroupRelations$(group_uid).pipe(
-         switchMap(userGroupRelationList =>
-            guardCombineLatest(userGroupRelationList.map(relation => users$({ uid: relation.user_uid })))
+   function groupMembers$(where: { group_uid: string }) {
+      return combineLatest([
+         userGroupRelations$(where),
+         users$({}),
+      ]).pipe(
+         map(([relations, users]) => relations
+            .map(relation => users.find(user => user.uid === relation.user_uid))
+            .filter(Boolean)
+            .sort((a, b) => a.lastname.localeCompare(b.lastname))
          ),
-         map(listOfList => listOfList.reduce(((accu, list) => [...accu, ...list]), []).sort((a, b) => a.lastname.localeCompare(b.lastname))),
       )
    }
 

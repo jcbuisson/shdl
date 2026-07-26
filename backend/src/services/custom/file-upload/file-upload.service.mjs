@@ -51,7 +51,7 @@ export default function (app) {
             const uploadPath = path.join(baseDir, filePath)
             console.log("deleteFile", uploadPath)
             sync(path.dirname(uploadPath))
-            await fs.promises.rm(uploadPath)
+            await fs.promises.rm(uploadPath, { force: true })
          } catch(err) {
             console.log(err)
             throw new EXError('delete-file-error')

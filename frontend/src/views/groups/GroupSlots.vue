@@ -17,8 +17,8 @@
          <tbody>
             <tr v-for="groupSlot in slotList" :key="groupSlot.uid">
                <td>{{ groupSlot.name }}</td>
-               <td>{{ format(groupSlot.start, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
-               <td>{{ format(groupSlot.end, "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
+               <td>{{ format(new Date(groupSlot.start), "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
+               <td>{{ format(new Date(groupSlot.end), "eee d MMMM yyyy, HH'h'mm", { locale: fr }) }}</td>
                <td><v-btn color="grey-lighten-1" icon="mdi-pencil" variant="text" @click="editSlot(groupSlot)"></v-btn></td>
                <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteSlot(groupSlot)"></v-btn></td>
             </tr>
@@ -38,7 +38,7 @@
             </tr>
          </thead>
          <tbody>
-            <tr v-for="member in groupMemberList" :key="$index">
+            <tr v-for="member in groupMemberList" :key="member.uid">
                <td>{{ member.lastname }}</td>
                <td>{{ member.firstname }}</td>
                <td><v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteMember(member)"></v-btn></td>
@@ -146,8 +146,6 @@ const props = defineProps({
    },
 })
 
-const groupMembers = useObservable(groupMembers$({ group_uid: props.group_uid }))
-
 const shdlTestList = useObservable(shdlTests$());
 const sortedTestList = computed(() => shdlTestList.value
    ? [...shdlTestList.value].sort((test1, test2) =>
@@ -177,7 +175,7 @@ watch(() => props.group_uid, async (group_uid) => {
    })
 
    if (groupMembersSubscription) groupMembersSubscription.unsubscribe();
-   groupMembersSubscription = groupMembers$({ group_uid: props.group_uid }).subscribe(groupMembers => {
+   groupMembersSubscription = groupMembers$({ group_uid }).subscribe(groupMembers => {
       groupMemberList.value = groupMembers;
    })
 

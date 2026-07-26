@@ -231,35 +231,47 @@ const onGroupChange = async (groupUIDs) => {
 //////////////////////        AVATAR UPLOAD        //////////////////////
 
 let avatarPath
+let uploadFailed = false
+let uploadPromise = Promise.resolve()
 
 async function onUploadStart(ev) {
    let extension = ev.detail.file.type.substring(6)
    if (extension === 'svg+xml') extension = 'svg'
    const uid = uuidv7()
    avatarPath = `avatar-${uid}.${extension}`
+   uploadFailed = false
+   uploadPromise = Promise.resolve()
 }
 
-async function onUploadChunk(ev) {
+function onUploadChunk(ev) {
    const type = ev.detail.file.type // ex: image/jpg
    if (type.startsWith('image')) {
-      try {
-         await app.service('file-upload').appendToFile({
-            dirKey: 'UPLOAD_AVATARS_PATH',
-            filePath: avatarPath,
-            arrayBuffer: ev.detail.arrayBufferSlice,
-         })
-      } catch(err) {
-         console.log('err', err)
-      } finally {
-      }
+      uploadPromise = uploadPromise.then(async () => {
+         try {
+            await app.service('file-upload').appendToFile({
+               dirKey: 'UPLOAD_AVATARS_PATH',
+               filePath: avatarPath,
+               arrayBuffer: ev.detail.arrayBufferSlice,
+            })
+         } catch(err) {
+            uploadFailed = true
+            console.log('err', err)
+         }
+      })
    } else {
+      uploadFailed = true
       alert("Fournissez un fichier avec une extension .jpg, .jpeg, .png, .gif, .webp")
    }
 }
 
 async function onUploadEnd(ev) {
+   await uploadPromise
+   if (uploadFailed) {
+      displaySnackbar({ text: "Erreur lors de l'envoi de l'image", color: 'error', timeout: 4000 })
+      return
+   }
    // remove previous file
-   if (user.value.pict) {
+   if (user.value.pict?.startsWith('avatar-')) {
       await app.service('file-upload').deleteFile('UPLOAD_AVATARS_PATH', user.value.pict)
    }
    // store path in user record
@@ -277,7 +289,9 @@ function onAvatarClick() {
 
 const userPictPath = computed(() => (user) => {
    if (user?.pict) {
-      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
+      return user.pict.startsWith('/')
+         ? user.pict
+         : import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
    }
 })
 

@@ -15,13 +15,13 @@
                <div v-if="!groupAndUsersList" class="d-flex flex-column flex-grow-1 align-center justify-center">
                   <v-progress-circular indeterminate color="red-darken-4"></v-progress-circular>
                </div>
-               <v-list-item v-else three-line v-for="(groupAndUsers, index) in filteredSortedGroupAndUsersList":key="index"
+               <v-list-item v-else three-line v-for="groupAndUsers in filteredSortedGroupAndUsersList" :key="groupAndUsers.group.uid"
                      :value="groupAndUsers.group" @click="selectGroup(groupAndUsers.group)" :active="selectedGroup?.uid === groupAndUsers.group.uid">
                   <v-list-item-title>{{ groupAndUsers?.group?.name }}</v-list-item-title>
                   <v-list-item-subtitle>{{ groupAndUsers?.users.length }} membre{{ groupAndUsers?.users.length > 1 ? 's' : '' }}</v-list-item-subtitle>
 
                   <template v-slot:append>
-                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click="deleteGroup(groupAndUsers.group)"></v-btn>
+                     <v-btn color="grey-lighten-1" icon="mdi-delete" variant="text" @click.stop="deleteGroup(groupAndUsers.group)"></v-btn>
                   </template>
                </v-list-item>
             </div>
@@ -55,7 +55,7 @@ import { displaySnackbar } from '/src/use/useSnackbar'
 const { app } = useExpressXClient();
 const { getObservable: users$ } = useUser(app)
 const { getObservable: groups$, remove: removeGroup } = useGroup(app)
-const { findWhere: findGroupWhere, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
+const { findMany: findGroupRelations, getObservable: userGroupRelations$, remove: removeGroupRelation } = useUserGroupRelation(app)
 const props = defineProps({
    signedinUid: {
       type: String,
@@ -81,7 +81,10 @@ const groupsAndUsers$ = combineLatest([
 )
 
 const groupAndUsersList = useObservable(groupsAndUsers$)
-const sortedGroupAndUsersList = computed(() => groupAndUsersList.value ? groupAndUsersList.value.toSorted((u1, u2) => (u1.name > u2.name) ? 1 : (u1.name < u2.name) ? -1 : 0) : [])
+const sortedGroupAndUsersList = computed(() => groupAndUsersList.value
+   ? groupAndUsersList.value.toSorted((a, b) => a.group.name.localeCompare(b.group.name))
+   : []
+)
 
 const filteredSortedGroupAndUsersList = computed(() => {
    if (!sortedGroupAndUsersList.value) return []
@@ -111,7 +114,7 @@ function selectGroup(group) {
 async function deleteGroup(group) {
    // const userGroupRelations = await firstValueFrom(debouncedGroupRelations$(group.uid))
    // group relations are in cache since they are displayed
-   const userGroupRelations = await findGroupWhere({ group_uid: group.uid })
+   const userGroupRelations = await findGroupRelations({ group_uid: group.uid })
    if (window.confirm(`Supprimer le groupe ${group.name} ? (nombre d'utilisateurs membres : ${userGroupRelations.length})`)) {
       try {
          // remove user-group relations
@@ -133,6 +136,6 @@ watch(() => [route.path, groupAndUsersList.value], async () => {
    const match = route.path.match(routeRegex)
    if (!match) return
    const group_uid = match[2]
-   selectedGroup.value = groupAndUsersList.value.find(group => group.uid === group_uid)
+   selectedGroup.value = groupAndUsersList.value.find(item => item.group.uid === group_uid)?.group ?? null
 }, { immediate: true })
 </script>

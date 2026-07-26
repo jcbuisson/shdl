@@ -14,7 +14,7 @@
                <v-col cols="12" md="6">
                   <div style="display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px;">
                      <v-avatar size="80" @click="onAvatarClick(data)">
-                        <v-img :src="data?.pict"></v-img>
+                        <v-img :src="userPictPath(data)"></v-img>
                      </v-avatar>
                      <jcb-upload ref="upload" chunksize="32768" accept="image/*" @upload-start="onUploadStart" @upload-chunk="onUploadChunk" @upload-end="onUploadEnd">
                         Cliquez ici ou glissez-déposez une photo
@@ -79,8 +79,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useObservable } from '@vueuse/rxjs'
+import { v7 as uuidv7 } from 'uuid'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
@@ -128,6 +129,7 @@ async function submit() {
             email: data.value.email,
             firstname: data.value.firstname,
             lastname: data.value.lastname,
+            ...(data.value.pict ? { pict: data.value.pict } : {}),
          })
          const [toAddGroupUIDs, toRemoveRelationUIDs] = await groupDifference(user.uid, data.value.groups || [])
          for (const group_uid of toAddGroupUIDs) {
@@ -142,6 +144,59 @@ async function submit() {
    } catch(err) {
       displaySnackbar({ text: "Erreur lors de la création...", color: 'error', timeout: 4000 })
    }
+}
+
+//////////////////////        AVATAR UPLOAD        //////////////////////
+
+let avatarPath
+let uploadFailed = false
+let uploadPromise = Promise.resolve()
+
+function onUploadStart(ev) {
+   let extension = ev.detail.file.type.substring(6)
+   if (extension === 'svg+xml') extension = 'svg'
+   avatarPath = `avatar-${uuidv7()}.${extension}`
+   uploadFailed = false
+   uploadPromise = Promise.resolve()
+}
+
+function onUploadChunk(ev) {
+   if (!ev.detail.file.type.startsWith('image/')) {
+      uploadFailed = true
+      displaySnackbar({ text: "Le fichier doit être une image", color: 'error', timeout: 4000 })
+      return
+   }
+
+   uploadPromise = uploadPromise.then(async () => {
+      try {
+         await app.service('file-upload').appendToFile({
+            dirKey: 'UPLOAD_AVATARS_PATH',
+            filePath: avatarPath,
+            arrayBuffer: ev.detail.arrayBufferSlice,
+         })
+      } catch(err) {
+         uploadFailed = true
+         displaySnackbar({ text: "Erreur lors de l'envoi de l'image", color: 'error', timeout: 4000 })
+      }
+   })
+}
+
+async function onUploadEnd() {
+   await uploadPromise
+   if (!uploadFailed) data.value.pict = avatarPath
+}
+
+const userPictPath = computed(() => user => {
+   if (!user?.pict) return '/static/img/avatar.svg'
+   return user.pict.startsWith('/')
+      ? user.pict
+      : import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
+})
+
+const avatarDialog = ref(false)
+
+function onAvatarClick() {
+   avatarDialog.value = true
 }
 </script>
 

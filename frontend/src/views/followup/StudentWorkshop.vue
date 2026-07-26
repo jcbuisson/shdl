@@ -3,14 +3,32 @@
       <template v-slot:left-panel>
          <!-- makes the layout a vertical stack filling the full height -->
          <v-card class="d-flex flex-column fill-height">
-            <v-toolbar color="red-darken-4" density="compact">
-               <v-btn readonly icon="mdi-magnify" variant="text"></v-btn>
-               <v-text-field v-model="filter" single-line></v-text-field>
-            </v-toolbar>
+            <div class="d-flex flex-column bg-red-darken-4">
+               <div class="d-flex align-center">
+                  <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
+                     <v-btn value="shdl" size="small" variant="text" rounded="lg"
+                        :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
+                     <v-btn value="craps" size="small" variant="text" rounded="lg"
+                        :style="typeFilter === 'craps' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">CRAPS</v-btn>
+                     <v-btn value="text" size="small" variant="text" rounded="lg"
+                        :style="typeFilter === 'text' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">Texte</v-btn>
+                  </v-btn-toggle>
+               </div>
+               <v-text-field
+                  v-model="nameFilter"
+                  label="Recherche par nom..."
+                  class="px-2 pb-2"
+                  single-line
+                  clearable
+                  hide-details
+                  density="compact"
+                  variant="solo-filled"
+               ></v-text-field>
+            </div>
          
             <!-- Fills remaining vertical space -->
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
-               <v-list-item three-line v-for="(document, index) in documentList":key="index" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
+               <v-list-item three-line v-for="document in filteredDocumentList" :key="document.uid" :value="document" @click="selectDocument(document)" :active="selectedDocument?.uid === document?.uid">
                   <v-list-item-title>{{ document.name }}</v-list-item-title>
                   <v-list-item-subtitle>{{ document.type }}</v-list-item-subtitle>
 
@@ -35,7 +53,8 @@
 
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import { map } from 'rxjs'
 
 import useExpressXClient from '/src/use/useExpressXClient';
@@ -60,9 +79,17 @@ const props = defineProps({
    },
 })
 
-const filter = ref('')
+const nameFilter = ref('')
+const typeFilter = useLocalStorage('student_workshop_selected_type', 'shdl')
 
 const documentList = ref([]);
+const filteredDocumentList = computed(() => {
+   const normalizedName = (nameFilter.value || '').toLowerCase()
+   return documentList.value.filter(document => {
+      if (typeFilter.value && document.type !== typeFilter.value) return false
+      return normalizedName.length === 0 || document.name.toLowerCase().includes(normalizedName)
+   })
+})
 
 let documentListSubscription;
 
