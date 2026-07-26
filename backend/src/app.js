@@ -42,7 +42,7 @@ app.configure(electricOfflinePlugin, pgDB, [
    'user_test_relation',
 ], {
    // ElectricSQL sync service
-   electricUrl: process.env.ELECTRIC_URL ?? 'http://localhost:3002/v1/shape',
+   electricUrl: process.env.ELECTRIC_URL,
    authorize: async (context, { action }) => (
       action === 'shape' || Boolean(context.socket?.data?.user)
    ),
