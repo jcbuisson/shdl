@@ -14,6 +14,13 @@ const { extendExpiration } = useAuthentication(app)
 const { findWhere: findUserTabRelations } = useUserTabRelation(app)
 const { findMany: findManyUserDocument } = useUserDocument(app)
 
+const documentRouteProps = route => ({
+   signedinUid: route.params.signedinUid,
+   user_uid: route.params.signedinUid,
+   document_uid: route.params.document_uid,
+   readonly: false,
+})
+
 
 const routes = [
    {
@@ -102,12 +109,10 @@ const routes = [
                   children: [
                      {
                         path: '',
-                        props: route => ({
-                           signedinUid: route.params.signedinUid,
-                           user_uid: route.params.signedinUid,
-                           document_uid: route.params.document_uid,
-                           readonly: false,
-                        }),
+                        props: {
+                           editor: documentRouteProps,
+                           simulator: documentRouteProps,
+                        },
                         components: {
                            editor: () => import('/src/components/EditSHDLDocument.vue'),
                            simulator: () => import('/src/views/workshop/SHDLSimulator.vue'),
@@ -125,12 +130,10 @@ const routes = [
                   children: [
                      {
                         path: '',
-                        props: route => ({
-                           signedinUid: route.params.signedinUid,
-                           user_uid: route.params.signedinUid,
-                           document_uid: route.params.document_uid,
-                           readonly: false,
-                        }),
+                        props: {
+                           editor: documentRouteProps,
+                           simulator: documentRouteProps,
+                        },
                         components: {
                            editor: () => import('/src/components/EditCRAPSDocument.vue'),
                            simulator: () => import('/src/views/workshop/CrapsSimulator.vue'),

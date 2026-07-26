@@ -23,7 +23,6 @@
 <script setup>
 import { ref, watch, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { map } from 'rxjs'
 
 import ace from 'ace-builds'
 import 'ace-builds/src-noconflict/theme-chrome'
@@ -135,63 +134,63 @@ const currentDocument = ref()
 let updateUid
 
 const mutex = new Mutex()
+let documents = []
 
-function userDocument$(uid) {
-   return userDocuments$({ uid }).pipe(
-      map(documents => documents.length > 0 ? documents[0] : null)
-   )
-}
+async function displayDocument(doc) {
+   if (!doc) return
+   // handle document content change
+   const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
+   const docText = normalizedEditorText(doc.text)
 
-watch(() => props.document_uid, async (uid, previous_uid) => {
-   if (subscription) subscription.unsubscribe()
-   subscription = userDocument$(uid).subscribe(async doc => {
-      if (!doc) return
-      // handle document content change
-      const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
-      const docText = normalizedEditorText(doc.text)
+   if (isNewDocument) {
+      // New document - update everything including editor content
+      currentDocument.value = doc
+      hasPendingLocalEdit = false
 
-      if (isNewDocument) {
-         // New document - update everything including editor content
-         currentDocument.value = doc
+      // Wait for DOM to update, then initialize editor if needed
+      await nextTick()
+      initializeEditor()
+
+      if (editor && doc.text !== undefined) {
+         setEditorText(doc.text)
+      }
+   } else {
+      // Same document - only update if text actually changed from external source
+      if (editor && editor.getValue() === docText) {
          hasPendingLocalEdit = false
-
-         // Wait for DOM to update, then initialize editor if needed
-         await nextTick()
-         initializeEditor()
-
-         if (editor && doc.text !== undefined) {
-            setEditorText(doc.text)
+         currentDocument.value = { ...currentDocument.value, ...doc, text: docText }
+      } else if (hasPendingLocalEdit) {
+         currentDocument.value = { ...currentDocument.value, ...doc, text: editor?.getValue() ?? currentDocument.value.text }
+      } else if (currentDocument.value.text !== docText) {
+         // External change (from another user or server)
+         currentDocument.value = { ...doc, text: docText }
+         if (editor) {
+            // use a mutex because of the possible race conditions between multiple updates
+            await mutex.acquire()
+            try {
+               setEditorText(doc.text, { preserveCursor: true })
+            } finally {
+               mutex.release()
+            }
          }
       } else {
-         // Same document - only update if text actually changed from external source
-         if (editor && editor.getValue() === docText) {
-            hasPendingLocalEdit = false
-            currentDocument.value = { ...currentDocument.value, ...doc, text: docText }
-         } else if (hasPendingLocalEdit) {
-            currentDocument.value = { ...currentDocument.value, ...doc, text: editor?.getValue() ?? currentDocument.value.text }
-         } else if (currentDocument.value.text !== docText) {
-            // External change (from another user or server)
-            currentDocument.value = { ...doc, text: docText }
-            if (editor) {
-               // use a mutex because of the possible race conditions between multiple updates
-               await mutex.acquire()
-               try {
-                  setEditorText(doc.text, { preserveCursor: true })
-               } finally {
-                  mutex.release()
-               }
-            }
-         } else {
-            // Text is same, just update metadata
-            currentDocument.value = { ...currentDocument.value, ...doc }
-         }
+         // Text is same, just update metadata
+         currentDocument.value = { ...currentDocument.value, ...doc }
       }
+   }
 
-      if (doc.type === 'shdl') {
-         analyzeSHDLDocument(doc)
-      }
-   })
+   if (doc.type === 'shdl') {
+      analyzeSHDLDocument(doc)
+   }
+}
 
+subscription = userDocuments$({ user_uid: props.user_uid }).subscribe(rows => {
+   documents = rows
+   displayDocument(documents.find(document => document.uid === props.document_uid))
+})
+
+watch(() => props.document_uid, uid => {
+   displayDocument(documents.find(document => document.uid === uid))
 }, { immediate: true })
 
 onUnmounted(() => {
