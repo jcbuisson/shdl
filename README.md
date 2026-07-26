@@ -8,16 +8,19 @@ The project is split into a Vue 3 frontend and a Node.js backend backed by Postg
 
 ### Start express-x backend
 ```bash
+cd backend
 pm2 start ecosystem.config.mjs
 ```
 
 ### Start electric sync process
 ```bash
+cd backend
 npm run electric:up
 ```
 
 ### Build frontend
 ```bash
+cd frontend
 npm run build
 ```
 
