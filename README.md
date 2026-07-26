@@ -4,6 +4,23 @@ SHDL is an educational web platform for teaching digital hardware design and low
 
 The project is split into a Vue 3 frontend and a Node.js backend backed by PostgreSQL. Client data is synchronized through WebSockets and cached locally in IndexedDB so the application can keep a responsive offline-first workflow.
 
+## Deployment
+
+### Start express-x backend
+```bash
+pm2 start ecosystem.config.mjs
+```
+
+### Start electric sync process
+```bash
+npm run electric:up
+```
+
+### Build frontend
+```bash
+npm run build
+```
+
 ## Main Features
 
 - SHDL document editor with parsing, syntax checks, semantic analysis, and simulation.
