@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useUserGroupRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('user_group_relation')
+      modelInstance = useSharedElectricModel(app, 'user_group_relation')
    }
 
    /////////////          UTILITY          /////////////

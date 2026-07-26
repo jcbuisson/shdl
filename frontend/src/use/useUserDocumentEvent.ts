@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useUserDocumentEvent(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('user_document_event')
+      modelInstance = useSharedElectricModel(app, 'user_document_event')
    }
    return modelInstance
 }

@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useGroupSlot(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('group_slot')
+      modelInstance = useSharedElectricModel(app, 'group_slot')
    }
    return modelInstance
 }

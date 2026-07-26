@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useUserSHDLTestRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('user_test_relation')
+      modelInstance = useSharedElectricModel(app, 'user_test_relation')
    }
    return modelInstance
 }

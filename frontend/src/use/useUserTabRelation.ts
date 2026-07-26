@@ -1,10 +1,11 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 
 export function useUserTabRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('user_tab_relation')
+      modelInstance = useSharedElectricModel(app, 'user_tab_relation')
    }
    
    /////////////          UTILITY          /////////////
@@ -31,4 +32,3 @@ export function useUserTabRelation(app) {
 
    return { ...modelInstance, tabDifference }
 }
-

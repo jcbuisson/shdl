@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useUser(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('user')
+      modelInstance = useSharedElectricModel(app, 'user')
    }
 
    // special case of signin: create/update record of user

@@ -1,9 +1,10 @@
+import { useSharedElectricModel } from './useSharedElectricModel'
 
 let modelInstance = null
 
 export function useGroupSlotSHDLTestRelation(app) {
    if (!modelInstance) {
-      modelInstance = app.createElectricModel('groupslot_test_relation')
+      modelInstance = useSharedElectricModel(app, 'groupslot_test_relation')
    }
 
    /////////////          UTILITY          /////////////
