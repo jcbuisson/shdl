@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, onUnmounted, computed, watch, useId } from 'vue'
 import * as d3 from 'd3'
 import { timeFormatLocale } from 'd3-time-format'
 import { addHours, subHours } from 'date-fns'
@@ -79,6 +79,7 @@ const props = defineProps({
 
 const chartContainer = ref<HTMLElement | null>(null)
 const tooltip = ref<HTMLElement | null>(null)
+const plotClipId = `activity-plot-clip-${useId().replaceAll(':', '')}`
 const margin = { top: 28, right: 28, bottom: 46, left: 116 }
 const height = 430
 const slotLane = { y: 72, height: 64 }
@@ -207,6 +208,15 @@ function drawChart(slots, events) {
       .attr('preserveAspectRatio', 'xMinYMin meet')
       .attr('class', 'activity-svg')
 
+   svg.append('defs')
+      .append('clipPath')
+      .attr('id', plotClipId)
+      .append('rect')
+      .attr('x', margin.left)
+      .attr('y', 0)
+      .attr('width', width - margin.left - margin.right)
+      .attr('height', height)
+
    const allStart = [...events, ...slots].map(d => new Date(d.start))
    const allEnd = [...events, ...slots].map(d => new Date(d.end))
    const dateMin = d3.min(allStart)
@@ -225,9 +235,12 @@ function drawChart(slots, events) {
       .attr('height', height - margin.top - margin.bottom)
       .attr('fill', '#fafafa')
 
-   gridGroup = svg.append('g').attr('class', 'grid')
+   gridGroup = svg.append('g')
+      .attr('class', 'grid')
+      .attr('clip-path', `url(#${plotClipId})`)
    xAxis = svg.append('g')
       .attr('class', 'x-axis')
+      .attr('clip-path', `url(#${plotClipId})`)
       .attr('transform', `translate(0,${height - margin.bottom})`)
 
    svg.append('text')
@@ -244,14 +257,18 @@ function drawChart(slots, events) {
       .attr('text-anchor', 'end')
       .text('Documents')
 
-   slotsGroup = svg.append('g').attr('class', 'slot-layer')
-   eventsGroup = svg.append('g').attr('class', 'event-layer')
+   slotsGroup = svg.append('g')
+      .attr('class', 'slot-layer')
+      .attr('clip-path', `url(#${plotClipId})`)
+   eventsGroup = svg.append('g')
+      .attr('class', 'event-layer')
+      .attr('clip-path', `url(#${plotClipId})`)
 
    redraw(xScale, slots, events, 1)
 
    svg.call(
       d3.zoom()
-         .scaleExtent([1, 120])
+         .scaleExtent([1, 800])
          .translateExtent([[margin.left, 0], [width - margin.right, height]])
          .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
          .on('zoom', (e) => {
