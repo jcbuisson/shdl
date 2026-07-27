@@ -64,14 +64,14 @@ export default defineConfig({
       host: true, // allows for external device connection on local network
       proxy: {
          '^/shdl-socket-io/.*': {
-            target: 'http://localhost:3000',
+            target: 'http://localhost:3016',
             ws: true,
             secure: false,
             changeOrigin: true,
          },
-         '^/static/.*': 'http://localhost:3000',
+         '^/static/.*': 'http://localhost:3016',
          '^/electric/v1/.*': {
-            target: 'http://localhost:3000',
+            target: 'http://localhost:3002',
             secure: false,
             changeOrigin: true,
          },

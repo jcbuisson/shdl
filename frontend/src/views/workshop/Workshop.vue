@@ -180,7 +180,7 @@ const filteredSortedDocumentList = computed(() => {
 // undefined, true, false
 const shdlDocumentStatus = computed(() => (doc) => {
    if (doc.type !== 'shdl') return
-   const module = moduleList.value.find(module => module.document_uid === doc.uid)
+   const module = moduleList.value?.find(module => module.document_uid === doc.uid)
    if (!module) return
    return module?.is_valid
 })

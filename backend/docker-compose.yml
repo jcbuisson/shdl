@@ -1,10 +1,18 @@
 services:
   electric-shdl:
-    image: electricsql/electric:1.7.7
+    image: electricsql/electric:1.7.8
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
       DATABASE_URL: postgresql://chris:eureka31@host.docker.internal:5432/shdl
       ELECTRIC_INSECURE: "true"
+      ELECTRIC_STORAGE: FAST_FILE
+      ELECTRIC_PERSISTENT_STATE: FILE
+      ELECTRIC_STORAGE_DIR: /var/lib/electric
     ports:
-      - "3016:3000"
+      - "3002:3000"
+    volumes:
+      - electric_shdl_data:/var/lib/electric
+
+volumes:
+  electric_shdl_data:

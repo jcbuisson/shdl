@@ -5,6 +5,7 @@ export default {
    LOGS_DIR: process.env.LOGS_DIR,
    DATABASE_URL: process.env.DATABASE_URL,
    CLIENT_URL: process.env.CLIENT_URL,
+   ELECTRIC_URL: process.env.ELECTRIC_URL,
 
    WS_TRANSPORT: true,
    WS_PATH: '/shdl-socket-io/',

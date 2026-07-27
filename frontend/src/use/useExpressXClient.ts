@@ -50,7 +50,7 @@ export default function useExpressXClient() {
          shapePath: new URL(
             '/electric/v1/shape',
             import.meta.env.DEV
-               ? `${window.location.protocol}//${window.location.hostname}:3000`
+               ? `${window.location.protocol}//${window.location.hostname}:3016`
                : window.location.origin,
          ).href,
       })

@@ -6,6 +6,14 @@ The project is split into a Vue 3 frontend and a Node.js backend backed by Postg
 
 ## Deployment
 
+IMPORTANT: set lc_messages=C for the PostgreSQL chris role so Electric receives recognizable English errors.
+
+
+### Ports
+
+- Express-X/PM2: 3016
+- Electric sync: 3002
+
 ### Start express-x backend
 ```bash
 cd backend
@@ -15,7 +23,7 @@ pm2 start ecosystem.config.mjs
 ### Start electric sync process
 ```bash
 cd backend
-npm run electric:up
+sudo npm run electric:up
 ```
 
 ### Build frontend

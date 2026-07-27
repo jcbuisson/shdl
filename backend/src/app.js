@@ -17,8 +17,9 @@ const db = createDB(config.DATABASE_URL)
 app.set('db', db)
 
 const { Pool } = pg
-const pgDB = new Pool({ connectionString: process.env.DATABASE_URL })
+const pgDB = new Pool({ connectionString: config.DATABASE_URL })
 
+// dev only?
 app.use('/electric/v1', (_request, response, next) => {
    response.setHeader('Access-Control-Allow-Origin', '*')
    response.setHeader(
@@ -42,7 +43,7 @@ app.configure(electricOfflinePlugin, pgDB, [
    'user_test_relation',
 ], {
    // ElectricSQL sync service
-   electricUrl: process.env.ELECTRIC_URL,
+   electricUrl: config.ELECTRIC_URL,
    authorize: async (context, { action }) => (
       action === 'shape' || Boolean(context.socket?.data?.user)
    ),
