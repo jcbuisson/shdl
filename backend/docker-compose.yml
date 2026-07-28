@@ -10,7 +10,7 @@ services:
       ELECTRIC_PERSISTENT_STATE: FILE
       ELECTRIC_STORAGE_DIR: /var/lib/electric
     ports:
-      - "3002:3000"
+      - "3216:3000"
     volumes:
       - electric_shdl_data:/var/lib/electric
 

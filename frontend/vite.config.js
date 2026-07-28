@@ -71,7 +71,7 @@ export default defineConfig({
          },
          '^/static/.*': 'http://localhost:3016',
          '^/electric/v1/.*': {
-            target: 'http://localhost:3002',
+            target: 'http://localhost:3216',
             secure: false,
             changeOrigin: true,
          },

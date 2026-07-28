@@ -12,7 +12,7 @@ IMPORTANT: set lc_messages=C for the PostgreSQL chris role so Electric receives 
 ### Ports
 
 - Express-X/PM2: 3016
-- Electric sync: 3002
+- Electric sync: 3216
 
 ### Start express-x backend
 ```bash
