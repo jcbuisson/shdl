@@ -95,6 +95,8 @@
                            :item-value="test => test.uid"
                            :item-title="test => test.name"
                            v-model="selectedTestUIDs"
+                           :loading="slotTestsLoading"
+                           :disabled="slotTestsLoading || savingSlot"
                         ></v-select>
                      </v-row>
                   </v-col>
@@ -105,9 +107,9 @@
 
             <v-card-actions>
                <v-spacer></v-spacer>
-               <v-btn text="Annuler" variant="plain" @click="addOrEditSlotDialog = false"></v-btn>
-               <v-btn v-if="edit" :disabled="!valid" color="primary" text="Modifier" variant="tonal" @click="addOrEditSlotDialog = false; updateSlot()"></v-btn>
-               <v-btn v-else :disabled="!valid" color="primary" text="Créer" variant="tonal" @click="addOrEditSlotDialog = false; createSlot()"></v-btn>
+               <v-btn text="Annuler" variant="plain" :disabled="savingSlot" @click="closeSlotDialog"></v-btn>
+               <v-btn v-if="edit" :disabled="!valid || slotTestsLoading" :loading="savingSlot" color="primary" text="Modifier" variant="tonal" @click="updateSlot"></v-btn>
+               <v-btn v-else :disabled="!valid" :loading="savingSlot" color="primary" text="Créer" variant="tonal" @click="createSlot"></v-btn>
             </v-card-actions>
          </v-card>
       </v-form>
@@ -127,14 +129,16 @@ import { useGroupSlot } from '/src/use/useGroupSlot'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useGroupSlotSHDLTestRelation } from '/src/use/useGroupSlotSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
+import { useAuthentication } from '/src/use/useAuthentication'
 
 import { displaySnackbar } from '/src/use/useSnackbar'
 
 const { app } = useExpressXClient();
 const { getObservable: groupSlots$, create: createGroupSlot, update: updateGroupSlot, remove: removeGroupSlot } = useGroupSlot(app)
 const { getObservable: shdlTests$ } = useSHDLTest(app)
-const { getObservable: groupslotShdltestRelations$, groupDifference, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
+const { getObservable: groupSlotSHDLTestRelations$, create: createGroupSlotSHDLTestRelation, remove: removeGroupSlotSHDLTestRelation } = useGroupSlotSHDLTestRelation(app)
 const { groupMembers$ } = useBusinessObservables(app)
+const { refreshExpiration } = useAuthentication(app)
 
 
 const props = defineProps({
@@ -147,6 +151,7 @@ const props = defineProps({
 })
 
 const shdlTestList = useObservable(shdlTests$());
+const groupSlotSHDLTestRelationList = useObservable(groupSlotSHDLTestRelations$({}))
 const sortedTestList = computed(() => shdlTestList.value
    ? [...shdlTestList.value].sort((test1, test2) =>
       test1.name.localeCompare(test2.name, undefined, { sensitivity: 'base' })
@@ -159,12 +164,10 @@ const groupMemberList = ref([]);
 const selectedTestUIDs = ref([]);
 
 let groupSubscription;
-let slotSubscription;
 let groupMembersSubscription;;
 
 onUnmounted(() => {
    if (groupSubscription) groupSubscription.unsubscribe();
-   if (slotSubscription) slotSubscription.unsubscribe();
    if (groupMembersSubscription) groupMembersSubscription.unsubscribe();
 })
 
@@ -185,6 +188,9 @@ const addOrEditSlotDialog = ref(false)
 const edit = ref(false)
 const slotData = ref({})
 const valid = ref()
+const slotTestsLoading = ref(false)
+const savingSlot = ref(false)
+let slotEditRequest = 0
 
 const nameRules = [
    (v) => !!v || "Le nom est obligatoire",
@@ -197,28 +203,16 @@ const timeRules = [
 ]
 
 async function addSlot() {
+   slotEditRequest++
    slotData.value = {}
-   groupSlotToEdit.value = null // will force selectedTestUIDs to [], see watch/groupSlotToEditUid
+   selectedTestUIDs.value = []
+   slotTestsLoading.value = false
    edit.value = false
    addOrEditSlotDialog.value = true
 }
 
-// when a new slot is edited, start observing its associated tests
-const groupSlotToEdit = ref()
-watch(groupSlotToEdit, (groupSlot) => {
-   if (slotSubscription) slotSubscription.unsubscribe()
-   if (groupSlot === null) {
-      selectedTestUIDs.value = []
-   } else {
-      slotSubscription = groupslotShdltestRelations$({ group_slot_uid: groupSlot.uid }).subscribe((relationList) => {
-         selectedTestUIDs.value = relationList.map(relation => relation.test_uid)
-      })
-   }
-})
-
 async function editSlot(groupSlot) {
-   groupSlotToEdit.value = groupSlot // start observation of tests for this slot (see watch/groupSlotToEditUid)
-
+   slotEditRequest++
    slotData.value = {
       uid: groupSlot.uid,
       group_uid: groupSlot.group_uid,
@@ -228,43 +222,83 @@ async function editSlot(groupSlot) {
       enddate: groupSlot.end.substring(0, 10),
       endtime: new Date(groupSlot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
    }
+   selectedTestUIDs.value = relationsForSlot(groupSlot.uid).map(relation => relation.test_uid)
+   slotTestsLoading.value = !groupSlotSHDLTestRelationList.value
    edit.value = true
    addOrEditSlotDialog.value = true
 }
 
+watch(groupSlotSHDLTestRelationList, relations => {
+   if (!addOrEditSlotDialog.value || !edit.value || !slotTestsLoading.value || !relations) return
+   selectedTestUIDs.value = relationsForSlot(slotData.value.uid).map(relation => relation.test_uid)
+   slotTestsLoading.value = false
+})
+
+function relationsForSlot(groupSlotUid) {
+   return (groupSlotSHDLTestRelationList.value || [])
+      .filter(relation => relation.group_slot_uid === groupSlotUid)
+}
+
 const createSlot = async () => {
-   // create group slot
-   const createdGroupSlot = await createGroupSlot({
-      group_uid: props.group_uid,
-      name: slotData.value.name,
-      start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
-      end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
-   })
-   // add group_slot <-> test relations
-   for (const test_uid of selectedTestUIDs.value) {
-      await createGroupSlotSHDLTestRelation({ group_slot_uid: createdGroupSlot.uid, test_uid })
+   savingSlot.value = true
+   try {
+      await refreshExpiration()
+      const createdGroupSlot = await createGroupSlot({
+         group_uid: props.group_uid,
+         name: slotData.value.name,
+         start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
+         end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
+      })
+      await Promise.all(selectedTestUIDs.value.map(test_uid =>
+         createGroupSlotSHDLTestRelation({ group_slot_uid: createdGroupSlot.uid, test_uid })
+      ))
+      closeSlotDialog()
+      displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch (err) {
+      displaySnackbar({ text: "Erreur lors de la création du créneau.", color: 'error', timeout: 4000 })
+   } finally {
+      savingSlot.value = false
    }
 }
 
 const updateSlot = async () => {
-   console.log('update', slotData.value)
-
-   // update group_slot <-> test relations
-   const [toAddTestUIDs, toRemoveRelationUIDs] = await groupDifference(slotData.value.uid, selectedTestUIDs.value)
-   for (const test_uid of toAddTestUIDs) {
-      await createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.value.uid, test_uid })
+   savingSlot.value = true
+   try {
+      await refreshExpiration()
+      const currentRelations = relationsForSlot(slotData.value.uid)
+      const toAddTestUIDs = selectedTestUIDs.value.filter(testUid =>
+         !currentRelations.some(relation => relation.test_uid === testUid)
+      )
+      const toRemoveRelationUIDs = currentRelations
+         .filter(relation => !selectedTestUIDs.value.includes(relation.test_uid))
+         .map(relation => relation.uid)
+      await Promise.all([
+         ...toAddTestUIDs.map(test_uid =>
+            createGroupSlotSHDLTestRelation({ group_slot_uid: slotData.value.uid, test_uid })
+         ),
+         ...toRemoveRelationUIDs.map(relation_uid =>
+            removeGroupSlotSHDLTestRelation(relation_uid)
+         ),
+         updateGroupSlot(slotData.value.uid, {
+            group_uid: slotData.value.group_uid,
+            name: slotData.value.name,
+            start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
+            end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
+         }),
+      ])
+      closeSlotDialog()
+      displaySnackbar({ text: "Modification effectuée avec succès !", color: 'success', timeout: 2000 })
+   } catch (err) {
+      displaySnackbar({ text: "Erreur lors de la modification du créneau.", color: 'error', timeout: 4000 })
+   } finally {
+      savingSlot.value = false
    }
-   for (const relation_uid of toRemoveRelationUIDs) {
-      await removeGroupSlotSHDLTestRelation(relation_uid)
-   }
+}
 
-   // update group slot
-   await updateGroupSlot(slotData.value.uid, {
-      group_uid: slotData.value.group_uid,
-      name: slotData.value.name,
-      start: new Date(slotData.value.startdate + 'T' + slotData.value.starttime),
-      end: new Date(slotData.value.enddate + 'T' + slotData.value.endtime),
-   })
+function closeSlotDialog() {
+   slotEditRequest++
+   addOrEditSlotDialog.value = false
+   slotTestsLoading.value = false
 }
 
 const deleteSlot = async (groupSlot) => {

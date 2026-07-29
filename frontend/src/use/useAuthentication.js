@@ -89,13 +89,13 @@ export function useAuthentication(app) {
       }
    }
 
-   const extendExpiration = useDebounceFn(doExtendExpiration, 5000)
-
-   async function doExtendExpiration() {
-      if (!app.isConnected) return
+   async function refreshExpiration() {
+      if (!app.isConnected) throw new Error('Socket is not connected')
       console.log('DO extend expiration')
-      await app.service('auth', { volatile: true }).extendExpiration()
+      await app.service('auth').extendExpiration()
    }
+
+   const extendExpiration = useDebounceFn(refreshExpiration, 5000)
 
    return {
       clearCaches,
@@ -104,5 +104,6 @@ export function useAuthentication(app) {
       signup,
       signout,
       extendExpiration,
+      refreshExpiration,
    }
 }

@@ -43,6 +43,10 @@ export default function useExpressXClient() {
    if (!app) {
       socket = io(socketOptions);
       app = createClient(socket, { debug: false });
+      Object.defineProperty(app, 'isConnected', {
+         enumerable: true,
+         get: () => Boolean(socket?.connected),
+      })
 
       app.configure(electricClientPlugin, {
          // Keep Electric's long-polling requests out of Vite's HTTP/1.1

@@ -41,7 +41,7 @@
   "dependencies": {
     "@electric-sql/client": "^1.5.24",
     "@jcbuisson/express-x": "^4.0.4",
-    "@jcbuisson/express-x-plugins": "^4.0.7",
+    "@jcbuisson/express-x-plugins": "^4.0.8",
     "bcryptjs": "^2.4.3",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
