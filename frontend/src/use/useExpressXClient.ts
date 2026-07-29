@@ -48,16 +48,23 @@ export default function useExpressXClient() {
          get: () => Boolean(socket?.connected),
       })
 
+      const origin = import.meta.env.DEV ? 'http://localhost:3016' : window.location.origin
+      const url = new URL('/electric/v1/shape', origin)
+
       app.configure(electricClientPlugin, {
-         // Keep Electric's long-polling requests out of Vite's HTTP/1.1
-         // connection pool so that page navigations cannot be starved.
-         shapePath: new URL(
-            '/electric/v1/shape',
-            import.meta.env.DEV
-               ? `${window.location.protocol}//${window.location.hostname}:3016`
-               : window.location.origin,
-         ).href,
+         shapePath: url.href
       })
+
+      // app.configure(electricClientPlugin, {
+      //    // Keep Electric's long-polling requests out of Vite's HTTP/1.1
+      //    // connection pool so that page navigations cannot be starved.
+      //    shapePath: new URL(
+      //       '/electric/v1/shape',
+      //       import.meta.env.DEV
+      //          ? `${window.location.protocol}//${window.location.hostname}:3016`
+      //          : window.location.origin,
+      //    ).href,
+      // })
 
       // reload plugin: handles cnx-transfer on page reload (persists socket id in sessionStorage)
       configureReload(app);

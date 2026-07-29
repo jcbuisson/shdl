@@ -214,8 +214,9 @@ function onAvatarClick() {
 }
 
 const userPictPath = computed(() => (user) => {
-   if (user?.pict) {
-      return import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
-   }
+   if (!user?.pict) return '/static/img/avatar.svg'
+   return user.pict.startsWith('/')
+      ? user.pict
+      : import.meta.env.VITE_APP_UPLOAD_AVATARS_PATH + user.pict
 })
 </script>
