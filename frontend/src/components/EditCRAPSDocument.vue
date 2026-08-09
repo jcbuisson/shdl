@@ -7,7 +7,13 @@
             :style="{ backgroundColor: message.inError ? '#E15241' : '#67AD5B' }"
             style="color: white; height: 48px; padding: 10px;">
          <h5>{{ message.text }}</h5>
-         <v-btn class="ml-auto" density="compact" icon="mdi-format-indent-increase"
+         <v-btn class="ml-auto" density="compact" icon="mdi-magnify"
+                variant="text" color="white"
+                title="Rechercher (Ctrl+F)" @click="openFind"></v-btn>
+         <v-btn density="compact" icon="mdi-find-replace"
+                variant="text" color="white" :disabled="props.readonly"
+                title="Rechercher et remplacer (Ctrl+H)" @click="openReplace"></v-btn>
+         <v-btn density="compact" icon="mdi-format-indent-increase"
                 variant="text" color="white" :disabled="props.readonly"
                 title="Formater" @click="formatCRAPS"></v-btn>
       </div>
@@ -26,6 +32,7 @@ import { map } from 'rxjs'
 
 import ace from 'ace-builds'
 import 'ace-builds/src-noconflict/theme-chrome'
+import 'ace-builds/src-noconflict/ext-searchbox'
 import '/src/lib/craps/crapsAceMode.js'
 
 import useExpressXClient from '/src/use/useExpressXClient'
@@ -101,6 +108,14 @@ function initializeEditor() {
          }
       })
    }
+}
+
+function openFind() {
+   editor?.execCommand('find')
+}
+
+function openReplace() {
+   if (!props.readonly) editor?.execCommand('replace')
 }
 
 onBeforeUnmount(() => {
