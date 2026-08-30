@@ -202,6 +202,10 @@ const timeRules = [
    (v) => !!v || "L'heure est obligatoire",
 ]
 
+function localDateInputValue(value) {
+   return format(new Date(value), 'yyyy-MM-dd')
+}
+
 async function addSlot() {
    slotEditRequest++
    slotData.value = {}
@@ -217,9 +221,9 @@ async function editSlot(groupSlot) {
       uid: groupSlot.uid,
       group_uid: groupSlot.group_uid,
       name: groupSlot.name,
-      startdate: groupSlot.start.substring(0, 10),
+      startdate: localDateInputValue(groupSlot.start),
       starttime: new Date(groupSlot.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-      enddate: groupSlot.end.substring(0, 10),
+      enddate: localDateInputValue(groupSlot.end),
       endtime: new Date(groupSlot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
    }
    selectedTestUIDs.value = relationsForSlot(groupSlot.uid).map(relation => relation.test_uid)

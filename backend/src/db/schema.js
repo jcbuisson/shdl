@@ -37,8 +37,8 @@ export const group_slot = pgTable('group_slot', {
    uid:       text('uid').notNull().unique(),
    group_uid: text('group_uid').notNull(),
    name:      text('name').notNull(),
-   start:     timestamp('start').notNull(),
-   end:       timestamp('end').notNull(),
+   start:     timestamp('start', { withTimezone: true }).notNull(),
+   end:       timestamp('end', { withTimezone: true }).notNull(),
 })
 
 export const user_slot_excuse = pgTable('user_slot_excuse', {
@@ -70,9 +70,9 @@ export const user_test_relation = pgTable('user_test_relation', {
    uid:            text('uid').notNull().unique(),
    user_uid:       text('user_uid').notNull(),
    test_uid:       text('test_uid').notNull(),
-   first_try_date: timestamp('first_try_date'),
-   last_try_date:  timestamp('last_try_date'),
-   success_date:   timestamp('success_date'),
+   first_try_date: timestamp('first_try_date', { withTimezone: true }),
+   last_try_date:  timestamp('last_try_date', { withTimezone: true }),
+   success_date:   timestamp('success_date', { withTimezone: true }),
    update_count:   integer('update_count').notNull().default(0),
    evaluation:     integer('evaluation'),
    last_module_name: text('last_module_name'),
@@ -93,6 +93,6 @@ export const user_document_event = pgTable('user_document_event', {
    uid:          text('uid').notNull().unique(),
    document_uid: text('document_uid').notNull(),
    type:         text('type').notNull(), // 'create', 'edit', 'delete', 'pass_test'
-   start:        timestamp('start').notNull(),
-   end:          timestamp('end'),
+   start:        timestamp('start', { withTimezone: true }).notNull(),
+   end:          timestamp('end', { withTimezone: true }),
 })

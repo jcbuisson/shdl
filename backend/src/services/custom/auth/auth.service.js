@@ -29,7 +29,8 @@ export default function (app) {
          const user = rows[0] ?? null
          if (user) {
             await app.service('mail').send({
-               from: 'buisson@enseeiht.fr',
+               // from: 'buisson@enseeiht.fr',
+               from: config.MAIL_SENDER,
                to: email,
                subject: "Création compte SHDL",
                text: `<p>Bonjour,</p>
@@ -42,7 +43,8 @@ export default function (app) {
                algorithm: "RS256",
             })
             await app.service('mail').send({
-               from: 'buisson@enseeiht.fr',
+               // from: 'buisson@enseeiht.fr',
+               from: config.MAIL_SENDER,
                to: email,
                subject: "Création compte SHDL",
                text: `<p>Bonjour,</p>
@@ -118,7 +120,8 @@ export default function (app) {
             algorithm: "RS256",
          })
          await app.service('mail').send({
-            from: 'buisson@enseeiht.fr',
+            // from: 'buisson@enseeiht.fr',
+            from: config.MAIL_SENDER,
             to: email,
             subject: "SHDL, réinitialisation du mot de passe",
             text: `Cliquez <a href="${config.CLIENT_URL}/set-password/${token}">sur ce lien</a> pour réinitialiser votre mot de passe`,

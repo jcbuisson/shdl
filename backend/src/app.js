@@ -42,7 +42,6 @@ app.configure(electricOfflinePlugin, pgDB, [
    'groupslot_test_relation',
    'user_test_relation',
 ], {
-   // ElectricSQL sync service
    electricUrl: config.ELECTRIC_URL,
    authorize: async (context, { action }) => (
       action === 'shape' || Boolean(context.socket?.data?.user)
