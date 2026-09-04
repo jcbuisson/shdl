@@ -285,14 +285,13 @@ async function deleteDocument(module) {
 }
 
 const route = useRoute()
-const routeRegex = /\/home\/([a-z0-9]+)\/workshop\/([a-z0-9]+)/
 
-watch(() => [route.path, sortedDocumentList.value], async () => {
+watch(() => [route.params.document_uid, sortedDocumentList.value], () => {
    if (!sortedDocumentList.value) return
-   const match = route.path.match(routeRegex)
-   if (!match) return
-   const uid = match[2]
-   selectedDocument.value = sortedDocumentList.value.find(module => module.uid === uid)
+   const documentUid = route.params.document_uid
+   selectedDocument.value = documentUid
+      ? sortedDocumentList.value.find(document => document.uid === documentUid) ?? null
+      : null
 }, { immediate: true })
 
 watch(typeFilter, () => {
