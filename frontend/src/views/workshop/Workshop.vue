@@ -258,12 +258,10 @@ async function createDocument() {
    });
    const uid = uuidv7();
    await createUserDocumentEvent({
-      data: {
-         uid,
-         document_uid: document.uid,
-         type: 'create',
-         start: new Date(),
-      }
+      uid,
+      document_uid: document.uid,
+      type: 'create',
+      start: new Date(),
    });
    selectDocument(document);
 }
