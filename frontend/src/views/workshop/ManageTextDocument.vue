@@ -22,8 +22,7 @@ import { ref, watch, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'v
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
-import ace from 'ace-builds'
-import 'ace-builds/src-noconflict/mode-json'
+import ace from '/src/lib/aceJson.js'
 import 'ace-builds/src-noconflict/theme-chrome'
 
 import useExpressXClient from '/src/use/useExpressXClient';
