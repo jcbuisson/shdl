@@ -8,6 +8,7 @@ import * as schema from '#root/src/db/schema.js'
 
 async function afterSignin(context) {
    context.socket.data.user = Object.assign({}, context.result)
+   delete context.socket.data.user.password
    const now = new Date()
    context.socket.data.expiresAt = new Date(now.getTime() + config.SESSION_EXPIRE_DELAY)
    console.log('socket.data.expiresAt set by afterSignin', context.socket.data.expiresAt)

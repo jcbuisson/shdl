@@ -29,7 +29,7 @@ export default function (app) {
          const user = rows[0] ?? null
          if (user) {
             await app.service('mail').send({
-               from: config.EMAIL_FROM,
+               from: config.MAIL_SENDER,
                to: email,
                subject: "Création compte SHDL",
                text: `<p>Bonjour,</p>
@@ -42,7 +42,7 @@ export default function (app) {
                algorithm: "RS256",
             })
             await app.service('mail').send({
-               from: config.EMAIL_FROM,
+               from: config.MAIL_SENDER,
                to: email,
                subject: "Création compte SHDL",
                text: `<p>Bonjour,</p>
@@ -63,21 +63,15 @@ export default function (app) {
             password = await bcrypt.hash(password, 5)
             const uid = uuidv7()
             const data = { uid, email: payload.email, password, firstname, lastname }
-            const created_at = new Date()
             const db = app.get('db')
-            const [user] = await db.transaction(async (tx) => {
-               const [u] = await tx.insert(schema.user).values({ uid, ...data }).returning()
-               await tx.insert(schema.metadata).values({ uid, created_at }).returning()
-               return [u]
+            const user = await db.transaction(async (tx) => {
+               const [user] = await tx.insert(schema.user).values(data).returning()
+               // give user tab 'workshop'
+               await tx.insert(schema.user_tab_relation).values({
+                  uid: uuidv7(), user_uid: user.uid, tab: 'workshop',
+               }).returning()
+               return user
             })
-            // give user tab 'workshop'
-            for (const tab of ['workshop']) {
-               const tabUid = uuidv7()
-               await db.transaction(async (tx) => {
-                  await tx.insert(schema.user_tab_relation).values({ uid: tabUid, user_uid: user.uid, tab }).returning()
-                  await tx.insert(schema.metadata).values({ uid: tabUid, created_at }).returning()
-               })
-            }
             return user
          } catch(err) {
             if (err.code === 'jwt-error') {
@@ -118,7 +112,7 @@ export default function (app) {
             algorithm: "RS256",
          })
          await app.service('mail').send({
-            from: config.EMAIL_FROM,
+            from: config.MAIL_SENDER,
             to: email,
             subject: "SHDL, réinitialisation du mot de passe",
             text: `Cliquez <a href="${config.CLIENT_URL}/set-password/${token}">sur ce lien</a> pour réinitialiser votre mot de passe`,

@@ -12,7 +12,7 @@ export default {
 
    SESSION_EXPIRE_DELAY: parseInt(process.env.SESSION_EXPIRE_DELAY),
 
-   EMAIL_FROM: process.env.MAIL_SENDER,
+   MAIL_SENDER: process.env.MAIL_SENDER,
    NODEMAILER: {
       host: process.env.MAIL_HOST,
       port: process.env.MAIL_PORT,

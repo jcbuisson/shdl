@@ -6,9 +6,10 @@ services:
     environment:
       DATABASE_URL: postgresql://chris:eureka31@host.docker.internal:5432/shdl
       ELECTRIC_INSECURE: "true"
+      ELECTRIC_REPLICATION_STREAM_ID: shdl
       ELECTRIC_STORAGE: FAST_FILE
       ELECTRIC_PERSISTENT_STATE: FILE
-      ELECTRIC_STORAGE_DIR: /var/lib/electric
+      ELECTRIC_STORAGE_DIR: /var/lib/electric/shdl
     ports:
       - "3216:3000"
     volumes:
