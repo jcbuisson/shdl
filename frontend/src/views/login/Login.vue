@@ -6,7 +6,7 @@
             {{ title }}
          </div>
          
-         <v-form v-model="valid" ref="form" lazy-validation>
+         <v-form v-model="valid" ref="form" lazy-validation @submit.prevent="submit">
          
             <v-text-field
                name="email"
@@ -16,7 +16,6 @@
                :rules="emailRules"
                :autocomplete= 'isConnection ? "new-password" : null'
                required
-               @keyup.enter.native="submit"
             ></v-text-field>
 
             <!-- see https://stackoverflow.com/questions/15738259/disabling-chrome-autofill -->
@@ -29,14 +28,13 @@
                v-model="password"
                :rules="passwordRules"
                required
-               @keyup.enter.native="submit"
                :append-inner-icon="hiddenPassword ? 'mdi-eye' : 'mdi-eye-off'"
                @click:append-inner="() => (hiddenPassword = !hiddenPassword)"
                :type="hiddenPassword ? 'password' : 'text'"
             ></v-text-field>
             
             <div class="submit-block">
-               <v-btn @click="submit" :disabled="!valid" flat color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
+               <v-btn type="submit" :disabled="!valid" flat color="indigo-darken-3" style="width: 100%;">{{ submitButtonText }}</v-btn>
             </div>
          </v-form>
 
@@ -110,6 +108,7 @@ function onModeButtonTap() {
 }
 
 function submit() {
+   if (!valid.value) return
    if (isConnection.value) {
       signIn()
    } else {

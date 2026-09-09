@@ -71,8 +71,8 @@ export default function useExpressXClient() {
 
       const { restartApp } = useAuthentication(app);
 
-      app.addErrorListener((socket: Socket, err: unknown) => {
-         console.log('CNX ERROR!!!', socket.id, err)
+      socket.on('connect_error', (err: Error) => {
+         console.error('Socket.IO connection failed:', err.message, err)
       })
 
       socket.on('expiresAt', async (expiresAt: unknown) => {

@@ -10,14 +10,6 @@
                      variant="underlined"
                   ></v-text-field>
                </v-col>
-               <v-col cols="12" sm="3">
-                  <v-select
-                     label="Type"
-                     v-model="data.type"
-                     :items="['shdl', 'craps']"
-                     variant="underlined"
-                  ></v-select>
-               </v-col>
             </v-row>
          </v-container>
          <div class="submit-block">
@@ -29,6 +21,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
@@ -48,16 +41,15 @@ const props = defineProps({
    },
 })
 
-const data = ref({
-   type: 'shdl',
-})
+const typeFilter = useLocalStorage('shdl_selected_test_type', 'shdl')
+const data = ref({})
 
 const valid = ref()
 
 async function submit() {
    try {
       extendExpiration()
-      const test = await createTest(data.value)
+      const test = await createTest({ ...data.value, type: typeFilter.value })
       displaySnackbar({ text: "Création effectuée avec succès !", color: 'success', timeout: 2000 })
       router.push(`/home/${props.signedinUid}/tests/${test.uid}`)
    } catch(err) {

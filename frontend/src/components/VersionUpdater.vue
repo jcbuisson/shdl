@@ -8,7 +8,9 @@ const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
    onRegistered(r) {
       r &&
          setInterval(() => {
-            r.update();
+            r.update().catch((error: unknown) => {
+               console.warn('Service worker update check failed:', error);
+            });
          }, 10000);
    },
 });

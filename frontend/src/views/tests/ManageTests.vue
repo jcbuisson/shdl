@@ -7,7 +7,7 @@
             <!-- Test filters (do not grow) -->
             <div class="d-flex flex-column bg-red-darken-4">
                <div class="d-flex align-center">
-                  <v-btn-toggle v-model="typeFilter" density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
+                  <v-btn-toggle v-model="typeFilter" mandatory density="compact" class="mx-2" style="flex-shrink: 0; background: transparent">
                      <v-btn value="shdl" size="small" variant="text" rounded="lg"
                         :style="typeFilter === 'shdl' ? 'background: white; color: #b71c1c; font-weight: bold' : 'color: white'">SHDL</v-btn>
                      <v-btn value="craps" size="small" variant="text" rounded="lg"
