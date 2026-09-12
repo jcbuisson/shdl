@@ -95,7 +95,8 @@ export function useAuthentication(app) {
       await app.service('auth').extendExpiration()
    }
 
-   const extendExpiration = useDebounceFn(refreshExpiration, 5000)
+   // Continuous editing must renew the session even without a pause in typing.
+   const extendExpiration = useDebounceFn(refreshExpiration, 5000, { maxWait: 30000 })
 
    return {
       clearCaches,

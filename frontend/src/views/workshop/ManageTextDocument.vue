@@ -28,9 +28,11 @@ import 'ace-builds/src-noconflict/theme-chrome'
 import useExpressXClient from '/src/use/useExpressXClient';
 
 import { useUserDocument } from '/src/use/useUserDocument'
+import { useAuthentication } from '/src/use/useAuthentication'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 
 const { app } = useExpressXClient();
+const { extendExpiration } = useAuthentication(app)
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
 
@@ -93,6 +95,9 @@ function initializeEditor() {
             if (currentDocument.value) {
                hasPendingLocalEdit = true
                currentDocument.value.text = text
+               if (app.isConnected) extendExpiration().catch(err => {
+                  console.warn('Could not renew workshop session:', err)
+               })
                onTextChangeDebounced(text)
             }
          }

@@ -37,12 +37,14 @@ import '/src/lib/craps/crapsAceMode.js'
 
 import useExpressXClient from '/src/use/useExpressXClient'
 import { useUserDocument } from '/src/use/useUserDocument'
+import { useAuthentication } from '/src/use/useAuthentication'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { checkModule } from '/src/lib/craps/crapsChecker.js'
 import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
 import { installSessionClipboardGuard } from '/src/lib/sessionClipboardGuard'
 
 const { app } = useExpressXClient()
+const { extendExpiration } = useAuthentication(app)
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
 const { setAssembly } = useCRAPSAssembly()
@@ -103,6 +105,9 @@ function initializeEditor() {
             if (currentDocument.value) {
                hasPendingLocalEdit = true
                currentDocument.value.text = text
+               if (app.isConnected) extendExpiration().catch(err => {
+                  console.warn('Could not renew workshop session:', err)
+               })
                onTextChangeDebounced(text)
             }
          }
