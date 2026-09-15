@@ -14,17 +14,16 @@
                autofocus tabindex="1"
                v-model="email"
                :rules="emailRules"
-               :autocomplete= 'isConnection ? "new-password" : null'
+               :autocomplete="email"
                required
             ></v-text-field>
 
-            <!-- see https://stackoverflow.com/questions/15738259/disabling-chrome-autofill -->
             <v-text-field
                v-if="isConnection"
                name="password"
                label="Mot de passe"
                tabindex="2"
-               autocomplete="new-password"
+               autocomplete="current-password"
                v-model="password"
                :rules="passwordRules"
                required
