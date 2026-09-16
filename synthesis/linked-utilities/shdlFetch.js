@@ -1,7 +1,6 @@
 
 import { peg$parse } from './parser.js';
 import _ from 'lodash';
-import axios from 'axios';
 
 
 function pegParse(moduleText) {
@@ -16,13 +15,12 @@ function pegParse(moduleText) {
 async function fetchShdlModule(app, moduleName, userId, options) {
    console.log(`Fetching module ${moduleName}...`)
    const userDocuments = await app.service('user_document').findMany({
-      where: {
-         user_uid: userId,
-         type: 'shdl',
-         name: moduleName,
-      }
+      user_uid: userId,
+      type: 'shdl',
+      name: moduleName,
    })
-   if (userDocuments.length !== 1) throw { message: `*** could not find module '${moduleName}'` }
+   if (userDocuments.length === 0) throw new Error(`*** could not find module '${moduleName}'`)
+   if (userDocuments.length > 1) throw new Error(`*** multiple SHDL documents named '${moduleName}'; rename duplicates before synthesis`)
    return {
       name: moduleName,
       text: userDocuments[0].text,
@@ -67,16 +65,9 @@ export async function fetchModuleTreeFromServer(app, rootModuleName, userId, opt
             // console.log("SKIPPED CIRCULARITY CHECK")
          }
          if (!name2module[submoduleName]) {
-            try {
-               let submodule = await fetchShdlModule(app, submoduleName, userId, options)
-               name2module[submoduleName] = submodule
-               toCheck.push(submodule)
-            } catch(error) {
-               throw {
-                  message: `*** error: unknown module '${submoduleName}'`,
-                  location: null,
-               }
-            }
+            let submodule = await fetchShdlModule(app, submoduleName, userId, options)
+            name2module[submoduleName] = submodule
+            toCheck.push(submodule)
          }
       }
    }

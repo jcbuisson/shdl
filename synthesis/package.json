@@ -9,7 +9,7 @@
   "homepage": "https://jcbuisson.dev",
   "main": "commander.js",
   "scripts": {
-    "test": "mocha"
+    "test": "node --test"
   },
   "bin": {
     "shdl": "./commander.js"
@@ -22,7 +22,6 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@jcbuisson/express-x-client": "^2.2.2",
     "axios": "^0.19.0",
     "colors": "^1.4.0",
     "commander": "^2.20.0",

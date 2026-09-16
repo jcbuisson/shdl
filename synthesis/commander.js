@@ -14,8 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
 
-import { io, Socket } from "socket.io-client";
-import expressXClient from "@jcbuisson/express-x-client";
+import { connectToServer } from './server-client.js';
 
 import { synthesize } from './synthesizer.js';
 import boards from './boards.js';
@@ -34,13 +33,6 @@ async function handleOptions(options) {
    if (!config.board) throw ({ message: "*** error: board name missing in config" })
    if (!boards[config.board.toLowerCase()]) throw ({ message: `*** error: unknown board name: ${config.board}` })
 
-   const socket = io(config.server, {
-      path: '/shdl-socket-io/',
-      transports: ["websocket"],
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
-   });
-   const app = expressXClient(socket, { debug: false });
    const credentials = await inquirer.prompt([
       {
          name: 'email',
@@ -53,7 +45,15 @@ async function handleOptions(options) {
          message: "Enter password:",
       }
    ]);
-   const { user } = await app.service('auth').signin(credentials.email, credentials.password);
+   const app = await connectToServer(config.server)
+   let user
+   try {
+      const result = await app.service('auth').signin(credentials.email, credentials.password)
+      user = result.user
+   } catch (error) {
+      app.disconnect()
+      throw error
+   }
 
    // collect synthesis arguments
    let userUid = user.uid
@@ -86,9 +86,12 @@ program
    .command('check <moduleName>')
    .description("Check SHDL module <moduleName> and display its hierarchy")
    .action(async function (moduleName, options) {
+      let app
       try {
          // handle options
-         let { app, userUid } = await handleOptions(options)
+         const connection = await handleOptions(options)
+         app = connection.app
+         const { userUid } = connection
          // fetch module
          let name2module = await fetchModuleTreeFromServer(app, moduleName, userUid, options)
          let module = name2module[moduleName]
@@ -99,6 +102,9 @@ program
          displayModuleStructure(module, name2module, '')
       } catch (error) {
          console.error(error.message)
+         process.exitCode = 1
+      } finally {
+         app?.disconnect()
       }
    })
 
@@ -107,13 +113,19 @@ program
    .description("Synthesize SHDL module <moduleName>")
    .option("-m, --memfile <memFile>", "Initialize memory blocks with <memFile>")
    .action(async function(moduleName, options) {
+      let app
       try {
          // handle options
-         let { app, userUid, board, vivadoPath } = await handleOptions(options)
+         const connection = await handleOptions(options)
+         app = connection.app
+         const { userUid, board, vivadoPath } = connection
          // start synthesis
          await synthesize(app, moduleName, userUid, board, vivadoPath, options)
       } catch (error) {
          console.error(error.message)
+         process.exitCode = 1
+      } finally {
+         app?.disconnect()
       }
    })
 
