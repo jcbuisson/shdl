@@ -1,6 +1,6 @@
 {
   "name": "shdl-synthesis",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "SHDL synthseis",
   "type": "module",
   "keywords": [
@@ -12,6 +12,7 @@
     "test": "node --test"
   },
   "bin": {
+    "shdl-synthesis": "./commander.js",
     "shdl": "./commander.js"
   },
   "repository": {

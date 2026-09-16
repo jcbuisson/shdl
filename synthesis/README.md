@@ -1,12 +1,12 @@
 # SHDL synthesis CLI
 
-Install dependencies in this directory with `npm install`, then configure the CLI:
+Run the published CLI with `npx`, then configure it:
 
 ```sh
-node commander.js config
-node commander.js check <moduleName>
-node commander.js synthesize <moduleName>
-node commander.js synthesize <moduleName> --memfile memory.json
+npx shdl-synthesis config
+npx shdl-synthesis check <moduleName>
+npx shdl-synthesis synthesize <moduleName>
+npx shdl-synthesis synthesize <moduleName> --memfile memory.json
 ```
 
 Configuration is stored in `~/.shdl_config.json`. Set `server` to the current
