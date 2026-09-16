@@ -1,6 +1,6 @@
 {
   "name": "shdl-synthesis",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "SHDL synthseis",
   "type": "module",
   "keywords": [
