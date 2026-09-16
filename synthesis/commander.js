@@ -149,7 +149,7 @@ program
                name: 'server',
                type: 'text',
                message: "Enter SHDL platform url:",
-               default: config.server || "https://app.shdl.fr",
+               default: "https://app.shdl.fr",
             },
             {
                name: 'board',
