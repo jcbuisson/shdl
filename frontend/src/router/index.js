@@ -51,6 +51,14 @@ const routes = [
       component: () => import('/src/views/Home.vue'),
       children: [
          {
+            path: 'documentation/:topic(shdl|craps)?',
+            props: route => ({
+               signedinUid: route.params.signedinUid,
+               topic: route.params.topic || 'shdl',
+            }),
+            component: () => import('/src/views/documentation/Documentation.vue'),
+         },
+         {
             path: 'users',
             meta: {
                roles: ['users']

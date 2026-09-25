@@ -111,7 +111,11 @@ const userTabs$ = userTabRelation$({ user_uid: props.signedinUid })
       map(relationList => tabs.filter(tab => relationList.find(relation => relation.tab === tab.uid))),
    )
 
-const userTabs = useObservable(userTabs$)
+const permittedTabs = useObservable(userTabs$)
+const userTabs = computed(() => permittedTabs.value ? [
+   ...permittedTabs.value,
+   { uid: 'documentation', name: 'Documentation' },
+] : [])
 
 const signedinUser = useObservable(user$({ uid: props.signedinUid }).pipe(
    map(userList => userList.length > 0 ? userList[0] : null)

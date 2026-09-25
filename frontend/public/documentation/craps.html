@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="fr">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Documentation CRAPS</title>
+   <style>
+      body { margin: 0; padding: clamp(1rem, 4vw, 2rem); font-family: system-ui, sans-serif; color: #303030; background: #fff; line-height: 1.6; }
+      main { max-width: 960px; margin: 0 auto; }
+      h1, h2, h3, h4 { line-height: 1.3; }
+      h2 { margin-top: 2.5rem; padding-bottom: .4rem; border-bottom: 1px solid #ddd; }
+      h3 { margin-top: 1.75rem; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
+      pre { padding: 1rem; overflow-x: auto; background: #f5f5f7; border: 1px solid #e4e4e7; border-radius: 6px; line-height: 1.5; }
+      p code, li code { overflow-wrap: anywhere; }
+      .table-scroll { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; margin: 1rem 0; text-align: left; }
+      th, td { padding: .65rem .8rem; border: 1px solid #ddd; vertical-align: top; }
+      th { background: #f5f5f7; }
+      td code { white-space: nowrap; }
+      a { color: #3949ab; }
+   </style>
+</head>
+<body>
+   <main>
+      <h1>Guide du programmeur CRAPS</h1>
+      <p>
+         L’architecture du jeu d’instructions (ISA) de CRAPS s’inspire largement de SPARC 32 bits, version 8.
+         Contrairement à SPARC, elle ne comporte ni fenêtres de registres ni instructions en virgule flottante.
+      </p>
+      <p>
+         CRAPS a une architecture 'load-store' : il possède de nombreux registres sur lesquels opèrent exclusivement la plupart des instructions.
+         Une seule instruction permet de lire en mémoire (<code>ld</code>) et une seule d’y écrire (<code>st</code>).
+         La mémoire étant considérée comme un composant lent, le jeu d’instructions encourage à utiliser les registres autant que possible et à limiter les accès à la mémoire.
+      </p>
+
+      <h2>Exemples</h2>
+      <p>Le programme suivant s’exécute en boucle sans jamais s’arrêter ; à chaque itération, il lit un nombre n sur 16 bits sur les interrupteurs simulés, calcule la racine carrée de n et l’affiche sur les 16 LED simulées.</p>
+      <pre><code>SW = 0x90000000 // adresse d’entrée/sortie des interrupteurs
+LD = 0xB0000000 // adresse d’entrée/sortie des LED
+
+           set    SW, %r8
+           set    LD, %r9
+loop:      ld     [%r8+%r0], %r1
+           umulcc %r1, %r1, %r2
+           st     %r2, [%r9+%r0]
+           ba     loop</code></pre>
+      <p>Ce deuxième programme calcule la somme des éléments d’un tableau d’entiers signés :</p>
+      <pre><code>tab      =      0x100000
+n        =      3
+
+         set    tab, %r1
+         clr    %r2
+         clr    %r3
+loop:    ld     [%r1+%r2], %r4
+         add    %r4, %r3, %r3
+         inc    %r2
+         cmp    %r2, n
+         blu    loop
+stop:    ba     stop
+
+         .org     tab
+         .word  -1, 10, 2*n+1</code></pre>
+
+      <h2>Organisation de la mémoire CRAPS</h2>
+      <h3>RAM</h3>
+      <p><code>[0x00000000 - 0x10000000[</code></p>
+      <h3>Adresses d’entrée/sortie</h3>
+      <ul>
+         <li>Interrupteurs (16 bits) : lecture à l’adresse <code>0x90000000</code></li>
+         <li>LED (16 bits) : écriture à l’adresse <code>0xb0000000</code></li>
+      </ul>
+
+      <h2>Registres CRAPS</h2>
+      <h3>%r0 = 0</h3>
+      <p><code>%r0</code> est un registre particulier : sa lecture renvoie toujours 0. Il est possible d’y écrire, mais la valeur écrite est perdue.</p>
+      <p>Il est utile dans de nombreuses situations. Par exemple, lorsqu’on exécute <code>subcc %r1, %r2, %r0</code> pour comparer <code>%r1</code> et <code>%r2</code> (soit l’instruction synthétique <code>cmp %r1, %r2</code>), seul l’état des indicateurs nous intéresse, et non le résultat de la soustraction. Écrire ce résultat dans <code>%r0</code> évite donc de mobiliser un autre registre. Ce registre est aussi utilisé par les instructions synthétiques <code>clr</code>, <code>mov</code>, <code>setq</code>, <code>tst</code>, <code>negcc</code>, <code>push</code> et <code>pop</code>.</p>
+      <h3>%r1-%r19 : registres à usage général du programmeur</h3>
+      <p>Le programmeur peut les utiliser librement.</p>
+      <h3>%r28 : adresse de retour après un appel</h3>
+      <p>Voir les instructions synthétiques <code>call</code> et <code>ret</code>.</p>
+      <h3>%r29 = %sp : pointeur de pile</h3>
+      <p>Voir les instructions synthétiques de manipulation de la pile <code>push</code> et <code>pop</code>.</p>
+      <h3>%r30 = %pc : compteur ordinal</h3>
+      <p>Contient l’adresse courante d’exécution.</p>
+      <h3>%r31 = %ir : registre d’instruction</h3>
+      <p>Contient le code de l’instruction en cours d’exécution.</p>
+
+      <h2>Instructions CRAPS</h2>
+      <h3>add</h3>
+      <p>Comme addcc, mais sans modification des indicateurs.</p>
+      <h3>addcc</h3>
+      <pre><code>addcc %rs1, %rs2, %rd
+addcc %rs1, simm13, %rd</code></pre>
+      <p>Additionne les deux opérandes <code>%rs1</code> et <code>%rs2 / simm13</code> et place le résultat dans le registre <code>%rd</code>. L’indicateur C n’est pas ajouté aux opérandes.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z, V, C</p>
+      <p>Exemple : <code>addcc %r1, 5, %r1</code><br>Ajoute 5 à %r1 et met à jour les indicateurs N, Z, V, C.</p>
+
+      <h3>and</h3>
+      <p>Comme addcc, mais sans modification des indicateurs.</p>
+      <h3>andcc</h3>
+      <pre><code>andcc %rs1, %rs2, %rd
+andcc %rs1, simm13, %rd</code></pre>
+      <p>Effectue un ET bit à bit entre les deux opérandes <code>%rs1</code> et <code>%rs2 / simm13</code> et place le résultat dans le registre <code>%rd</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z</p>
+      <p>Exemple : <code>andcc %r1, %r2, %r3</code><br>Effectue un ET bit à bit entre %r1 et %r2 et place le résultat dans %r3.</p>
+
+      <h3>b(cond)</h3>
+      <pre><code>b(cond) label</code></pre>
+      <p>Si la condition cond est vérifiée, effectue un branchement vers l’étiquette label ; sinon, passe à l’instruction suivante.</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <h4>Conditions générales</h4>
+      <div class="table-scroll">
+         <table>
+            <thead><tr><th scope="col">Instruction</th><th scope="col">Description</th><th scope="col">Test</th></tr></thead>
+            <tbody>
+               <tr><td><code>ba</code></td><td>branchement systématique, inconditionnel</td><td>1</td></tr>
+               <tr><td><code>be / bz / beq</code></td><td>branchement si égal</td><td>Z</td></tr>
+               <tr><td><code>bne / bnz</code></td><td>branchement si différent</td><td>non Z</td></tr>
+               <tr><td><code>bcs</code></td><td>branchement si retenue à 1</td><td>C</td></tr>
+               <tr><td><code>bcc</code></td><td>branchement si retenue à 0</td><td>non C</td></tr>
+               <tr><td><code>bvs</code></td><td>branchement si débordement à 1</td><td>V</td></tr>
+               <tr><td><code>bvc</code></td><td>branchement si débordement à 0</td><td>non V</td></tr>
+            </tbody>
+         </table>
+      </div>
+      <h4>Conditions arithmétiques signées</h4>
+      <div class="table-scroll">
+         <table>
+            <thead><tr><th scope="col">Instruction</th><th scope="col">Description</th><th scope="col">Test</th></tr></thead>
+            <tbody>
+               <tr><td><code>bpos / bnn</code></td><td>branchement si positif</td><td>non N</td></tr>
+               <tr><td><code>bneg / bn</code></td><td>branchement si négatif</td><td>N</td></tr>
+               <tr><td><code>bg / bgt</code></td><td>branchement si strictement supérieur</td><td>non (Z ou (N ou exclusif V))</td></tr>
+               <tr><td><code>bge</code></td><td>branchement si supérieur ou égal</td><td>non (N ou exclusif V)</td></tr>
+               <tr><td><code>bl / blt</code></td><td>branchement si strictement inférieur</td><td>N ou exclusif V</td></tr>
+               <tr><td><code>ble</code></td><td>branchement si inférieur ou égal</td><td>Z ou (N ou exclusif V)</td></tr>
+            </tbody>
+         </table>
+      </div>
+      <h4>Conditions arithmétiques non signées</h4>
+      <div class="table-scroll">
+         <table>
+            <thead><tr><th scope="col">Instruction</th><th scope="col">Description</th><th scope="col">Test</th></tr></thead>
+            <tbody>
+               <tr><td><code>bgu</code></td><td>branchement si strictement supérieur, non signé</td><td>non (Z ou (N ou exclusif V))</td></tr>
+               <tr><td><code>bgeu</code></td><td>branchement si supérieur ou égal, non signé</td><td>non (N ou exclusif V)</td></tr>
+               <tr><td><code>blu</code></td><td>branchement si strictement inférieur, non signé</td><td>N ou exclusif V</td></tr>
+               <tr><td><code>bleu</code></td><td>branchement si inférieur ou égal, non signé</td><td>Z ou (N ou exclusif V)</td></tr>
+            </tbody>
+         </table>
+      </div>
+
+      <h3>call</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>clr</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>cmp</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>inc, incc</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>dec, deccc</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+
+      <h3>ld</h3>
+      <pre><code>ld [%rs1 + %rs2], %rd
+ls [%rs1 + simm13], %rd</code></pre>
+      <p>Charge le contenu d’une case mémoire dans le registre <code>%rd</code>. L’adresse de lecture est obtenue en additionnant <code>%rs1</code> et <code>%rs2 / simm13</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <p>Exemple : <code>ld [%r1 - 2], %r3</code><br>Calcule %r1 - 2, lit la mémoire à cette adresse et copie son contenu dans %r3.</p>
+
+      <h3>negcc</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>nop</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>or</h3>
+      <p>Comme orcc, mais sans modification des indicateurs.</p>
+      <h3>orcc</h3>
+      <pre><code>orcc %rs1, %rs2, %rd
+orcc %rs1, simm13, %rd</code></pre>
+      <p>Effectue un OU bit à bit entre les deux opérandes <code>%rs1</code> et <code>%rs2 / simm13</code> et place le résultat dans le registre <code>%rd</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z</p>
+      <p>Exemple : <code>orcc %r1, 1, %r1</code><br>Met à 1 le bit n° 0 de %r1 sans modifier les autres bits.</p>
+
+      <h3>push, pop</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>ret</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>reti</h3>
+      <p>« Retour d’interruption » : cette instruction doit être utilisée à la fin d’un sous-programme d’interruption.</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <h3>sethi</h3>
+      <pre><code>sethi imm24, %rd</code></pre>
+      <p>Chargement des bits de poids fort. Cette instruction est généralement utilisée par l’intermédiaire de l’instruction synthétique <code>set</code>. Elle affecte aux 24 bits de poids fort de <code>%rd</code> la valeur immédiate non signée <code>imm24</code>.</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <h3>set, setq</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+
+      <h3>sll</h3>
+      <pre><code>sll %rs1, %rs2, %rd
+sll %rs1, imm5, %rd</code></pre>
+      <p>Décalage logique à gauche. Décale les bits de <code>%rs1</code> de <code>%rs2</code> (ou <code>simm13</code>) positions vers la gauche et place le résultat dans le registre <code>%rd</code>. Des zéros sont insérés dans les <code>%rs2 / imm5</code> bits de poids faible de <code>%rd</code>.<br>Si <code>imm5</code> est utilisé, sa valeur doit appartenir à l’intervalle [0, 31].</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <p>Exemple : <code>sll %r1, 7, %r2</code><br>Décale les bits de %r1 vers la gauche et place le résultat dans %r2. Des zéros sont insérés dans les 7 bits de poids faible de %r2.</p>
+
+      <h3>slr</h3>
+      <pre><code>slr %rs1, %rs2, %rd
+slr %rs1, imm5, %rd</code></pre>
+      <p>Décalage logique à droite. Décale les bits de <code>%rs1</code> de <code>%rs2</code> (ou <code>simm13</code>) positions vers la droite et place le résultat dans le registre <code>%rd</code>. Des zéros sont insérés dans les <code>%rs2 / imm5</code> bits de poids fort de <code>%rd</code>.<br>Si <code>imm5</code> est utilisé, sa valeur doit appartenir à l’intervalle [0, 31].</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <p>Exemple : <code>slr %r1, 7, %r2</code><br>Décale les bits de %r1 vers la droite et place le résultat dans %r2. Des zéros sont insérés dans les 7 bits de poids fort de %r2.</p>
+
+      <h3>st</h3>
+      <pre><code>st %rd, [%rs1 + %rs2]
+st %rd, [%rs1 + simm13]</code></pre>
+      <p>Stocke <code>%rd</code> dans une case mémoire dont l’adresse est obtenue en additionnant <code>%rs1</code> et <code>%rs2 / simm13</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : aucun</p>
+      <p>Exemple : <code>ld %r3, [%r1 + %r2]</code><br>Calcule %r1 + %r2 et stocke la valeur de %r3 à cette adresse.</p>
+
+      <h3>sub</h3>
+      <p>Comme subcc, mais sans modification des indicateurs.</p>
+      <h3>subcc</h3>
+      <pre><code>subcc %rs1, %rs2, %rd
+subcc %rs1, simm13, %rd</code></pre>
+      <p>Soustrait <code>%rs2</code> ou <code>simm13</code> de <code>%rs1</code> et place le résultat dans le registre <code>%rd</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z, V, C</p>
+      <p>Exemple : <code>subcc %r1, 5, %r1</code><br>Calcule %r1 - 5, place le résultat dans %r1 et met à jour les indicateurs N, Z, V, C.</p>
+
+      <h3>tst</h3>
+      <p>Voir la section <a href="#synthetic-instructions">Instructions synthétiques</a>.</p>
+      <h3>umulcc</h3>
+      <pre><code>umulcc %rs1, %rs2, %rd
+umulcc %rs1, simm13, %rd</code></pre>
+      <p>Multiplication non signée. Prend uniquement les 16 bits de poids faible de <code>%rs1</code> et de <code>%rs2</code> ou <code>simm13</code>, effectue leur multiplication non signée et place le résultat dans le registre <code>%rd</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z</p>
+      <p>Exemple : <code>umulcc %r1, %r1, %r1</code><br>Élève %r1 au carré et met à jour les indicateurs N, Z.</p>
+
+      <h3>xor</h3>
+      <p>Comme xorcc, mais sans modification des indicateurs.</p>
+      <h3>xorcc</h3>
+      <pre><code>xorcc %rs1, %rs2, %rd
+xorcc %rs1, simm13, %rd</code></pre>
+      <p>Effectue un OU exclusif bit à bit entre les deux opérandes <code>%rs1</code> et <code>%rs2 / simm13</code> et place le résultat dans le registre <code>%rd</code>.<br>Si <code>simm13</code> est utilisé, sa valeur doit appartenir à l’intervalle [-4096, +4095].</p>
+      <p>Indicateurs modifiés : N, Z</p>
+      <p>Exemple : <code>xorcc %r1, %r2, %r3</code><br>Effectue un OU exclusif bit à bit entre %r1 et %r2 et place le résultat dans %r3.</p>
+
+      <h2 id="synthetic-instructions">Instructions synthétiques</h2>
+      <p>Les instructions synthétiques ne sont pas de véritables instructions : ce sont des façons plus simples et plus lisibles d’écrire des opérations courantes. Par exemple, la comparaison de <code>%r1</code> et de <code>%r2</code> peut s’écrire <code>cmp %r1, %r2</code>. Lors de l’assemblage, cette instruction synthétique est remplacée par <code>subcc %r1, %r2, %r0</code>.</p>
+      <p>Le tableau suivant présente l’ensemble des instructions synthétiques et leur équivalent :</p>
+      <div class="table-scroll">
+         <table>
+            <thead><tr><th scope="col">Instruction</th><th scope="col">Description</th><th scope="col">Implémentation</th></tr></thead>
+            <tbody>
+               <tr><td><code>clr %ri</code></td><td>met %ri à zéro</td><td><code>orcc %r0, %r0, %ri</code></td></tr>
+               <tr><td><code>mov %ri, %rj</code></td><td>copie %ri dans %rj</td><td><code>orcc %ri, %r0, %rj</code></td></tr>
+               <tr><td><code>inc %ri</code></td><td>incrémente %ri, sans modifier les indicateurs</td><td><code>add %ri, 1, %rj</code></td></tr>
+               <tr><td><code>inccc %ri</code></td><td>incrémente %ri, avec modification des indicateurs</td><td><code>addcc %ri, 1, %rj</code></td></tr>
+               <tr><td><code>dec %ri</code></td><td>décrémente %ri, sans modifier les indicateurs</td><td><code>sub %ri, 1, %rj</code></td></tr>
+               <tr><td><code>deccc %ri</code></td><td>décrémente %ri, avec modification des indicateurs</td><td><code>subcc %ri, 1, %rj</code></td></tr>
+               <tr><td><code>set imm32, %ri</code></td><td>copie imm32 dans %ri</td><td><code>sethi imm32[31..8], %ri</code><br><code>orcc %ri, imm32[7..0], %ri</code></td></tr>
+               <tr><td><code>setq simm13 %ri</code></td><td>copie simm13 dans %ri</td><td><code>orcc %r0, simm13, %ri</code></td></tr>
+               <tr><td><code>cmp %ri, %rj</code></td><td>compare %ri à %rj</td><td><code>subcc %ri, %rj, %r0</code></td></tr>
+               <tr><td><code>cmp %ri, simm13</code></td><td>compare %ri à simm13</td><td><code>subcc %ri, simm13, %r0</code></td></tr>
+               <tr><td><code>tst %ri</code></td><td>teste le signe et la nullité de %ri</td><td><code>subcc %ri, %r0, %r0</code></td></tr>
+               <tr><td><code>negcc %ri</code></td><td>remplace %ri par son opposé</td><td><code>subcc %r0, %ri, %ri</code></td></tr>
+               <tr><td><code>nop</code></td><td>aucune opération</td><td><code>sethi 0, %r0</code></td></tr>
+               <tr><td><code>call label</code></td><td>appelle un sous-programme terminal</td><td><code>or %r0, %r30, %r28</code><br><code>ba label</code></td></tr>
+               <tr><td><code>ret</code></td><td>revient d’un sous-programme terminal</td><td><code>orcc %r30, %r0, %r28</code></td></tr>
+               <tr><td><code>push %ri</code></td><td>empile %ri dans la pile mémoire</td><td><code>sub %r29, 1, %r29</code><br><code>st %ri, [%r29+%r0]</code></td></tr>
+               <tr><td><code>pop %ri</code></td><td>dépile un mot de la pile mémoire<br>et le place dans %ri</td><td><code>ld [%r29+%r0], %ri</code><br><code>add %r29, 1, %r29</code></td></tr>
+            </tbody>
+         </table>
+      </div>
+   </main>
+</body>
+</html>
