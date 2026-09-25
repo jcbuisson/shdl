@@ -1,5 +1,6 @@
 services:
   electric-shdl:
+    restart: unless-stopped
     image: electricsql/electric:1.7.8
     extra_hosts:
       - "host.docker.internal:host-gateway"
