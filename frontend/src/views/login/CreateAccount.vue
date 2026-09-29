@@ -55,6 +55,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { v7 as uuidv7 } from 'uuid'
 import { importSPKI, jwtVerify } from "jose"
 
 import { displaySnackbar } from '/src/use/useSnackbar'
@@ -84,6 +85,7 @@ const passwordConfirmed = ref('')
 const hiddenPassword = ref(true)
 const firstname = ref('')
 const lastname = ref('')
+const accountIds = { uid: uuidv7(), workshopTabUid: uuidv7() }
 
 async function submit() {
    try {
@@ -91,7 +93,7 @@ async function submit() {
       const publicKey = await importSPKI(publicKeyPEM, 'RS256')
       const { payload } = await jwtVerify(props.token, publicKey)
       console.log('payload', payload)
-      await app.service('auth').createAccountWithToken(props.token, password.value, firstname.value, lastname.value)
+      await app.service('auth').createAccountWithToken(props.token, password.value, firstname.value, lastname.value, accountIds)
       router.push('/login')
    } catch(err) {
       console.log('err', err)
@@ -144,4 +146,3 @@ async function submit() {
       background-color: #CB1D00;
    }
 </style>
-

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { v7 as uuidv7 } from 'uuid'
+import { validate as isUUID } from 'uuid'
 import { eq } from 'drizzle-orm'
 
 import hooks from './auth.hooks.js'
@@ -57,18 +57,21 @@ export default function (app) {
          return 'ok'
       },
 
-      createAccountWithToken: async (token, password, firstname, lastname) => {
+      createAccountWithToken: async (token, password, firstname, lastname, accountIds) => {
          try {
             const payload = jwt.verify(token, config.JWT_PRIVATE_KEY)
+            if (!isUUID(accountIds?.uid) || !isUUID(accountIds?.workshopTabUid)) {
+               throw new TypeError('Client-generated UUIDs are required for the account and workshop tab')
+            }
             password = await bcrypt.hash(password, 5)
-            const uid = uuidv7()
+            const uid = accountIds.uid
             const data = { uid, email: payload.email, password, firstname, lastname }
             const db = app.get('db')
             const user = await db.transaction(async (tx) => {
                const [user] = await tx.insert(schema.user).values(data).returning()
                // give user tab 'workshop'
                await tx.insert(schema.user_tab_relation).values({
-                  uid: uuidv7(), user_uid: user.uid, tab: 'workshop',
+                  uid: accountIds.workshopTabUid, user_uid: user.uid, tab: 'workshop',
                }).returning()
                return user
             })

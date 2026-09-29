@@ -3,7 +3,7 @@ import pg from 'pg'
 
 import { expressX } from '@jcbuisson/express-x/server'
 import { reloadPlugin } from '@jcbuisson/express-x-plugins/reload-server'
-import { electricOfflinePlugin } from '@jcbuisson/express-x-plugins/electric-server'
+import { electricServerPlugin } from '@jcbuisson/express-x-plugins/electric-server'
 
 import config from '#config'
 import { createDB } from './db/index.js'
@@ -29,7 +29,7 @@ app.use('/electric/v1', (_request, response, next) => {
    next()
 })
 
-app.configure(electricOfflinePlugin, pgDB, [
+app.configure(electricServerPlugin, pgDB, [
    'user',
    'group',
    'group_slot',
@@ -41,7 +41,8 @@ app.configure(electricOfflinePlugin, pgDB, [
    'test',
    'groupslot_test_relation',
    'user_test_relation',
-], {
+].map(name => ({ name, primaryKey: 'uid' })), {
+   sync: false,
    electricUrl: config.ELECTRIC_URL,
    authorize: async (context, { action }) => (
       action === 'shape' || Boolean(context.socket?.data?.user)

@@ -1,7 +1,8 @@
 // Solves the sync processes explosion problem, by creating only one sync process per model,
 // with further local filtering
 
-import { firstValueFrom, map, shareReplay } from 'rxjs'
+import { BehaviorSubject, combineLatest, firstValueFrom, map, shareReplay } from 'rxjs'
+import { v7 as uuidv7 } from 'uuid'
 
 const modelCache = new WeakMap()
 
@@ -38,8 +39,29 @@ export function useSharedElectricModel(app, modelName) {
    }
    if (models.has(modelName)) return models.get(modelName)
 
-   const model = app.createElectricModel(modelName)
-   const rowsObservable = model.getObservable({}).pipe(
+   const model = app.createElectricModel(modelName, { primaryKey: 'uid', idGeneration: 'client' })
+   // Keep confirmed local creates/deletes visible while Electric catches up.
+   const pending = new BehaviorSubject(new Map())
+   let latestRows = new Map()
+   const electricRows = model.getObservable({}).pipe(
+      map(rows => {
+         const byUid = new Map(rows.map(row => [row.uid, row]))
+         latestRows = byUid
+         for (const [uid, row] of pending.value) {
+            if (row === null ? !byUid.has(uid) : byUid.has(uid)) pending.value.delete(uid)
+         }
+         return rows
+      }),
+   )
+   const rowsObservable = combineLatest([electricRows, pending]).pipe(
+      map(([rows, changes]) => {
+         const byUid = new Map(rows.map(row => [row.uid, row]))
+         for (const [uid, row] of changes) {
+            if (row === null) byUid.delete(uid)
+            else if (!byUid.has(uid)) byUid.set(uid, row)
+         }
+         return [...byUid.values()]
+      }),
       shareReplay({ bufferSize: 1, refCount: true }),
    )
 
@@ -53,7 +75,21 @@ export function useSharedElectricModel(app, modelName) {
       return firstValueFrom(getObservable(where))
    }
 
-   const sharedModel = { ...model, getObservable, findMany }
+   async function create(data) {
+      // Pass both arguments explicitly: plugin 5.0.1's automatic-ID path drops the data.
+      const { uid = uuidv7(), ...fields } = data
+      const row = await model.create(uid, fields)
+      if (!latestRows.has(uid)) pending.next(new Map(pending.value).set(uid, row))
+      return row
+   }
+
+   async function remove(uid) {
+      const row = await model.remove(uid)
+      pending.next(new Map(pending.value).set(uid, null))
+      return row
+   }
+
+   const sharedModel = { ...model, create, remove, getObservable, findMany }
    models.set(modelName, sharedModel)
    return sharedModel
 }
