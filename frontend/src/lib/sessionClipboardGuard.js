@@ -10,18 +10,25 @@ function sessionToken() {
    return token
 }
 
-export function installSessionClipboardGuard(editor) {
-   const container = editor.container
+export function installSessionClipboardSource(container, getSelectedText) {
    const token = sessionToken()
-
    function onCopy(event) {
-      const selectedText = editor.getSelectedText()
+      const selectedText = getSelectedText()
       if (!selectedText || !event.clipboardData) return
 
       event.preventDefault()
       event.clipboardData.setData('text/plain', selectedText)
       event.clipboardData.setData(CLIPBOARD_TYPE, token)
    }
+
+   container.addEventListener('copy', onCopy, true)
+   return () => container.removeEventListener('copy', onCopy, true)
+}
+
+export function installSessionClipboardGuard(editor) {
+   const container = editor.container
+   const token = sessionToken()
+   const removeCopySource = installSessionClipboardSource(container, () => editor.getSelectedText())
 
    function onCut(event) {
       const selectedText = editor.getSelectedText()
@@ -40,12 +47,11 @@ export function installSessionClipboardGuard(editor) {
       }
    }
 
-   container.addEventListener('copy', onCopy, true)
    container.addEventListener('cut', onCut, true)
    container.addEventListener('paste', onPaste, true)
 
    return () => {
-      container.removeEventListener('copy', onCopy, true)
+      removeCopySource()
       container.removeEventListener('cut', onCut, true)
       container.removeEventListener('paste', onPaste, true)
    }
