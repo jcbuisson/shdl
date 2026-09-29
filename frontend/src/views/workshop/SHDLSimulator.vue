@@ -41,6 +41,9 @@
             :disabled="isTestRunning || memoryLoading"
             @update:model-value="onMemoryFileChange"
          />
+         <v-btn size="small" variant="text" prepend-icon="mdi-download" @click="downloadMemoryExample">
+            Télécharger un exemple JSON
+         </v-btn>
          <v-alert v-if="memoryMessage" :type="memoryError ? 'error' : 'success'" density="compact" class="mt-2">
             {{ memoryMessage }}
          </v-alert>
@@ -871,6 +874,18 @@ function executeLine(line) {
    } catch(err) {
       return "*** erreur de syntaxe ***"
    }
+}
+
+function downloadMemoryExample() {
+   const example = memoryInstances.value.map(memory => ({
+      ['0b' + '0'.repeat(memory[0].addrs.length)]: '0b' + '0'.repeat(memory.length),
+   }))
+   const url = URL.createObjectURL(new Blob([JSON.stringify(example, null, 2)], { type: 'application/json' }))
+   const link = globalThis.document.createElement('a')
+   link.href = url
+   link.download = 'memory-contents.json'
+   link.click()
+   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 async function onMemoryFileChange(value) {
