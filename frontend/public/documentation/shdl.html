@@ -132,6 +132,7 @@ q := d on h, set on init</code></pre>
       </ul>
 
       <h3>Initialisation des mémoires</h3>
+      <p>Les adresses et les valeurs acceptent les chaînes binaires avec le préfixe <code>0b</code> ou les chaînes hexadécimales avec le préfixe <code>0x</code>. Sans préfixe, les chiffres sont interprétés en binaire pour compatibilité : <code>"1010"</code>, <code>"0b1010"</code> et la valeur JSON <code>1010</code> représentent la même valeur. Les chaînes binaires sans préfixe doivent avoir la largeur du bloc ; les valeurs préfixées et les nombres JSON sont complétés à gauche par des zéros si nécessaire.</p>
       <p>Dans le simulateur, un champ « Contenu des mémoires (.json) » apparaît lorsque le circuit contient des blocs RAM ou ROM. La liste indique leur ordre et la taille des adresses et des données. Vous pouvez télécharger un exemple JSON adapté au circuit, puis charger votre fichier : les sorties sont recalculées immédiatement. Le chargement manuel quitte le test sélectionné. Les adresses absentes du fichier conservent leur contenu actuel.</p>
       <p>Le contenu initial des instances de RAM et de ROM peut être défini à l’aide d’un fichier de données, utilisable aussi bien pour la simulation que pour la synthèse sur un véritable FPGA. Pour obtenir la liste et les indices des instances de mémoire d’un circuit, exécutez :</p>
       <pre><code>shdl check &lt;module_name&gt; [-t &lt;team_name&gt;]</code></pre>

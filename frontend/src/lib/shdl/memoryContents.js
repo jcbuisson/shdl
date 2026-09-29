@@ -9,9 +9,19 @@ export function getMemoryInstances(equipotentials) {
 }
 
 function binary(value, width, label) {
-   if (typeof value !== 'string') throw new Error(`${label} : une chaîne est attendue.`)
-   let bits = value.replace(/\s/g, '')
-   if (/^0x[0-9a-f]+$/i.test(bits)) bits = BigInt(bits).toString(2).padStart(width, '0')
+   const isNumber = typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+   if (typeof value !== 'string' && !isNumber) {
+      throw new Error(`${label} : une chaîne ou un entier positif ou nul est attendu.`)
+   }
+   let bits = String(value).replace(/\s/g, '')
+   if (/^0x[0-9a-f]+$/i.test(bits)) {
+      bits = BigInt(bits).toString(2).padStart(width, '0')
+   } else if (/^0b[01]+$/i.test(bits)) {
+      bits = bits.slice(2).padStart(width, '0')
+   } else if (isNumber) {
+      // JSON numbers cannot retain leading zeroes; their digits still represent binary.
+      bits = bits.padStart(width, '0')
+   }
    if (!/^[01]+$/.test(bits) || bits.length !== width) {
       throw new Error(`${label} : ${width} bits attendus.`)
    }
