@@ -28,6 +28,24 @@
          ></v-select>
       </div>
 
+      <div v-if="memoryInstances.length" class="px-4 py-2">
+         <div v-for="(memory, index) in memoryInstances" :key="index" class="text-caption">
+            Bloc {{ index + 1 }} : {{ memory[0].type === 'rom' ? 'ROM' : 'RAM' }},
+            adresses sur {{ memory[0].addrs.length }} bits, données sur {{ memory.length }} bits
+         </div>
+         <v-file-input
+            label="Contenu des mémoires (.json)"
+            accept=".json,application/json"
+            density="compact"
+            hide-details
+            :disabled="isTestRunning || memoryLoading"
+            @update:model-value="onMemoryFileChange"
+         />
+         <v-alert v-if="memoryMessage" :type="memoryError ? 'error' : 'success'" density="compact" class="mt-2">
+            {{ memoryMessage }}
+         </v-alert>
+      </div>
+
       <!-- Toolbar (does not grow) -->
       <div v-if="!!selectedTest" class="d-flex align-center flex-wrap justify-space-between px-2">
          <div class="d-flex align-center" style="overflow: hidden;">
@@ -111,7 +129,7 @@ import { watch, onUnmounted, computed, ref } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
-import { strToBin } from '/src/lib/binutils.js'
+import { getMemoryInstances, loadMemoryContents } from '/src/lib/shdl/memoryContents.js'
 
 import useExpressXClient from '/src/use/useExpressXClient';
 
@@ -141,6 +159,10 @@ const props = defineProps({
 
 const document = useObservable(userDocument$(props.document_uid))
 const module = ref()
+const memoryMessage = ref('')
+const memoryError = ref(false)
+const memoryLoading = ref(false)
+const memoryInstances = computed(() => getMemoryInstances(module.value?.equipotentials ?? []))
 const previousValues = ref(null)
 const currentValues = ref(null)
 
@@ -182,7 +204,7 @@ watch(() => props.document_uid, async (document_uid) => {
    if (subscription) subscription.unsubscribe()
    subscription = module$(document_uid).subscribe({
       next: module_ => {
-         console.log('next simu', module_, module.value);
+         memoryMessage.value = '';
          // if (!module.value || !module_.structure) {
          //   console.log('NEXT simu', module_);
             selectedTest.value = null;
@@ -712,7 +734,13 @@ function initTest() {
    initializeEquipotentials(module.value);
    // load memory
    if (selectedTest.value.memory_contents) {
-      loadMemContents(selectedTest.value.memory_contents)
+      try {
+         loadMemoryContents(selectedTest.value.memory_contents, memoryInstances.value)
+      } catch (error) {
+         testStatusCode.value = 3
+         testStatusText.value = error.message
+         return
+      }
    }
    // load statements
    testStatementList.value = selectedTest.value.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : [];
@@ -845,98 +873,29 @@ function executeLine(line) {
    }
 }
 
-// function onMemFileChange(e) {
-//    var files = e.target.files || e.dataTransfer.files
-//    if (!files.length) return
-
-//    var reader = new FileReader()
-//    reader.onload = (e) => {
-//       let memContent = e.target.result
-//       loadMemContents(memContent)
-//       updateState()
-//    }
-//    reader.readAsText(files[0])
-// }
-
-function getMemoryInstanceArray() {
-   let memoryEquipotentials = equipotentials.value.filter(function(equipotential) {
-      if (equipotential.type === 'rom') return true
-      if (equipotential.type === 'ram_aread_swrite') return true
-   })
-   let memoryInstanceArray = []
-   memoryEquipotentials.forEach(equipotential => {
-      if (memoryInstanceArray[equipotential.memUUID] === undefined) memoryInstanceArray[equipotential.memUUID] = []
-      memoryInstanceArray[equipotential.memUUID][equipotential.memOutIndex] = equipotential
-   })
-   return memoryInstanceArray
-}
-
-function loadMemContents(memoryFileContent) {
-   testStatusCode.value = 2
-   let memoryContentArray
+async function onMemoryFileChange(value) {
+   const file = Array.isArray(value) ? value[0] : value
+   memoryMessage.value = ''
+   if (!file) return
+   const targetModule = module.value
+   memoryLoading.value = true
    try {
-      memoryContentArray = JSON.parse(memoryFileContent)
-   } catch(err) {
-      testStatusCode.value = 3
-      testStatusText.value = "JSON syntax error"
-      return
+      const contents = await file.text()
+      if (module.value !== targetModule) return
+      loadMemoryContents(contents, memoryInstances.value)
+      // A manual upload starts a free simulation, outside the selected test.
+      selectedTest.value = null
+      testToSelect.value = null
+      const error = updateState()
+      if (error) throw new Error(error)
+      memoryError.value = false
+      memoryMessage.value = `Mémoires chargées : ${file.name}`
+   } catch (error) {
+      if (module.value !== targetModule) return
+      memoryError.value = true
+      memoryMessage.value = error.message
+   } finally {
+      memoryLoading.value = false
    }
-   let memoryInstanceArray = getMemoryInstanceArray()
-   if (memoryInstanceArray.length != memoryContentArray.length) {
-      testStatusCode.value = 3
-      testStatusText.value = "Wrong number of memory initialization blocks"
-      return
-   }
-
-   memoryContentArray.forEach((memoryContent, memoryIndex) => {
-      // look for memory equipotentials
-      let memEquipotentials = memoryInstanceArray[memoryIndex]
-      // check arities
-      for (let addr in memoryContent) {
-         let addrLength = memEquipotentials[0].addrs.length
-         let dataLength = memEquipotentials.length
-         let addrArray = strToBin(addr, addrLength)
-         let dataArray = strToBin(memoryContent[addr], dataLength)
-         if (dataArray.length !== dataLength || addr.length !== addrLength) {
-            testStatusCode.value = 3
-            testStatusText.value = `arity issue for ${addr} : ${memoryContent[addr]}`
-            break
-         }
-         // fill memory
-         let status = loadMemLine(addr, dataArray, memEquipotentials)
-         if (status.length > 0) {
-            testStatusCode.value = 3
-            testStatusText.value = status
-            break
-         }
-      }
-   })
-   if (testStatusCode.value === 2) {
-      testStatusText.value = "MEMORY LOADED"
-   }
-}
-
-
-function loadMemLine(addr, dataArray, memEquipotentials) {
-   for (let i = 0; i < addr.length; i++) {
-      if (addr[i] !== '0' && addr[i] !== '1') {
-         return 'ADDRESS ISSUE'
-      }
-   }
-   let arity = memEquipotentials.length
-   for (let i = 0; i < arity; i++) {
-      let equipotential = memEquipotentials[i]
-      let value = dataArray[arity - equipotential.memOutIndex - 1]
-      if (value !== '0' && value !== '1') {
-         return 'VALUE ISSUE'
-      }
-      let boolValue = (value === '0') ? false : true
-      let saddr = Array.prototype.map.call(addr, function(digit) {
-         if (digit === '0') return false
-         if (digit === '1') return true
-      }).join(',')
-      equipotential.dict[saddr] = boolValue
-   }
-   return ''
 }
 </script>

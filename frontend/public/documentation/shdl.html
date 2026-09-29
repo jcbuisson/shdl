@@ -132,6 +132,7 @@ q := d on h, set on init</code></pre>
       </ul>
 
       <h3>Initialisation des mémoires</h3>
+      <p>Dans le simulateur, un champ « Contenu des mémoires (.json) » apparaît lorsque le circuit contient des blocs RAM ou ROM. La liste indique leur ordre et la taille des adresses et des données. Vous pouvez télécharger un exemple JSON adapté au circuit, puis charger votre fichier : les sorties sont recalculées immédiatement. Le chargement manuel quitte le test sélectionné. Les adresses absentes du fichier conservent leur contenu actuel.</p>
       <p>Le contenu initial des instances de RAM et de ROM peut être défini à l’aide d’un fichier de données, utilisable aussi bien pour la simulation que pour la synthèse sur un véritable FPGA. Pour obtenir la liste et les indices des instances de mémoire d’un circuit, exécutez :</p>
       <pre><code>shdl check &lt;module_name&gt; [-t &lt;team_name&gt;]</code></pre>
       <p>Voici un exemple de fichier pour 2 instances de mémoire (RAM ou ROM), la première de 8 × 3 bits, la seconde de 16 × 8 bits. Toutes les cases mémoire, ou seulement une partie d’entre elles, peuvent être définies.</p>
