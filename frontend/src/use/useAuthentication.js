@@ -13,6 +13,7 @@ import { useUserGroupRelation } from '/src/use/useUserGroupRelation'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useUserSlotExcuse } from '/src/use/useUserSlotExcuse'
 import { useUserTabRelation } from '/src/use/useUserTabRelation'
+import { resetSharedElectricModels } from '/src/use/useSharedElectricModel'
 
 import router from '/src/router'
 
@@ -23,6 +24,7 @@ export function useAuthentication(app) {
    const { putUser } = useUser(app)
 
    async function clearCaches() {
+      resetSharedElectricModels(app)
       console.log('clearCaches - starting')
 
       // Helper to add timeout to any promise

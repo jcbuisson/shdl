@@ -1,10 +1,26 @@
 // Solves the sync processes explosion problem, by creating only one sync process per model,
 // with further local filtering
 
-import { BehaviorSubject, combineLatest, firstValueFrom, map, shareReplay } from 'rxjs'
+import { BehaviorSubject, Subject, EMPTY, catchError, combineLatest, concat, defer, filter, finalize, firstValueFrom, map, merge, of, shareReplay, startWith, switchMap, tap } from 'rxjs'
 import { v7 as uuidv7 } from 'uuid'
 
 const modelCache = new WeakMap()
+const mutationClients = new WeakMap()
+
+export function resetSharedElectricModels(app) {
+   for (const model of modelCache.get(app)?.values() ?? []) model.reset()
+}
+
+function nextMutation(app) {
+   if (!mutationClients.has(app)) mutationClients.set(app, { clientId: uuidv7(), revision: 0 })
+   const client = mutationClients.get(app)
+   return { clientId: client.clientId, revision: String(++client.revision) }
+}
+
+function mutationFields(data) {
+   const { uid, version, deleted, ...fields } = data
+   return fields
+}
 
 function comparable(value) {
    return value instanceof Date ? value.toISOString() : value
@@ -39,16 +55,40 @@ export function useSharedElectricModel(app, modelName) {
    }
    if (models.has(modelName)) return models.get(modelName)
 
-   const model = app.createElectricModel(modelName, { primaryKey: 'uid', idGeneration: 'client' })
-   // Keep confirmed local creates/deletes visible while Electric catches up.
+   const service = app.service(modelName)
+   // Keep confirmed local mutations visible while Electric catches up.
    const pending = new BehaviorSubject(new Map())
+   const resets = new Subject()
+   let cachedRows
    let latestRows = new Map()
-   const electricRows = model.getObservable({}).pipe(
+   const electricRows = resets.pipe(
+      startWith(false),
+      switchMap(reset => defer(() => {
+         const controller = new AbortController()
+         const model = app.createElectricModel(modelName, {
+            primaryKey: 'uid', idGeneration: 'client',
+            streamOptions: { signal: controller.signal, parser: { int8: value => value } },
+         })
+         // Replay without waiting for HTTP; then refresh through one shared stream.
+         const initial = reset ? of([]) : cachedRows === undefined ? EMPTY : of(cachedRows)
+         let receivedElectricRows = false
+         const stream = model.getObservable({}).pipe(tap(() => { receivedElectricRows = true }))
+         // A first visit can load via the existing WebSocket even if HTTP polls are queued.
+         const snapshot = cachedRows === undefined ? defer(() => service.findMany({})).pipe(
+            filter(() => !receivedElectricRows),
+            catchError(() => EMPTY),
+         ) : EMPTY
+         return concat(initial, merge(stream, snapshot)).pipe(
+            finalize(() => controller.abort()),
+         )
+      })),
       map(rows => {
+         cachedRows = rows
          const byUid = new Map(rows.map(row => [row.uid, row]))
          latestRows = byUid
          for (const [uid, row] of pending.value) {
-            if (row === null ? !byUid.has(uid) : byUid.has(uid)) pending.value.delete(uid)
+            const confirmed = byUid.get(uid)
+            if (confirmed && BigInt(confirmed.version) >= BigInt(row.version)) pending.value.delete(uid)
          }
          return rows
       }),
@@ -57,10 +97,9 @@ export function useSharedElectricModel(app, modelName) {
       map(([rows, changes]) => {
          const byUid = new Map(rows.map(row => [row.uid, row]))
          for (const [uid, row] of changes) {
-            if (row === null) byUid.delete(uid)
-            else if (!byUid.has(uid)) byUid.set(uid, row)
+            byUid.set(uid, row)
          }
-         return [...byUid.values()]
+         return [...byUid.values()].filter(row => !row.deleted)
       }),
       shareReplay({ bufferSize: 1, refCount: true }),
    )
@@ -77,19 +116,45 @@ export function useSharedElectricModel(app, modelName) {
 
    async function create(data) {
       // Pass both arguments explicitly: plugin 5.0.1's automatic-ID path drops the data.
-      const { uid = uuidv7(), ...fields } = data
-      const row = await model.create(uid, fields)
-      if (!latestRows.has(uid)) pending.next(new Map(pending.value).set(uid, row))
+      const uid = data.uid ?? uuidv7()
+      const row = await service.create(uid, mutationFields(data), nextMutation(app))
+      publishMutation(uid, row)
       return row
    }
 
    async function remove(uid) {
-      const row = await model.remove(uid)
-      pending.next(new Map(pending.value).set(uid, null))
+      const row = await service.delete(uid, nextMutation(app))
+      publishMutation(uid, row)
       return row
    }
 
-   const sharedModel = { ...model, create, remove, getObservable, findMany }
+   function publishMutation(uid, row) {
+      const confirmed = latestRows.get(uid)
+      const newerPending = pending.value.get(uid)
+      if (newerPending && BigInt(newerPending.version) >= BigInt(row.version)) return
+      if (!confirmed || BigInt(confirmed.version) < BigInt(row.version)) {
+         pending.next(new Map(pending.value).set(uid, row))
+      }
+   }
+
+   async function update(uid, data) {
+      const row = await service.update(uid, mutationFields(data), nextMutation(app))
+      publishMutation(uid, row)
+      return row
+   }
+
+   async function findUnique(where) {
+      return (await findMany(where))[0] ?? null
+   }
+
+   function reset() {
+      cachedRows = undefined
+      latestRows = new Map()
+      pending.next(new Map())
+      resets.next(true)
+   }
+
+   const sharedModel = { create, update, remove, getObservable, findMany, findUnique, reset }
    models.set(modelName, sharedModel)
    return sharedModel
 }

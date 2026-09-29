@@ -7,6 +7,7 @@ import { electricServerPlugin } from '@jcbuisson/express-x-plugins/electric-serv
 
 import config from '#config'
 import { createDB } from './db/index.js'
+import { prepareSHDLSyncSchema } from './db/electricSync.js'
 import services from './services/index.js'
 import channels from './channels.js'
 
@@ -29,20 +30,22 @@ app.use('/electric/v1', (_request, response, next) => {
    next()
 })
 
-app.configure(electricServerPlugin, pgDB, [
-   'user',
-   'group',
-   'group_slot',
-   'user_tab_relation',
-   'user_group_relation',
-   'user_document',
-   'user_document_event',
-   'user_slot_excuse',
-   'test',
-   'groupslot_test_relation',
-   'user_test_relation',
-].map(name => ({ name, primaryKey: 'uid' })), {
-   sync: false,
+// Complete the idempotent migration before accepting requests.
+const migrationClient = await pgDB.connect()
+let electricModels
+try {
+   await migrationClient.query('BEGIN')
+   electricModels = await prepareSHDLSyncSchema(migrationClient)
+   await migrationClient.query('COMMIT')
+} catch (error) {
+   await migrationClient.query('ROLLBACK')
+   throw error
+} finally {
+   migrationClient.release()
+}
+
+app.configure(electricServerPlugin, pgDB, electricModels, {
+   sync: true,
    electricUrl: config.ELECTRIC_URL,
    authorize: async (context, { action }) => (
       action === 'shape' || Boolean(context.socket?.data?.user)

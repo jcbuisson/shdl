@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { validate as isUUID } from 'uuid'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 import hooks from './auth.hooks.js'
 import config from '#config'
@@ -15,7 +15,7 @@ export default function (app) {
 
       signin: async (email, password) => {
          const db = app.get('db')
-         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const rows = await db.select().from(schema.user).where(and(eq(schema.user.email, email), eq(schema.user.deleted, false))).limit(1)
          const user = rows[0] ?? null
          if (!user) throw new EXError('wrong-credentials')
          const correct = await bcrypt.compare(password, user.password)
@@ -25,7 +25,7 @@ export default function (app) {
 
       signup: async (email) => {
          const db = app.get('db')
-         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const rows = await db.select().from(schema.user).where(and(eq(schema.user.email, email), eq(schema.user.deleted, false))).limit(1)
          const user = rows[0] ?? null
          if (user) {
             await app.service('mail').send({
@@ -92,7 +92,7 @@ export default function (app) {
             const db = app.get('db')
             const rows = await db.update(schema.user)
                .set({ password })
-               .where(eq(schema.user.uid, payload.user_uid))
+               .where(and(eq(schema.user.uid, payload.user_uid), eq(schema.user.deleted, false)))
                .returning()
             const user = rows[0]
             delete user.password
@@ -108,7 +108,7 @@ export default function (app) {
 
       forgottenPassword: async (email) => {
          const db = app.get('db')
-         const rows = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1)
+         const rows = await db.select().from(schema.user).where(and(eq(schema.user.email, email), eq(schema.user.deleted, false))).limit(1)
          const user = rows[0] ?? null
          if (!user) return
          const token = jwt.sign({ user_uid: user.uid }, config.JWT_PRIVATE_KEY, {

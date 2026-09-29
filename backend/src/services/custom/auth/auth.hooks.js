@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 import config from '#config'
 import { protect } from '#root/src/common-server.mjs'
@@ -14,7 +14,7 @@ async function afterSignin(context) {
    console.log('socket.data.expiresAt set by afterSignin', context.socket.data.expiresAt)
    const db = context.app.get('db')
    const tabRelations = await db.select().from(schema.user_tab_relation)
-      .where(eq(schema.user_tab_relation.user_uid, context.socket.data.user.uid))
+      .where(and(eq(schema.user_tab_relation.user_uid, context.socket.data.user.uid), eq(schema.user_tab_relation.deleted, false)))
    const tabs = tabRelations.map(relation => relation.tab)
    const isTeacher = tabs.includes('followup')
    if (isTeacher) {
