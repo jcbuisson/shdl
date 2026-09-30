@@ -196,6 +196,59 @@ export default {
          { shdlName: "txd", pin: "D4", isInput: false, isOutput: true },
          { shdlName: "cts", pin: "D3", isInput: false, isOutput: true },
          { shdlName: "rds", pin: "E5", isInput: true, isOutput: false },
+
+         // Pin assignments: https://github.com/Digilent/digilent-xdc/blob/master/Nexys-4-Master.xdc
+
+         // Tri-color RGB LED 1
+         { shdlName: "red1", pin: "K5", isInput: false, isOutput: true },
+         { shdlName: "grn1", pin: "F13", isInput: false, isOutput: true },
+         { shdlName: "blu1", pin: "F6", isInput: false, isOutput: true },
+
+         // Tri-color RGB LED 2
+         { shdlName: "red2", pin: "K6", isInput: false, isOutput: true },
+         { shdlName: "grn2", pin: "H6", isInput: false, isOutput: true },
+         { shdlName: "blu2", pin: "L16", isInput: false, isOutput: true },
+
+         // Pmod Header JA
+         { shdlName: "ja1", pin: "B13", isInput: true, isOutput: true },
+         { shdlName: "ja2", pin: "F14", isInput: true, isOutput: true },
+         { shdlName: "ja3", pin: "D17", isInput: true, isOutput: true },
+         { shdlName: "ja4", pin: "E17", isInput: true, isOutput: true },
+         { shdlName: "ja7", pin: "G13", isInput: true, isOutput: true },
+         { shdlName: "ja8", pin: "C17", isInput: true, isOutput: true },
+         { shdlName: "ja9", pin: "D18", isInput: true, isOutput: true },
+         { shdlName: "ja10", pin: "E18", isInput: true, isOutput: true },
+
+         // Pmod Header JB
+         { shdlName: "jb1", pin: "G14", isInput: true, isOutput: true },
+         { shdlName: "jb2", pin: "P15", isInput: true, isOutput: true },
+         { shdlName: "jb3", pin: "V11", isInput: true, isOutput: true },
+         { shdlName: "jb4", pin: "V15", isInput: true, isOutput: true },
+         { shdlName: "jb7", pin: "K16", isInput: true, isOutput: true },
+         { shdlName: "jb8", pin: "R16", isInput: true, isOutput: true },
+         { shdlName: "jb9", pin: "T9", isInput: true, isOutput: true },
+         { shdlName: "jb10", pin: "U11", isInput: true, isOutput: true },
+
+         // Pmod Header JC
+         { shdlName: "jc1", pin: "K2", isInput: true, isOutput: true },
+         { shdlName: "jc2", pin: "E7", isInput: true, isOutput: true },
+         { shdlName: "jc3", pin: "J3", isInput: true, isOutput: true },
+         { shdlName: "jc4", pin: "J4", isInput: true, isOutput: true },
+         { shdlName: "jc7", pin: "K1", isInput: true, isOutput: true },
+         { shdlName: "jc8", pin: "E6", isInput: true, isOutput: true },
+         { shdlName: "jc9", pin: "J2", isInput: true, isOutput: true },
+         { shdlName: "jc10", pin: "G6", isInput: true, isOutput: true },
+
+         // Pmod Header JD
+         { shdlName: "jd1", pin: "H4", isInput: true, isOutput: true },
+         { shdlName: "jd2", pin: "H1", isInput: true, isOutput: true },
+         { shdlName: "jd3", pin: "G1", isInput: true, isOutput: true },
+         { shdlName: "jd4", pin: "G3", isInput: true, isOutput: true },
+         { shdlName: "jd7", pin: "H2", isInput: true, isOutput: true },
+         { shdlName: "jd8", pin: "G4", isInput: true, isOutput: true },
+         { shdlName: "jd9", pin: "G2", isInput: true, isOutput: true },
+         { shdlName: "jd10", pin: "F3", isInput: true, isOutput: true },
+
       ]
    },
 

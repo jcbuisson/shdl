@@ -13,6 +13,10 @@
       code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; }
       pre { padding: 1rem; overflow-x: auto; background: #f5f5f7; border: 1px solid #e4e4e7; border-radius: 6px; line-height: 1.5; }
       p code, li code { overflow-wrap: anywhere; }
+      .table-scroll { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+      th, td { padding: .6rem; border: 1px solid #ddd; text-align: left; vertical-align: top; }
+      th { background: #f5f5f7; }
    </style>
 </head>
 <body>
@@ -159,6 +163,90 @@ q := d on h, set on init</code></pre>
       "0b1000": "0b11001100"
    }
 ]</code></pre>
+
+      <h2 id="synthese">Synthèse sur une carte FPGA</h2>
+      <p>La synthèse transforme un module SHDL et ses sous-modules en un circuit implanté sur FPGA. L’outil en ligne de commande nécessite Node.js avec npm et une installation de Xilinx Vivado compatible avec le FPGA Artix-7 XC7A100T des cartes supportées. Pour programmer la carte, celle-ci doit être allumée, connectée par USB et accessible depuis Vivado.</p>
+
+      <h3>Configuration</h3>
+      <p>Dans un terminal, lancez :</p>
+      <pre><code>npx shdl-synthesis config</code></pre>
+      <p>La commande demande les trois paramètres suivants et les enregistre dans <code>~/.shdl_config.json</code> :</p>
+      <ul>
+         <li><strong>URL de la plateforme SHDL</strong> : par exemple <code>https://app.shdl.fr</code>, ou l’URL de votre serveur local.</li>
+         <li><strong>Nom de la carte</strong> : <code>nexys4</code> ou <code>nexys4-ddr</code>.</li>
+         <li><strong>Chemin de l’exécutable Vivado</strong> : le chemin de la commande <code>vivado</code> sur votre machine.</li>
+      </ul>
+      <p>Relancez cette commande pour changer de carte, de serveur ou d’installation Vivado.</p>
+
+      <h3>Vérification et synthèse</h3>
+      <p>Enregistrez et synchronisez d’abord votre module et ses dépendances sur la plateforme. Les commandes suivantes demandent l’adresse e-mail et le mot de passe de votre compte SHDL ; elles chargent les documents de ce compte depuis le serveur configuré. Chaque nom de module doit correspondre à un seul document SHDL.</p>
+      <pre><code># Vérifier un module et afficher la hiérarchie de ses sous-modules
+npx shdl-synthesis check mon_module
+
+# Synthétiser le module et programmer la carte
+npx shdl-synthesis synthesize mon_module
+
+# Synthétiser avec un fichier d’initialisation des mémoires
+npx shdl-synthesis synthesize mon_module --memfile memory.json</code></pre>
+      <p>Remplacez <code>mon_module</code> par le nom de votre module principal. La synthèse génère les fichiers VHDL, les contraintes de broches XDC et un script Tcl dans <code>/tmp</code>, puis lance Vivado pour effectuer la synthèse, le placement, le routage et la génération du bitstream. Le script programme ensuite la carte connectée. Les fichiers portent un nom composé du nom du module et d’un identifiant unique ; le bitstream a l’extension <code>.bit</code>.</p>
+      <p>L’option <code>-m</code> est équivalente à <code>--memfile</code>. Le fichier JSON contient un tableau de contenus, un par instance de mémoire dans l’ordre utilisé par la synthèse. Pour cette commande, utilisez des chaînes binaires sans préfixe pour les adresses et les valeurs, par exemple <code>[{"000": "110", "001": "100"}]</code> pour une mémoire dont les adresses et les données ont trois bits.</p>
+
+      <h3>Interface du module principal</h3>
+      <p>Les paramètres du module principal doivent porter exactement les noms des signaux de la carte choisie. Vous pouvez utiliser une partie de ces signaux et des portions de vecteurs. Un paramètre inconnu de la carte provoque une erreur de synthèse. Les sous-modules peuvent conserver leurs propres noms de paramètres.</p>
+      <pre><code>module copie_switches(sw[15:0] : ld[15:0])
+   ld[15:0] = sw[15:0]
+end module</code></pre>
+      <p>Dans les tableaux, « Entrée » désigne un signal reçu par le FPGA, « Sortie » un signal piloté par le FPGA, et « Entrée ou sortie » une broche Pmod dont le sens dépend de son utilisation dans le module.</p>
+
+      <h3>Digilent Nexys4 (<code>nexys4</code>)</h3>
+      <div class="table-scroll">
+         <table>
+            <caption>Signaux d’interface — Digilent Nexys4</caption>
+            <thead><tr><th scope="col">Signaux SHDL</th><th scope="col">Sens</th><th scope="col">Fonction</th></tr></thead>
+            <tbody>
+               <tr><td><code>mclk</code></td><td>Entrée</td><td>Horloge principale de 100 MHz</td></tr>
+               <tr><td><code>btnc</code>, <code>btnr</code>, <code>btnl</code>, <code>btnu</code>, <code>btnd</code></td><td>Entrée</td><td>Boutons : centre, droite, gauche, haut, bas</td></tr>
+               <tr><td><code>sw[15:0]</code></td><td>Entrée</td><td>16 interrupteurs</td></tr>
+               <tr><td><code>ld[15:0]</code></td><td>Sortie</td><td>16 LED</td></tr>
+               <tr><td><code>an[7:0]</code></td><td>Sortie</td><td>Sélection des huit chiffres de l’afficheur à sept segments</td></tr>
+               <tr><td><code>ssg[6:0]</code></td><td>Sortie</td><td>Sept segments de l’afficheur</td></tr>
+               <tr><td><code>dp</code></td><td>Sortie</td><td>Point décimal</td></tr>
+               <tr><td><code>red1</code>, <code>grn1</code>, <code>blu1</code></td><td>Sortie</td><td>Composantes rouge, verte et bleue de la première LED RGB</td></tr>
+               <tr><td><code>red2</code>, <code>grn2</code>, <code>blu2</code></td><td>Sortie</td><td>Composantes rouge, verte et bleue de la seconde LED RGB</td></tr>
+               <tr><td><code>txd_in</code>, <code>rds</code></td><td>Entrée</td><td>Interface UART</td></tr>
+               <tr><td><code>txd</code>, <code>cts</code></td><td>Sortie</td><td>Interface UART</td></tr>
+               <tr><td><code>ja1</code>, <code>ja2</code>, <code>ja3</code>, <code>ja4</code>, <code>ja7</code>, <code>ja8</code>, <code>ja9</code>, <code>ja10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JA</td></tr>
+               <tr><td><code>jb1</code>, <code>jb2</code>, <code>jb3</code>, <code>jb4</code>, <code>jb7</code>, <code>jb8</code>, <code>jb9</code>, <code>jb10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JB</td></tr>
+               <tr><td><code>jc1</code>, <code>jc2</code>, <code>jc3</code>, <code>jc4</code>, <code>jc7</code>, <code>jc8</code>, <code>jc9</code>, <code>jc10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JC</td></tr>
+               <tr><td><code>jd1</code>, <code>jd2</code>, <code>jd3</code>, <code>jd4</code>, <code>jd7</code>, <code>jd8</code>, <code>jd9</code>, <code>jd10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JD</td></tr>
+            </tbody>
+         </table>
+      </div>
+
+      <h3>Digilent Nexys4 DDR (<code>nexys4-ddr</code>)</h3>
+      <div class="table-scroll">
+         <table>
+            <caption>Signaux d’interface — Digilent Nexys4 DDR</caption>
+            <thead><tr><th scope="col">Signaux SHDL</th><th scope="col">Sens</th><th scope="col">Fonction</th></tr></thead>
+            <tbody>
+               <tr><td><code>mclk</code></td><td>Entrée</td><td>Horloge principale de 100 MHz</td></tr>
+               <tr><td><code>btnrst</code></td><td>Entrée</td><td>Bouton de réinitialisation CPU</td></tr>
+               <tr><td><code>btnc</code>, <code>btnr</code>, <code>btnl</code>, <code>btnu</code>, <code>btnd</code></td><td>Entrée</td><td>Boutons : centre, droite, gauche, haut, bas</td></tr>
+               <tr><td><code>sw[15:0]</code></td><td>Entrée</td><td>16 interrupteurs</td></tr>
+               <tr><td><code>ld[15:0]</code></td><td>Sortie</td><td>16 LED</td></tr>
+               <tr><td><code>an[7:0]</code></td><td>Sortie</td><td>Sélection des huit chiffres de l’afficheur à sept segments</td></tr>
+               <tr><td><code>ssg[6:0]</code></td><td>Sortie</td><td>Sept segments de l’afficheur</td></tr>
+               <tr><td><code>dp</code></td><td>Sortie</td><td>Point décimal</td></tr>
+               <tr><td><code>red1</code>, <code>grn1</code>, <code>blu1</code></td><td>Sortie</td><td>Composantes rouge, verte et bleue de la première LED RGB</td></tr>
+               <tr><td><code>red2</code>, <code>grn2</code>, <code>blu2</code></td><td>Sortie</td><td>Composantes rouge, verte et bleue de la seconde LED RGB</td></tr>
+               <tr><td><code>txd_in</code>, <code>rds</code></td><td>Entrée</td><td>Interface UART</td></tr>
+               <tr><td><code>txd</code>, <code>cts</code></td><td>Sortie</td><td>Interface UART</td></tr>
+               <tr><td><code>ja1</code>, <code>ja2</code>, <code>ja3</code>, <code>ja4</code>, <code>ja7</code>, <code>ja8</code>, <code>ja9</code>, <code>ja10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JA</td></tr>
+               <tr><td><code>jb1</code>, <code>jb2</code>, <code>jb3</code>, <code>jb4</code>, <code>jb7</code>, <code>jb8</code>, <code>jb9</code>, <code>jb10</code></td><td>Entrée ou sortie</td><td>Connecteur Pmod JB</td></tr>
+            </tbody>
+         </table>
+      </div>
+      <p>Les noms <code>rds</code> et <code>txd_in</code> sont ceux de la configuration de synthèse : conservez cette orthographe. Les noms des broches Pmod reprennent les numéros physiques 1 à 4 et 7 à 10 ; les autres broches du connecteur servent à l’alimentation et à la masse.</p>
    </main>
 </body>
 </html>
