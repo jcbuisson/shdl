@@ -17,10 +17,14 @@
 </head>
 <body>
    <main>
-      <h1>SHDL : langage simple de description matérielle</h1>
+      <h1>SHDL : Simple Hardware Description Language</h1>
 
       <h2>Introduction</h2>
-      <p>SHDL est un langage permettant de décrire des circuits numériques de manière simple et modulaire. Ce n’est pas un langage de programmation : il décrit les différentes équipotentielles qui composent un circuit ainsi que leurs relations combinatoires ou séquentielles. Une fois correctement décrit en SHDL, un circuit peut être « mis sous tension » et exécuté par simulation ou par synthèse sur un véritable circuit FPGA.</p>
+      <p>
+         SHDL est un langage permettant de décrire des circuits numériques de manière simple et modulaire.
+         Ce n’est pas un langage de programmation : il décrit les différentes équipotentielles qui composent un circuit ainsi que leurs relations combinatoires ou séquentielles.
+         Une fois correctement décrit en SHDL, un circuit peut être « mis sous tension » et exécuté par simulation ou par synthèse sur un véritable circuit FPGA.
+      </p>
       <p>Voici un exemple de description d’un module combinatoire réalisant une addition sur 1 bit :</p>
       <pre><code>module fulladder(a, b, cin : s, cout)
    x = /a*b + a*/b
