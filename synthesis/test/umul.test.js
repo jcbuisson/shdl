@@ -89,7 +89,7 @@ test('dedicated simulation preserves unsigned high bits and unknown inputs', () 
    assert.equal(evaluateUmul16x16(eq, data), null)
 })
 
-test('browser analyzer remaps aliases and nested multipliers and tracks dependencies', async () => {
+async function loadBrowserAnalyzer() {
    // Load the browser's plain-JavaScript TS sources with its Vite imports resolved.
    const directory = new URL('../../frontend/src/lib/shdl/', import.meta.url)
    const load = async filename => {
@@ -100,7 +100,11 @@ test('browser analyzer remaps aliases and nested multipliers and tracks dependen
    }
    const syntaxUrl = 'data:text/javascript;base64,' + Buffer.from(await load('shdlSyntax.ts')).toString('base64')
    const analyzer = (await load('shdlAnalyzer.ts')).replace("'/src/lib/shdl/shdlSyntax'", JSON.stringify(syntaxUrl))
-   const { checkModuleMap } = await import('data:text/javascript;base64,' + Buffer.from(analyzer).toString('base64'))
+   return import('data:text/javascript;base64,' + Buffer.from(analyzer).toString('base64'))
+}
+
+test('browser analyzer remaps aliases and nested multipliers and tracks dependencies', async () => {
+   const { checkModuleMap } = await loadBrowserAnalyzer()
    const child = { name: 'mul', structure: peg$parse(text), submoduleNames: [] }
    const root = { name: 'root', structure: peg$parse('module root(a[15..0], b[15..0], p[31..0], q[31..0]) x[15..0] = a[15..0] mul(x[15..0], b[15..0], p[31..0]) mul(b[15..0], a[15..0], q[31..0]) end module'), submoduleNames: ['mul'] }
    assert.equal((await checkModuleMap({ root, mul: child })).err, null)
@@ -112,4 +116,42 @@ test('browser analyzer remaps aliases and nested multipliers and tracks dependen
    for (const eq of root.equipotentials) {
       if (eq?.type === 'umul16x16') assert.equal(eq.uses.length, 32)
    }
+})
+
+test('RAM and ROM outputs reject duplicate drivers in both analyzers', async () => {
+   const { checkModuleMap } = await loadBrowserAnalyzer()
+   const ram = output => `$ram_aread_swrite(clk, wr, addr[3..0], din[31..0] : ${output})`
+   const rom = output => `$rom(addr[3..0] : ${output})`
+   const header = 'module memory(clk, wr, addr[3..0], din[31..0], dataOut[31..0])'
+   const cases = [
+      [ram('dataOut[31..0]'), ram('dataOut[31..0]')],
+      [rom('dataOut[31..0]'), rom('dataOut[31..0]')],
+      [ram('dataOut[31..0]'), rom('dataOut[31..0]')],
+      [rom('dataOut[31..0]'), ram('dataOut[31..0]')],
+      ['dataOut[31..0] = din[31..0]', ram('dataOut[31..0]')],
+      [ram('dataOut[31..0]'), 'dataOut[31..0] = din[31..0]'],
+      ['dataOut[31..0] = din[31..0]', rom('dataOut[31..0]')],
+      [rom('dataOut[31..0]'), 'dataOut[31..0] = din[31..0]'],
+      [ram('dataOut[31..16] & dataOut[31..16]')],
+      [rom('dataOut[31..16] & dataOut[31..16]')],
+   ]
+   for (const instances of cases) {
+      const text = `${header} ${instances.join('\n')} end module`
+      const module = { name: 'memory', text }
+      const synthesisError = checkModule('memory', { memory: module }).err
+      const browser = { name: 'memory', structure: peg$parse(text), submoduleNames: [] }
+      const browserError = (await checkModuleMap({ memory: browser })).err
+      for (const err of [synthesisError, browserError]) {
+         assert.match(err?.message || '', /signal 'dataOut\[\d+\]' is assigned several times/, text)
+         assert.ok(err.location)
+      }
+   }
+   // Independent memories may drive non-overlapping slices of the same bus.
+   const valid = `module memory(clk, wr, addr[3..0], din[15..0], dataOut[31..0])
+      $ram_aread_swrite(clk, wr, addr[3..0], din[15..0] : dataOut[31..16])
+      $ram_aread_swrite(clk, wr, addr[3..0], din[15..0] : dataOut[15..0]) end module`
+   const module = { name: 'memory', text: valid }
+   assert.equal(checkModule('memory', { memory: module }).err, null)
+   const browser = { name: 'memory', structure: peg$parse(valid), submoduleNames: [] }
+   assert.equal((await checkModuleMap({ memory: browser })).err, null)
 })

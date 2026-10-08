@@ -472,6 +472,13 @@ function collectPredefinedModuleInstanceEquipotentials(predefinedModule, equipot
             doutEquipotential = createEquipotential(doutName, equipotentials)
          } else {
             doutEquipotential = equipotentials[doutEquipotentialIndex]
+            if ((doutEquipotential.type != null && !doutEquipotential.isInput)
+               || equipotentials.some(eq => eq?.name === doutName && eq.type === 'alias')) {
+               return {
+                  message: `signal '${doutName}' is assigned several times`,
+                  location: predefinedModule.location,
+               }
+            }
          }
          doutEquipotential.type = 'rom'
          doutEquipotential.addrs = addrs
@@ -556,6 +563,13 @@ function collectPredefinedModuleInstanceEquipotentials(predefinedModule, equipot
             doutEquipotential = createEquipotential(doutName, equipotentials)
          } else {
             doutEquipotential = equipotentials[doutEquipotentialIndex]
+            if ((doutEquipotential.type != null && !doutEquipotential.isInput)
+               || equipotentials.some(eq => eq?.name === doutName && eq.type === 'alias')) {
+               return {
+                  message: `signal '${doutName}' is assigned several times`,
+                  location: predefinedModule.location,
+               }
+            }
          }
          doutEquipotential.type = 'ram_aread_swrite'
          doutEquipotential.clk = clkEquipotentialIndex
