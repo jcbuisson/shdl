@@ -132,6 +132,7 @@ import { watch, onUnmounted, computed, ref } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 
 import { parameterArity, parameterNameAtIndex } from '/src/lib/shdl/shdlUtilities.js'
+import { evaluateUmul16x16 } from '/src/lib/shdl/shdlUmul.js'
 import { getMemoryInstances, loadMemoryContents } from '/src/lib/shdl/memoryContents.js'
 
 import useExpressXClient from '/src/use/useExpressXClient';
@@ -553,6 +554,9 @@ function equipotentialValue(equipotentialIndex, dataArray, previousValueArray) {
    } else if (equipotential.type === 'constant') {
       // return equipotential.name === '>1' ? true : false
       return equipotential.cvalue === 1 ? true : equipotential.cvalue === 0 ? false : null
+
+   } else if (equipotential.type === 'umul16x16') {
+      return evaluateUmul16x16(equipotential, dataArray)
 
    } else if (equipotential.type === 'combinatorial') {
       return evaluateFormula(equipotential.formula, dataArray)

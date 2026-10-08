@@ -308,6 +308,10 @@ export function addUsedBy(module) {
             let oeEquipotential = module.equipotentials[source.oeEquipotential]
             addUsedByEquipotential(equipotential, oeEquipotential)
          })
+      } else if (equipotential.type === 'umul16x16') {
+         for (const index of [...equipotential.aInputs, ...equipotential.bInputs]) {
+            addUsedByEquipotential(equipotential, module.equipotentials[index])
+         }
       } else if (equipotential.type === 'ram_aread_swrite') {
          addUsedByEquipotential(equipotential, module.equipotentials[equipotential.clk])
          addUsedByEquipotential(equipotential, module.equipotentials[equipotential.wr])

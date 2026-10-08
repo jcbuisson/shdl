@@ -1,3 +1,4 @@
+import { collectUmul16x16 } from './shdlUmul.js'
 import { checkSyntax } from '/src/lib/shdl/shdlSyntax'
 import { addUsedBy, addUnused, argumentArity, argumentsArity, argumentAt, argumentAtIndex, parameterArity, parameterNameAtIndex, parametersNameAtIndex, replaceAliases,
    getOriginalEquipotentialIndex, signalCompoundArity, signalCompoundAtIndex, sumoftermsCompoundAtIndex,
@@ -148,6 +149,9 @@ export async function checkModuleMap(moduleMap) {
                source.srcEquipotential = getOriginalEquipotentialIndex(source.srcEquipotential, module.equipotentials)
                source.oeEquipotential = getOriginalEquipotentialIndex(source.oeEquipotential, module.equipotentials)
             })
+         } else if (equipotential.type === 'umul16x16') {
+            equipotential.aInputs = equipotential.aInputs.map(index => getOriginalEquipotentialIndex(index, module.equipotentials))
+            equipotential.bInputs = equipotential.bInputs.map(index => getOriginalEquipotentialIndex(index, module.equipotentials))
          } else if (equipotential.type === 'rom' || equipotential.type === 'ram_aread_swrite') {
             equipotential.addrs = equipotential.addrs.map(function(addr) {
                return getOriginalEquipotentialIndex(addr, module.equipotentials)
@@ -441,6 +445,9 @@ export async function checkModuleMap(moduleMap) {
                source.srcEquipotential = mapping[source.srcEquipotential]
                source.oeEquipotential = mapping[source.oeEquipotential]
             })
+         } else if (equipotential.type === 'umul16x16') {
+            equipotential.aInputs = equipotential.aInputs.map(index => mapping[index])
+            equipotential.bInputs = equipotential.bInputs.map(index => mapping[index])
          } else if (equipotential.type === 'rom') {
             equipotential.addrs = equipotential.addrs.map(index => mapping[index])
          } else if (equipotential.type === 'ram_aread_swrite') {
@@ -483,6 +490,11 @@ export async function checkModuleMap(moduleMap) {
       } else if (equipotentialSrc.type === 'constant') {
          equipotentialDest.cvalue = equipotentialSrc.cvalue
 
+      } else if (equipotentialSrc.type === 'umul16x16') {
+         equipotentialDest.aInputs = equipotentialSrc.aInputs.slice()
+         equipotentialDest.bInputs = equipotentialSrc.bInputs.slice()
+         equipotentialDest.mulOutBit = equipotentialSrc.mulOutBit
+
       } else if (equipotentialSrc.type === 'rom' || equipotentialSrc.type === 'ram_aread_swrite') {
          equipotentialDest.memUUID = equipotentialSrc.memUUID
          equipotentialDest.memOutIndex = equipotentialSrc.memOutIndex
@@ -501,7 +513,9 @@ export async function checkModuleMap(moduleMap) {
    }
 
    function collectPredefinedModuleInstanceEquipotentials(predefinedModule, equipotentials) {
-      if (predefinedModule.name === 'rom') {
+      if (predefinedModule.name === 'umul16x16') {
+         return collectUmul16x16(predefinedModule, equipotentials)
+      } else if (predefinedModule.name === 'rom') {
          let memUUID = uuid++
          predefinedModule.memUUID = memUUID
          // addr equipotentials

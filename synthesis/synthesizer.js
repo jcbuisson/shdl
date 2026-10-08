@@ -1,3 +1,4 @@
+import { umulVhdl } from './umul-vhdl.js'
 import fs from 'fs'
 import shell from 'shelljs';
 import { v7 as uuidv7 } from 'uuid';
@@ -293,10 +294,13 @@ dout_${blockIndex} <= RAM_${blockIndex}(conv_integer(addrs_${blockIndex}));
       }
    }
 
+   const multiplier = umulVhdl(module.equipotentials)
+
    // build vhdl from template
    let vhdl = `library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity ${moduleName} is
 port (
@@ -308,6 +312,9 @@ architecture synthesis of ${moduleName} is
 
 -- internal signals declarations
 ${internalSignalsDeclarations}
+
+-- multiplier signal declarations
+${multiplier.declarations}
 
 -- RAM signal declarations
 ${memSignalsDeclarations}
@@ -328,6 +335,9 @@ ${triStateStatements}
 
 -- sequential statements
 ${sequentialStatements}
+
+-- multiplier statements
+${multiplier.statements}
 
 -- RAM statements
 ${memStatements}

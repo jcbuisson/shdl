@@ -1,3 +1,4 @@
+import { checkUmul16x16 } from './shdlUmul.js'
 import { termArity, signalCompoundArity, sumOfTermsCompoundArity, argumentArity, parameterArity, sumOfTermsArity } from '/src/lib/shdl/shdlUtilities'
 
 
@@ -217,7 +218,9 @@ export function checkSyntax(moduleName, moduleMap) {
    ////////////////////////////////               PREDEFINED MODULE INSTANCES             ////////////////////////////////.
 
    function checkPredefinedModuleInstance(moduleInstance) {
-      if (moduleInstance.name === 'ram_aread_swrite') {
+      if (moduleInstance.name === 'umul16x16') {
+         return checkUmul16x16(moduleInstance)
+      } else if (moduleInstance.name === 'ram_aread_swrite') {
          return checkRamAreadSwrite(moduleInstance)
       } else if (moduleInstance.name === 'rom') {
          return undefined

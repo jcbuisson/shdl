@@ -1,3 +1,4 @@
+import { checkUmul16x16 } from './shdlUmul.js'
 
 import { peg$parse } from './parser.js';
 import { signalCompoundArity, sumOfTermsCompoundArity, sumOfTermsArity, argumentArity, parameterArity, termArity } from './shdlUtilities.js';
@@ -219,7 +220,9 @@ function checkModuleInstance(moduleInstance, name2module) {
 
 
 function checkPredefinedModuleInstance(moduleInstance) {
-   if (moduleInstance.name === 'ram_aread_swrite') {
+   if (moduleInstance.name === 'umul16x16') {
+         return checkUmul16x16(moduleInstance)
+      } else if (moduleInstance.name === 'ram_aread_swrite') {
       return checkRamAreadSwrite(moduleInstance)
    } else if (moduleInstance.name === 'rom') {
       return undefined
