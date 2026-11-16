@@ -142,6 +142,7 @@ import { useSHDLModule } from '/src/use/useSHDLModule'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
+import { availableSlotTests } from '/src/lib/availableSlotTests.js'
 
 import { peg$parse as testLineParse } from '/src/lib/shdl/shdl_test_line_parser.js'
 import { useObservable } from '@vueuse/rxjs'
@@ -181,14 +182,10 @@ const userTestList = useObservable(userSHDLTests$(props.user_uid))
 const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user_uid))
 
 // every time 'currentTime' changes, this computed is re-evaluated, without running a new 'where' clause
-const filteredTestList = computed(() => {
-   if (!currentTime.value || !userSlots.value || !userTestList.value) return []
-   // filter user slots compatible with 'currentTime'
-   const slotUIDs = userSlots.value.filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value).map(slot => slot.uid)
-   // get associated tests using already loaded user test relation list and test list
-   const testUIDs = testRelationList.value.filter(relation => slotUIDs.includes(relation.group_slot_uid)).map(relation => relation.test_uid)
-   return testUIDs.map(testUID => userTestList.value.find(test => test.uid === testUID))
-})
+const filteredTestList = computed(() =>
+   availableSlotTests(userSlots.value, testRelationList.value, userTestList.value, currentTime.value)
+)
+
 const availableTestList = computed(() => {
    const tests = isTeacher.value ? testList.value : filteredTestList.value
    return tests

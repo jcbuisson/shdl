@@ -178,6 +178,7 @@ import useExpressXClient from '/src/use/useExpressXClient'
 import { useSHDLTest } from '/src/use/useSHDLTest'
 import { useUserSHDLTestRelation } from '/src/use/useUserSHDLTestRelation'
 import { useBusinessObservables } from '/src/use/useBusinessObservables'
+import { availableSlotTests } from '/src/lib/availableSlotTests.js'
 import {
    add32, sub32, and32, or32, xor32, sll32, slr32,
    bin32ToUnsigned, bin32ToSigned, unsignedToBin32, signedToBin32,
@@ -243,18 +244,9 @@ const testRelationList = useObservable(userGroupSlotSHDLTestRelation$(props.user
 const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
 const userDocument = useObservable(userDocument$(props.document_uid))
 
-const filteredTestList = computed(() => {
-   if (!currentTime.value || !userSlots.value || !userTestList.value || !testRelationList.value) return []
-   const slotUIDs = userSlots.value
-      .filter(slot => slot.start <= currentTime.value && slot.end >= currentTime.value)
-      .map(slot => slot.uid)
-   const testUIDs = testRelationList.value
-      .filter(relation => slotUIDs.includes(relation.group_slot_uid))
-      .map(relation => relation.test_uid)
-   return testUIDs
-      .map(testUID => userTestList.value.find(test => test.uid === testUID))
-      .filter(test => test?.type === 'craps')
-})
+const filteredTestList = computed(() =>
+   availableSlotTests(userSlots.value, testRelationList.value, userTestList.value, currentTime.value).filter(test => test.type === 'craps')
+)
 
 const availableTestList = computed(() => {
    const tests = isTeacher.value ? testList.value : filteredTestList.value
