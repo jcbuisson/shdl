@@ -162,6 +162,7 @@ const slotList = ref([]);
 const groupMemberList = ref([]);
 
 const selectedTestUIDs = ref([]);
+let initialTestUIDs = []
 
 let groupSubscription;
 let groupMembersSubscription;;
@@ -226,7 +227,7 @@ async function editSlot(groupSlot) {
       enddate: localDateInputValue(groupSlot.end),
       endtime: new Date(groupSlot.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
    }
-   selectedTestUIDs.value = relationsForSlot(groupSlot.uid).map(relation => relation.test_uid)
+   loadSlotTests()
    slotTestsLoading.value = !groupSlotSHDLTestRelationList.value
    edit.value = true
    addOrEditSlotDialog.value = true
@@ -234,9 +235,14 @@ async function editSlot(groupSlot) {
 
 watch(groupSlotSHDLTestRelationList, relations => {
    if (!addOrEditSlotDialog.value || !edit.value || !slotTestsLoading.value || !relations) return
-   selectedTestUIDs.value = relationsForSlot(slotData.value.uid).map(relation => relation.test_uid)
+   loadSlotTests()
    slotTestsLoading.value = false
 })
+
+function loadSlotTests() {
+   initialTestUIDs = relationsForSlot(slotData.value.uid).map(relation => relation.test_uid)
+   selectedTestUIDs.value = [...initialTestUIDs]
+}
 
 function relationsForSlot(groupSlotUid) {
    return (groupSlotSHDLTestRelationList.value || [])
@@ -271,10 +277,12 @@ const updateSlot = async () => {
       await refreshExpiration()
       const currentRelations = relationsForSlot(slotData.value.uid)
       const toAddTestUIDs = selectedTestUIDs.value.filter(testUid =>
-         !currentRelations.some(relation => relation.test_uid === testUid)
+         !initialTestUIDs.includes(testUid)
+         && !currentRelations.some(relation => relation.test_uid === testUid)
       )
       const toRemoveRelationUIDs = currentRelations
-         .filter(relation => !selectedTestUIDs.value.includes(relation.test_uid))
+         .filter(relation => initialTestUIDs.includes(relation.test_uid)
+            && !selectedTestUIDs.value.includes(relation.test_uid))
          .map(relation => relation.uid)
       await Promise.all([
          ...toAddTestUIDs.map(test_uid =>

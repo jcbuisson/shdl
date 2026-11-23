@@ -44,5 +44,55 @@ export async function prepareSHDLSyncSchema(db) {
       await db.query(`CREATE OR REPLACE TRIGGER shdl_sync_version BEFORE UPDATE ON ${table}
          FOR EACH ROW EXECUTE FUNCTION shdl_sync_version()`)
    }
+   await db.query(`CREATE OR REPLACE FUNCTION shdl_check_slot_test_parents() RETURNS trigger AS $$
+      BEGIN
+         IF NEW.deleted THEN
+            RETURN NEW;
+         END IF;
+         PERFORM 1 FROM group_slot WHERE uid = NEW.group_slot_uid AND NOT deleted FOR SHARE;
+         IF NOT FOUND THEN
+            RAISE EXCEPTION 'Assignment requires a live group slot' USING ERRCODE = '23503';
+         END IF;
+         PERFORM 1 FROM test WHERE uid = NEW.test_uid AND NOT deleted FOR SHARE;
+         IF NOT FOUND THEN
+            RAISE EXCEPTION 'Assignment requires a live test' USING ERRCODE = '23503';
+         END IF;
+         RETURN NEW;
+      END;
+   $$ LANGUAGE plpgsql`)
+   await db.query(`CREATE OR REPLACE TRIGGER shdl_check_slot_test_parents
+      BEFORE INSERT OR UPDATE OF group_slot_uid, test_uid, deleted ON groupslot_test_relation
+      FOR EACH ROW EXECUTE FUNCTION shdl_check_slot_test_parents()`)
+
+   await db.query(`CREATE OR REPLACE FUNCTION shdl_delete_slot_test_assignments() RETURNS trigger AS $$
+      BEGIN
+         IF TG_OP = 'UPDATE' THEN
+            IF NEW.uid = OLD.uid AND (OLD.deleted OR NOT NEW.deleted) THEN
+               RETURN NULL;
+            END IF;
+         END IF;
+         IF TG_TABLE_NAME = 'group_slot' THEN
+            UPDATE groupslot_test_relation
+            SET deleted = true, group_slot_uid = NULL, test_uid = NULL
+            WHERE NOT deleted AND group_slot_uid = OLD.uid;
+         ELSE
+            UPDATE groupslot_test_relation
+            SET deleted = true, group_slot_uid = NULL, test_uid = NULL
+            WHERE NOT deleted AND test_uid = OLD.uid;
+         END IF;
+         RETURN NULL;
+      END;
+   $$ LANGUAGE plpgsql`)
+   for (const parent of ['group_slot', 'test']) {
+      await db.query(`CREATE OR REPLACE TRIGGER shdl_delete_slot_test_assignments
+         AFTER DELETE OR UPDATE OF uid, deleted ON "${parent}"
+         FOR EACH ROW EXECUTE FUNCTION shdl_delete_slot_test_assignments()`)
+   }
+   await db.query(`UPDATE groupslot_test_relation AS relation
+      SET deleted = true, group_slot_uid = NULL, test_uid = NULL
+      WHERE NOT relation.deleted AND (
+         NOT EXISTS (SELECT 1 FROM group_slot WHERE uid = relation.group_slot_uid AND NOT deleted)
+         OR NOT EXISTS (SELECT 1 FROM test WHERE uid = relation.test_uid AND NOT deleted)
+      )`)
    return models
 }
