@@ -196,6 +196,12 @@ const availableTestList = computed(() => {
 
 const selectedTest = ref()
 const testToSelect = ref()
+const testStatusCode = ref(0)
+const testStatusText = ref()
+const testCurrentLineNo = ref(0)
+const testStatementList = ref([])
+const isTestRunning = ref(false)
+const testTextDialog = ref(false)
 
 const userTestRelations = useObservable(userSHDLTestsRelations$(props.user_uid))
 
@@ -208,8 +214,7 @@ watch(() => props.document_uid, async (document_uid) => {
          memoryMessage.value = '';
          // if (!module.value || !module_.structure) {
          //   console.log('NEXT simu', module_);
-            selectedTest.value = null;
-            testToSelect.value = null;
+            clearSelectedTest()
             if (module_?.structure) {
                module.value = module_;
                initializeEquipotentials(module_);
@@ -688,12 +693,22 @@ function evaluateFormula(formula, dataArray) {
 
 ////////////////////////////        TEST        ////////////////////////////
 
-const testStatusCode = ref(0) // 0: closed, 1: open but not started, 2: started & ok, 3: started & KO
-const testStatusText = ref()
-const testCurrentLineNo = ref(0)
-const testStatementList = ref()
-const isTestRunning = ref(false)
-const testTextDialog = ref(false)
+watch(availableTestList, tests => {
+   if (selectedTest.value && !tests.some(test => test.uid === selectedTest.value.uid)) {
+      clearSelectedTest()
+   }
+})
+
+function clearSelectedTest() {
+   isTestRunning.value = false
+   selectedTest.value = null
+   testToSelect.value = null
+   testTextDialog.value = false
+   testStatementList.value = []
+   testStatusCode.value = 0
+   testStatusText.value = null
+   testCurrentLineNo.value = 0
+}
 
 const testTextLines = computed(() => {
    return selectedTest.value?.test_statements ? selectedTest.value.test_statements.split(/\r?\n/) : []
@@ -753,7 +768,7 @@ function initTest() {
 }
 
 async function stepTest() {
-   if (testStatusCode.value >= 2) return // should not happen
+   if (!selectedTest.value || testStatusCode.value >= 2) return
 
    // execute current line
    const currentStatement = testStatementList.value[testCurrentLineNo.value]
@@ -900,8 +915,7 @@ async function onMemoryFileChange(value) {
       if (module.value !== targetModule) return
       loadMemoryContents(contents, memoryInstances.value)
       // A manual upload starts a free simulation, outside the selected test.
-      selectedTest.value = null
-      testToSelect.value = null
+      clearSelectedTest()
       const error = updateState()
       if (error) throw new Error(error)
       memoryError.value = false

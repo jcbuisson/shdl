@@ -284,11 +284,18 @@ function clearSelectedTest() {
    isTestRunning.value = false
    selectedTest.value = null
    testToSelect.value = null
+   testTextDialog.value = false
    testStatementList.value = []
    testStatusCode.value = 0
    testStatusText.value = null
    testCurrentLineNo.value = 0
 }
+
+watch(availableTestList, tests => {
+   if (selectedTest.value && !tests.some(test => test.uid === selectedTest.value.uid)) {
+      clearSelectedTest()
+   }
+})
 
 watch(() => props.document_uid, () => {
    clearSelectedTest()
