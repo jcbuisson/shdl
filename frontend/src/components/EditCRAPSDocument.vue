@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onBeforeUnmount, onUnmounted, nextTick } from 'vue'
+import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
@@ -135,7 +135,8 @@ onBeforeUnmount(() => {
 const message = ref({ inError: false, text: '' })
 const currentDocument = ref()
 let updateUid
-let subscription
+let lastAssembledUid
+let lastAssembledText
 
 function userDocument$(uid) {
    return userDocuments$({ uid }).pipe(
@@ -143,9 +144,9 @@ function userDocument$(uid) {
    )
 }
 
-watch(() => props.document_uid, async (uid) => {
-   if (subscription) subscription.unsubscribe()
-   subscription = userDocument$(uid).subscribe(async doc => {
+watch(() => props.document_uid, (uid, _previousUid, onCleanup) => {
+   let active = true
+   const subscription = userDocument$(uid).subscribe(async doc => {
       if (!doc) return
       const isNewDocument = !currentDocument.value || currentDocument.value.uid !== doc.uid
       const docText = normalizedEditorText(doc.text)
@@ -154,6 +155,7 @@ watch(() => props.document_uid, async (uid) => {
          currentDocument.value = doc
          hasPendingLocalEdit = false
          await nextTick()
+         if (!active || props.document_uid !== uid) return
          initializeEditor()
          if (editor && doc.text !== undefined) {
             setEditorText(doc.text)
@@ -174,30 +176,36 @@ watch(() => props.document_uid, async (uid) => {
          }
       }
 
-      assembleCRAPSDocument(doc)
+      assembleCRAPSDocument(uid)
+   })
+   onCleanup(() => {
+      active = false
+      subscription.unsubscribe()
    })
 }, { immediate: true })
 
-onUnmounted(() => {
-   subscription && subscription.unsubscribe()
-})
+function assembleCRAPSDocument(uid) {
+   if (!editor || uid !== props.document_uid || currentDocument.value?.uid !== uid) return
+   const text = normalizedEditorText(currentDocument.value.text)
+   if (uid === lastAssembledUid && text === lastAssembledText) return
 
-function assembleCRAPSDocument(doc) {
-   const result = checkModule({ text: doc.text || '' })
+   const result = checkModule({ text })
+   lastAssembledUid = uid
+   lastAssembledText = text
    if (result.errorMsg) {
       message.value = { inError: true, text: result.errorMsg }
-      setAssembly(props.document_uid, { memory: null, symbols: null, errorMsg: result.errorMsg })
+      setAssembly(uid, { memory: null, symbols: null, errorMsg: result.errorMsg })
    } else {
       const wordCount = Object.keys(result.memory).length
       message.value = { inError: false, text: `Programme OK, ${wordCount} mot${wordCount > 1 ? 's' : ''}` }
-      setAssembly(props.document_uid, { memory: result.memory, symbols: result.symbols, errorMsg: null })
+      setAssembly(uid, { memory: result.memory, symbols: result.symbols, errorMsg: null })
    }
 }
 
 const assembleCRAPSDocumentDebounced = useDebounceFn(assembleCRAPSDocument, 500)
 
 async function onTextChange(text) {
-   assembleCRAPSDocumentDebounced(currentDocument.value)
+   assembleCRAPSDocumentDebounced(props.document_uid)
    await updateUserDocument(props.document_uid, {
       text,
       update_count: currentDocument.value.update_count + 1,
