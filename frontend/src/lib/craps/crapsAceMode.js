@@ -49,10 +49,10 @@ ace.define('ace/mode/craps_highlight_rules', [
                token: 'entity.name.tag',
                regex: '[a-zA-Z0-9_]+(?=\\s*=)',
             },
-            // Registers: %r0–%r31, %fp, %sp, %pc, %ir
+            // Registers: %r0–%r31, %fp, %ret, %sp, %pc, %ir
             {
                token: 'variable.language',
-               regex: '%(?:r\\d+|fp|sp|pc|ir)\\b',
+               regex: '%(?:r\\d+|fp|ret|sp|pc|ir)\\b',
             },
             // Real instructions — craps.opcode maps to .ace_craps.ace_opcode (custom CSS)
             {

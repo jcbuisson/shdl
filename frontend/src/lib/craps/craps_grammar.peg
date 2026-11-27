@@ -139,6 +139,8 @@ Register
     { return regnum; }
   / '%fp'
     { return 27; }
+  / '%ret'
+    { return 28; }
   / '%sp'
     { return 29; }
   / '%pc'

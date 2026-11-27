@@ -67,7 +67,9 @@ It is also used for synthetic instructions `clr`, `mov`, `setq`, `tst`, `negcc`,
 #### %r1-%r19: general purpose programmer's registers
 The programmer can use them at will
 
-#### %r28: return address after a `call`
+#### %r27 = %fp: frame pointer
+
+#### %r28 = %ret: return address after a `call`
 See synthetic instructions `call`, `ret`
 
 #### %r29 = %sp: stack pointer

@@ -25,7 +25,7 @@ export function installSessionClipboardSource(container, getSelectedText) {
    return () => container.removeEventListener('copy', onCopy, true)
 }
 
-export function installSessionClipboardGuard(editor) {
+export function installSessionClipboardGuard(editor, allowExternalPaste) {
    const container = editor.container
    const token = sessionToken()
    const removeCopySource = installSessionClipboardSource(container, () => editor.getSelectedText())
@@ -41,6 +41,8 @@ export function installSessionClipboardGuard(editor) {
    }
 
    function onPaste(event) {
+      if (allowExternalPaste?.()) return
+
       if (!event.clipboardData || event.clipboardData.getData(CLIPBOARD_TYPE) !== token) {
          event.preventDefault()
          event.stopImmediatePropagation()

@@ -28,6 +28,7 @@
 
 <script setup>
 import { ref, watch, onUnmounted, onBeforeUnmount, onMounted, nextTick } from 'vue'
+import { useObservable } from '@vueuse/rxjs'
 import { useDebounceFn } from '@vueuse/core'
 
 import ace from 'ace-builds'
@@ -53,7 +54,7 @@ const { app } = useExpressXClient();
 const { extendExpiration } = useAuthentication(app)
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
-const { shdlDocumentParsing$ } = useBusinessObservables(app)
+const { shdlDocumentParsing$, isTeacher$ } = useBusinessObservables(app)
 
 const { addOrUpdateModule } = useSHDLModule()
 
@@ -64,6 +65,8 @@ const props = defineProps({
    document_uid: String,
    readonly: Boolean,
 })
+
+const isTeacher = useObservable(isTeacher$(props.signedinUid))
 
 // THANK YOU CLAUDE
 
@@ -108,7 +111,7 @@ function initializeEditor() {
          useSoftTabs: true,
       })
       editor.setReadOnly(props.readonly)
-      removeClipboardGuard = installSessionClipboardGuard(editor)
+      removeClipboardGuard = installSessionClipboardGuard(editor, () => isTeacher.value)
 
       // Listen for changes from user typing
       editor.session.on('change', () => {

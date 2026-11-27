@@ -27,6 +27,7 @@
 
 <script setup>
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
+import { useObservable } from '@vueuse/rxjs'
 import { useDebounceFn } from '@vueuse/core'
 import { map } from 'rxjs'
 
@@ -38,6 +39,7 @@ import '/src/lib/craps/crapsAceMode.js'
 import useExpressXClient from '/src/use/useExpressXClient'
 import { useUserDocument } from '/src/use/useUserDocument'
 import { useAuthentication } from '/src/use/useAuthentication'
+import { useBusinessObservables } from '/src/use/useBusinessObservables'
 import { useUserDocumentEvent } from '/src/use/useUserDocumentEvent'
 import { checkModule } from '/src/lib/craps/crapsChecker.js'
 import { useCRAPSAssembly } from '/src/use/useCRAPSAssembly'
@@ -48,6 +50,7 @@ const { extendExpiration } = useAuthentication(app)
 const { getObservable: userDocuments$, update: updateUserDocument } = useUserDocument(app)
 const { create: createUserDocumentEvent, update: updateUserDocumentEvent } = useUserDocumentEvent(app)
 const { setAssembly } = useCRAPSAssembly()
+const { isTeacher$ } = useBusinessObservables(app)
 
 const props = defineProps({
    signedinUid: String,
@@ -55,6 +58,8 @@ const props = defineProps({
    document_uid: String,
    readonly: Boolean,
 })
+
+const isTeacher = useObservable(isTeacher$(props.signedinUid))
 
 const editorContainer = ref(null)
 let editor = null
@@ -97,7 +102,7 @@ function initializeEditor() {
          useSoftTabs: true,
       })
       editor.setReadOnly(props.readonly ?? false)
-      removeClipboardGuard = installSessionClipboardGuard(editor)
+      removeClipboardGuard = installSessionClipboardGuard(editor, () => isTeacher.value)
 
       editor.session.on('change', () => {
          if (!isUpdatingFromSubscription) {
