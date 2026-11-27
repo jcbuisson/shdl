@@ -118,6 +118,35 @@ test('browser analyzer remaps aliases and nested multipliers and tracks dependen
    }
 })
 
+test('a child flip-flop retains an internal control at equipotential index zero', async () => {
+   const { checkModuleMap } = await loadBrowserAnalyzer()
+   const parentText = 'module parent(clk, d, q) child(clk, d, q) end module'
+   for (const [control, conditions] of [
+      ['en', 'reset when 0, enabled when control'],
+      ['rst', 'reset when control'],
+      ['set', 'set when control'],
+   ]) {
+      const childText = `module child(clk, d, q)
+         control = 0
+         q := d on clk, ${conditions}
+      end module`
+      const child = { name: 'child', text: childText }
+      const parent = { name: 'parent', text: parentText }
+      const browserChild = { name: 'child', structure: peg$parse(childText), submoduleNames: [] }
+      const browserParent = { name: 'parent', structure: peg$parse(parentText), submoduleNames: ['child'] }
+
+      assert.equal(checkModule('parent', { parent, child }).err, null)
+      assert.equal((await checkModuleMap({ parent: browserParent, child: browserChild })).err, null)
+      for (const [root, leaf] of [[parent, child], [browserParent, browserChild]]) {
+         assert.equal(leaf.equipotentials.__control, 0)
+         const flipFlop = root.equipotentials[root.equipotentials.__q]
+         const controlSignal = root.equipotentials[flipFlop[control]]
+         assert.equal(controlSignal?.type, 'constant', control)
+         assert.equal(controlSignal.cvalue, 0)
+      }
+   }
+})
+
 test('RAM and ROM outputs reject duplicate drivers in both analyzers', async () => {
    const { checkModuleMap } = await loadBrowserAnalyzer()
    const ram = output => `$ram_aread_swrite(clk, wr, addr[3..0], din[31..0] : ${output})`

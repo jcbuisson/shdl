@@ -141,9 +141,9 @@ export async function checkModuleMap(moduleMap) {
          } else if (equipotential.type === 'sequential') {
             replaceAliases(equipotential.formula, module.equipotentials)
             equipotential.clk = getOriginalEquipotentialIndex(equipotential.clk, module.equipotentials)
-            if (equipotential.rst) equipotential.rst = getOriginalEquipotentialIndex(equipotential.rst, module.equipotentials)
-            if (equipotential.set) equipotential.set = getOriginalEquipotentialIndex(equipotential.set, module.equipotentials)
-            if (equipotential.en) equipotential.en = getOriginalEquipotentialIndex(equipotential.en, module.equipotentials)
+            if (equipotential.rst !== undefined) equipotential.rst = getOriginalEquipotentialIndex(equipotential.rst, module.equipotentials)
+            if (equipotential.set !== undefined) equipotential.set = getOriginalEquipotentialIndex(equipotential.set, module.equipotentials)
+            if (equipotential.en !== undefined) equipotential.en = getOriginalEquipotentialIndex(equipotential.en, module.equipotentials)
          } else if (equipotential.type === 'tri-state') {
             equipotential.sources.forEach(function(source) {
                source.srcEquipotential = getOriginalEquipotentialIndex(source.srcEquipotential, module.equipotentials)

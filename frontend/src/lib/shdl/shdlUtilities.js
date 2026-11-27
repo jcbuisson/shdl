@@ -289,15 +289,15 @@ export function addUsedBy(module) {
          // addUsedByFormula(equipotential, equipotential.clk, module.equipotentials)
          let clkEquipotential = module.equipotentials[equipotential.clk]
          addUsedByEquipotential(equipotential, clkEquipotential)
-         if (equipotential.rst) {
+         if (equipotential.rst !== undefined) {
             let rstEquipotential = module.equipotentials[equipotential.rst]
             addUsedByEquipotential(equipotential, rstEquipotential)
          }
-         if (equipotential.set) {
+         if (equipotential.set !== undefined) {
             let setEquipotential = module.equipotentials[equipotential.set]
             addUsedByEquipotential(equipotential, setEquipotential)
          }
-         if (equipotential.en) {
+         if (equipotential.en !== undefined) {
             let enEquipotential = module.equipotentials[equipotential.en]
             addUsedByEquipotential(equipotential, enEquipotential)
          }

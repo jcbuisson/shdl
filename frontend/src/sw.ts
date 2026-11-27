@@ -3,7 +3,7 @@ import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { clientsClaim } from 'workbox-core'
 
-export const SW_VERSION = '2.1.6';
+export const SW_VERSION = '2.1.7';
 
 // Activate each deployment immediately and take control of existing tabs.
 // injectManifest workers must implement these autoUpdate lifecycle steps.
